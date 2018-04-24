@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import argparse
 import random
 
-FILE = 'AVAL1.csv'
+FILE = 'AVAL_test.csv'
 PATH_NET = './'
 
 PARAM_CHANNELS = {
