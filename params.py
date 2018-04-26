@@ -1,7 +1,7 @@
 PARAM_CHANNELS = {
-        'p__tau': 2.25518,
-        'p__scale': 7.42636,
-        'p__midpoint': -8.05232,
+        'p__tau': 2.25518, #ms
+        'p__scale': 7.42636, #mV
+        'p__midpoint': -8.05232, #mV
 
         'q__tau': 149.963,
         'q__scale': -9.97468,
@@ -23,9 +23,9 @@ PARAM_CHANNELS = {
         'e__scale': 6.74821,
         'e__midpoint': -3.3568,
 
-        'h__alpha' : 0.282473,
-        'h__k' : -1.00056e-5,
-        'h__ca_half' : 6.41889e-5
+        'h__alpha' : 0.282473, #None
+        'h__k' : -1.00056e-14, #mol per m3
+        'h__ca_half' : 6.41889e-14
 }
 
 RATE_COLORS = {'p' : '#00ccff',

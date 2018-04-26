@@ -42,11 +42,11 @@ class HodgkinHuxley():
     E_L = -50.0
     """Leak Nernst reversal potentials, in mV"""
 
-    DECAY_CA = 11.6  # s
-    RHO_CA = 0.000239e-2  # mol_per_cm_per_A_per_s
+    DECAY_CA = 11.6  # ms
+    RHO_CA = 0.000239e-11  # mol_per_cm_per_A_per_s
     REST_CA = 0  # M
 
-    dt = 0.05
+    dt = 0.01
     t = sp.arange(0.0, 450, dt)
 
     """ The time to  integrate over """
@@ -263,53 +263,53 @@ class HodgkinHuxley():
                       xs_,
                      initializer=init_state)
 
-        cacs = res[:, -1] * 1000
+        cacs = res[:, -1]
         cacs_pow = tf.pow(cacs, 3.8)
         cac_lum = cacs / (cacs_pow + N_HILL)
         losses = tf.square(tf.subtract(cac_lum, ys_))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
-        train_op = tf.train.AdamOptimizer(learning_rate=0.02).minimize(loss)
+        train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
 
-        epochs = 1
+        epochs = 2
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             train_loss = 0
 
             for i in range(epochs):
                 for j in range(1):
-                    results = sess.run(res, feed_dict={
+                    print(sess.run(self.rates['p__tau']))
+                    resu, cacl, _, train_loss, p = sess.run([res, cac_lum, train_op, loss, self.rates['p__tau']], feed_dict={
                         xs_: X,
+                        ys_: Y,
                         init_state: [-65, 0., 0.95, 0, 0, 1, 0]
                     })
-                    print(results.shape)
-                    print(T.shape)
-                    print(X.shape)
-                    self.plots_output(results, T, X, Y)
+                self.plots_output(T, X, cacl, Y)
+                print('[{}] loss : {}'.format(i, train_loss))
+                train_loss = 0
+
+            self.plots_results(T, X, resu)
 
 
 
-    def plots_output(self, results, ts, i_inj_values=X, y_cac=Y):
-        V = results[:, 0]
-        cac = results[:, 6]
+
+
+
+    def plots_output(self, ts, i_inj, cac_lum, y_cac_lum):
 
         plt.figure()
 
-        plt.subplot(4, 1, 1)
-        plt.title('Hodgkin-Huxley Neuron')
-        plt.plot(ts, V, 'k')
-        plt.ylabel('V (mV)')
 
-        plt.subplot(4, 1, 2)
-        plt.plot(ts, cac, 'r')
+        plt.subplot(3, 1, 1)
+        plt.plot(ts, cac_lum, 'r')
         plt.ylabel('Ca2+ concentration predicted')
 
-        plt.subplot(4, 1, 3)
-        plt.plot(ts, y_cac, 'r')
+        plt.subplot(3, 1, 2)
+        plt.plot(ts, y_cac_lum, 'r')
         plt.ylabel('Ca2+ concentration true')
 
-        plt.subplot(4, 1, 4)
-        plt.plot(ts, i_inj_values, 'k')
+        plt.subplot(3, 1, 3)
+        plt.plot(ts, i_inj, 'k')
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
         plt.ylim(-1, 40)
@@ -317,7 +317,7 @@ class HodgkinHuxley():
         plt.show()
 
 
-    def plots_results(self, results, ts, i_inj_values=X):
+    def plots_results(self, ts, i_inj_values, results):
         V = results[:, 0]
         p = results[:, 1]
         q = results[:, 2]

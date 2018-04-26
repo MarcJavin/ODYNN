@@ -31,7 +31,7 @@ class HodgkinHuxley():
     """Leak Nernst reversal potentials, in mV"""
 
     DECAY_CA = 11.6  # s
-    RHO_CA = 0.000239e-2  # mol_per_cm_per_A_per_s
+    RHO_CA = 0.000239e-11  # mol_per_cm_per_uA_per_ms
     REST_CA = 0  # M
 
 
