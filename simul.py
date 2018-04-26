@@ -1,36 +1,9 @@
 import scipy as sp
 import pylab as plt
 from scipy.integrate import odeint
+import time
 
-PARAM_CHANNELS = {
-        'p__tau': 2.25518,
-        'p__scale': 7.42636,
-        'p__midpoint': -8.05232,
-
-        'q__tau': 149.963,
-        'q__scale': -9.97468,
-        'q__midpoint': -15.6456,
-
-        'n__tau': 25.0007,
-        'n__scale': 15.8512,
-        'n__midpoint': 19.8741,
-
-        'e__tau': 0.100027,
-        'e__scale': 6.74821,
-        'e__midpoint': -3.3568,
-
-        'f__tau': 150.88,
-        'f__scale': -5.03176,
-        'f__midpoint': 25.1815,
-
-        'e__tau': 0.100027,
-        'e__scale': 6.74821,
-        'e__midpoint': -3.3568,
-
-        'h__alpha' : 0.282473,
-        'h__k' : -1.00056e-11,
-        'h__ca_half' : 6.41889e-11
-}
+from params import PARAM_CHANNELS, RATE_COLORS
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
@@ -38,11 +11,11 @@ class HodgkinHuxley():
     C_m  =   1.0
     """membrane capacitance, in uF/cm^2"""
 
-    g_Ca = .0
+    g_Ca = 3.0
     """Calcium (Na) maximum conductances, in mS/cm^2"""
 
     g_Ks = 3.0
-    g_Kf = 0.07
+    g_Kf = 0.0712
     """Postassium (K) maximum conductances, in mS/cm^2"""
 
     g_L  =   0.005
@@ -62,7 +35,7 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
 
-    t = sp.arange(0.0, 450.0, 0.01)
+    t = sp.arange(0.0, 450.0, 0.05)
     """ The time to integrate over """
 
     def inf_e(self, V):
@@ -166,22 +139,27 @@ class HodgkinHuxley():
         dedt = (self.inf_e(V) - e) / PARAM_CHANNELS['e__tau']
         dfdt = (self.inf_f(V) - f) / PARAM_CHANNELS['f__tau']
         dndt = (self.inf_n(V) - n) / PARAM_CHANNELS['n__tau']
-        dcacdt = self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)
+        dcacdt = - self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)
         return dVdt, dpdt, dqdt, dndt, dedt, dfdt, dcacdt
 
     def Main(self):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
+        start = time.time()
+        X = odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], self.t, args=(self,))
+        print(time.time() - start)
+        self.plots(X, self.t, [self.I_inj(t) for t in self.t])
 
-        X = odeint(self.dALLdt, [-65, 0.5, 0.5, 0.5, 0.5, 0.5, 1e-10], self.t, args=(self,))
-        V = X[:,0]
-        p = X[:,1]
-        q = X[:,2]
-        n = X[:,3]
-        e = X[:,4]
-        f = X[:,5]
-        cac = X[:,6]
+    def plots(self, results, ts, i_inj_values):
+        V = results[:, 0]
+        p = results[:, 1]
+        q = results[:, 2]
+        n = results[:, 3]
+        e = results[:, 4]
+        f = results[:, 5]
+        cac = results[:, 6]
+
         h = self.h(cac)
         ica = self.I_Ca(V, e, f, h)
         ik = self.I_Ks(V, n) + self.I_Kf(V, p, q)
@@ -189,35 +167,34 @@ class HodgkinHuxley():
 
         plt.figure()
 
-        plt.subplot(5,1,1)
+        plt.subplot(5, 1, 1)
         plt.title('Hodgkin-Huxley Neuron')
-        plt.plot(self.t, V, 'k')
+        plt.plot(ts, V, 'k')
         plt.ylabel('V (mV)')
 
-        plt.subplot(5,1,2)
-        plt.plot(self.t, ica, 'c', label='$I_{Na}$')
-        plt.plot(self.t, ik, 'y', label='$I_{K}$')
-        plt.plot(self.t, il, 'm', label='$I_{L}$')
+        plt.subplot(5, 1, 2)
+        plt.plot(ts, cac, 'r')
+        plt.ylabel('Ca2+ concentration')
+
+        plt.subplot(5, 1, 3)
+        plt.plot(ts, ica, 'c', label='$I_{Ca}$')
+        plt.plot(ts, ik, 'y', label='$I_{K}$')
+        plt.plot(ts, il, 'm', label='$I_{L}$')
         plt.ylabel('Current')
         plt.legend()
 
-        plt.subplot(5,1,3)
-        plt.plot(self.t, p, 'r', label='p')
-        plt.plot(self.t, q, 'g', label='q')
-        plt.plot(self.t, n, 'b', label='n')
-        plt.ylabel('Gating Value')
-        plt.legend()
-
         plt.subplot(5, 1, 4)
-        plt.plot(self.t, e, 'r', label='e')
-        plt.plot(self.t, f, 'g', label='f')
-        plt.plot(self.t, h, 'b', label='h')
+        plt.plot(ts, p, RATE_COLORS['p'], label='p')
+        plt.plot(ts, q, RATE_COLORS['q'], label='q')
+        plt.plot(ts, n, RATE_COLORS['n'], label='n')
+        plt.plot(ts, e, RATE_COLORS['e'], label='e')
+        plt.plot(ts, f, RATE_COLORS['f'], label='f')
+        plt.plot(ts, h, RATE_COLORS['h'], label='h')
         plt.ylabel('Gating Value')
         plt.legend()
 
-        plt.subplot(5,1,5)
-        i_inj_values = [self.I_inj(t) for t in self.t]
-        plt.plot(self.t, i_inj_values, 'k')
+        plt.subplot(5, 1, 5)
+        plt.plot(ts, i_inj_values, 'k')
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
         plt.ylim(-1, 40)
