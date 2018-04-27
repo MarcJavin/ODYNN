@@ -4,13 +4,18 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import time
+from tqdm import tqdm
 
 FILE = 'AVAL_test.csv'
-df = pd.read_csv(FILE)
+NB_SER = 15
+BATCH_SIZE = 5
+df = pd.read_csv(FILE)#.head(NB_SER)
 Y = np.array(df['trace'])
 X = np.array(df['inputCurrent'])*10
 T = np.array(df['timeVector'])*1000
 DT = T[1] - T[0]
+
+INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 0]
 
 N_HILL = 189e-9 #M
 
@@ -46,7 +51,7 @@ class HodgkinHuxley():
     RHO_CA = 0.000239e-11  # mol_per_cm_per_A_per_s
     REST_CA = 0  # M
 
-    dt = 0.01
+    dt = 0.05
     t = sp.arange(0.0, 450, dt)
 
     """ The time to  integrate over """
@@ -60,9 +65,9 @@ class HodgkinHuxley():
             self.rates['%s__mdp'%rate] = tf.get_variable('%s__midpoint' % rate, initializer=PARAM_CHANNELS['%s__midpoint' % rate])
             self.rates['%s__scale'%rate] = tf.get_variable('%s__scale' % rate, initializer=PARAM_CHANNELS['%s__scale' % rate])
             self.rates['%s__tau'%rate] = tf.get_variable('%s__tau' % rate, initializer=PARAM_CHANNELS['%s__tau' % rate])
-        self.rates['h__mdp'] = tf.get_variable('h__midpoint', initializer=PARAM_CHANNELS['h__ca_half'])
-        self.rates['h__scale'] = tf.get_variable('h__scale', initializer=PARAM_CHANNELS['h__k'])
-        self.rates['h__alpha'] = tf.get_variable('h__alpha', initializer=PARAM_CHANNELS['h__alpha'])
+        self.rates['h__mdp'] = tf.constant(PARAM_CHANNELS['h__ca_half'], name='h__midpoint')
+        self.rates['h__scale'] = tf.constant(PARAM_CHANNELS['h__k'], name='h__scale')
+        self.rates['h__alpha'] = tf.constant(PARAM_CHANNELS['h__alpha'], name='h__alpha')
 
     def inf(self, V, rate):
         mdp = self.rates['%s__mdp'%rate]
@@ -198,7 +203,8 @@ class HodgkinHuxley():
 
         h = self.h(cac)
         V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        #cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
         tau = self.rates['p__tau'] 
         p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
         tau = self.rates['q__tau'] 
@@ -243,10 +249,10 @@ class HodgkinHuxley():
             start = time.time()
             results = sess.run(res, feed_dict={
                 ts_: self.t,
-                init_state: [-65, 0., 0.95, 0, 0, 1, 0]
+                init_state: INIT_STATE
             })
             print('time spent : %.2f s' % (time.time() - start))
-        self.plots_results(results, self.t, [self.I_inj(t, True) for t in self.t])
+        self.plots_results(self.t, [self.I_inj(t, True) for t in self.t], results)
 
 
     def Main(self):
@@ -268,27 +274,46 @@ class HodgkinHuxley():
         cac_lum = cacs / (cacs_pow + N_HILL)
         losses = tf.square(tf.subtract(cac_lum, ys_))
         loss = tf.reduce_mean(losses)
-        loss = tf.Print(loss, [loss], 'loss : ')
-        train_op = tf.train.AdamOptimizer(learning_rate=0.001).minimize(loss)
+        # loss = tf.Print(loss, [loss], 'loss : ')
+        opt = tf.train.AdamOptimizer(learning_rate=0.01)
+        grads = opt.compute_gradients(loss)
+        capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
+        train_op = opt.apply_gradients(grads)
 
-        epochs = 2
+        epochs = 5
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             train_loss = 0
 
-            for i in range(epochs):
-                for j in range(1):
-                    print(sess.run(self.rates['p__tau']))
-                    resu, cacl, _, train_loss, p = sess.run([res, cac_lum, train_op, loss, self.rates['p__tau']], feed_dict={
-                        xs_: X,
-                        ys_: Y,
-                        init_state: [-65, 0., 0.95, 0, 0, 1, 0]
+            for i in tqdm(range(epochs)):
+                final_state = INIT_STATE
+                for j in range(0, X.shape[0], BATCH_SIZE):
+                    # grad = sess.run(grads, feed_dict={
+                    #     xs_: X[i,],
+                    #     ys_: Y,
+                    #     init_state: [-65, 0., 0.95, 0, 0, 1, 0]
+                    # })
+                    # for v, g in grad:
+                    #     print(v, g)
+                    results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
+                        xs_: X[j:j+BATCH_SIZE],
+                        ys_: Y[j:j+BATCH_SIZE],
+                        init_state: final_state
                     })
-                self.plots_output(T, X, cacl, Y)
+                    final_state = results[-1,:]
+                    train_loss += train_loss
+
+                # self.plots_output(T, X, cacl, Y)
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
-            self.plots_results(T, X, resu)
+            results = sess.run([res], feed_dict={
+                xs_: X,
+                ys_: Y,
+                init_state: INIT_STATE
+            })
+
+            self.plots_results(T, X, results)
 
 
 
