@@ -20,7 +20,7 @@ INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 N_HILL = 0.189 #mM
 
-from params import PARAM_CHANNELS
+from params import PARAM_GATES
 
 
 class HodgkinHuxley():
@@ -62,13 +62,8 @@ class HodgkinHuxley():
         tf.reset_default_graph()
         self.index = tf.constant(0, dtype=tf.int32)
         self.rates = {}
-        for rate in ['p', 'q', 'n', 'e', 'f']:
-            self.rates['%s__mdp'%rate] = tf.get_variable('%s__midpoint' % rate, initializer=PARAM_CHANNELS['%s__midpoint' % rate])
-            self.rates['%s__scale'%rate] = tf.get_variable('%s__scale' % rate, initializer=PARAM_CHANNELS['%s__scale' % rate])
-            self.rates['%s__tau'%rate] = tf.get_variable('%s__tau' % rate, initializer=PARAM_CHANNELS['%s__tau' % rate])
-        self.rates['h__mdp'] = tf.constant(PARAM_CHANNELS['h__ca_half'], name='h__midpoint')
-        self.rates['h__scale'] = tf.constant(PARAM_CHANNELS['h__k'], name='h__scale')
-        self.rates['h__alpha'] = tf.constant(PARAM_CHANNELS['h__alpha'], name='h__alpha')
+        for var, val in PARAM_GATES.items():
+            self.rates[var] = tf.get_variable(var, initializer=val)
 
     def inf(self, V, rate):
         mdp = self.rates['%s__mdp'%rate]
@@ -85,9 +80,9 @@ class HodgkinHuxley():
 
     def h_notensor(self, cac):
         """Channel gating kinetics. Functions of membrane voltage"""
-        mdp = PARAM_CHANNELS['h__ca_half']
-        scale = PARAM_CHANNELS['h__k']
-        alpha = PARAM_CHANNELS['h__alpha']
+        mdp = PARAM_GATES['h__mdp']
+        scale = PARAM_GATES['h__scale']
+        alpha = PARAM_GATES['h__alpha']
         q = 1 / (1 + sp.exp((mdp - cac) / scale))
         return 1 + (q - 1) * alpha
 
