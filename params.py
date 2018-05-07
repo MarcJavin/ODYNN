@@ -24,14 +24,7 @@ PARAM_CHANNELS = {
         'e__midpoint': -3.3568,
 
         'h__alpha' : 0.282473, #None
-        'h__k' : -1.00056e-14, #mol per m3
-        'h__ca_half' : 6.41889e-14
+        'h__k' : -1.00056, #mol per m3
+        'h__ca_half' : 6.41889
 }
 
-RATE_COLORS = {'p' : '#00ccff',
-               'q' : '#0000ff',
-               'n' : '#cc00ff',
-               'e' : '#b30000',
-               'f' : '#ff9900',
-               'h' : '#ff1a1a'
-                }

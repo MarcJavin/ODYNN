@@ -5,7 +5,6 @@ import pandas as pd
 import tensorflow as tf
 import time
 from tqdm import tqdm
-from utils import plots_output, plots_results
 
 FILE = 'AVAL_test.csv'
 NB_SER = 15
@@ -20,7 +19,7 @@ INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 N_HILL = 0.189 #mM
 
-from params import PARAM_CHANNELS
+from params import PARAM_CHANNELS, RATE_COLORS
 
 
 class HodgkinHuxley():
@@ -153,34 +152,7 @@ class HodgkinHuxley():
             return 10. * tf.cast((t > 100), tf.float32) - 10. * tf.cast((t > 200), tf.float32) + 35. * tf.cast((t > 300),
                                                             tf.float32) - 35. * tf.cast((t > 400), tf.float32)
 
-    #@staticmethod
-    def dALLdt(self, Xt, t):
-        """
-        Integrate
 
-        |  :param X:
-        |  :param t:
-        |  :return: calculate membrane potential & activation variables
-        """
-        V = Xt[0]
-        p = Xt[1]
-        q = Xt[2]
-        n = Xt[3]
-        e = Xt[4]
-        f = Xt[5]
-        cac = Xt[6]
-
-
-
-        h = self.h(cac)
-        dVdt = (self.I_inj(t) - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m
-        dpdt = (self.inf(V, 'p') - p) / self.rates['p__tau']
-        dqdt = (self.inf(V, 'q') - q) / self.rates['q__tau']
-        dedt = (self.inf(V, 'e') - e) / self.rates['e__tau']
-        dfdt = (self.inf(V, 'f') - f) / self.rates['f__tau']
-        dndt = (self.inf(V, 'n') - n) / self.rates['n__tau']
-        dcacdt = - self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)
-        return tf.stack([dVdt, dpdt, dqdt, dndt, dedt, dfdt, dcacdt], 0)
 
 
     def integ_comp(self, X, i_sin, dt, index=0):
@@ -194,29 +166,10 @@ class HodgkinHuxley():
         index += 1
 
         V = X[0]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[6]
 
 
-        h = self.h(cac)
-        V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
-        cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
-        tau = self.rates['p__tau']
-        p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
-        tau = self.rates['q__tau']
-        q = ((tau*dt) / (tau+dt)) * ((q/dt) + (self.inf(V, 'q')/tau))
-        tau = self.rates['e__tau']
-        e = ((tau*dt) / (tau+dt)) * ((e/dt) + (self.inf(V, 'e')/tau))
-        tau = self.rates['f__tau']
-        f = ((tau*dt) / (tau+dt)) * ((f/dt) + (self.inf(V, 'f')/tau))
-        tau = self.rates['n__tau']
-        n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
-        return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
+        V += ((i_sin - self.I_L(V)) / self.C_m) * dt
+        return tf.stack([V], 0), i_sin, dt, index
 
 
     def condition(self, hprev, x, dt, index):
@@ -235,27 +188,6 @@ class HodgkinHuxley():
         return self.integ_comp(X, self.I_inj(t), self.dt)[0]
 
 
-    def test(self):
-
-        ts_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[7], dtype=tf.float32)
-
-        res = tf.scan(self.step_test,
-                      ts_,
-                      initializer=init_state)
-
-
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            start = time.time()
-            results = sess.run(res, feed_dict={
-                ts_: self.t,
-                init_state: INIT_STATE
-            })
-            print('time spent : %.2f s' % (time.time() - start))
-        plots_results(self, self.t, [self.I_inj(t, True) for t in self.t], results)
-
-
     def Main(self):
         """
         Main demo for the Hodgkin Huxley neuron model
@@ -270,11 +202,9 @@ class HodgkinHuxley():
                       xs_,
                      initializer=init_state)
 
-        cacs = res[:, -1]
-        cacs_pow = tf.pow(cacs, 3.8)
-        cac_lum = cacs #cacs_pow / (cacs_pow + N_HILL)
-        cac_lum = cac_lum * tf.reduce_max(ys_) / tf.reduce_max(cac_lum)
-        losses = tf.square(tf.subtract(cac_lum, ys_))
+        V = res[:, 0]
+        V = V * tf.reduce_max(ys_) / tf.reduce_max(V)
+        losses = tf.square(tf.subtract(V, ys_))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
         opt = tf.train.AdamOptimizer(learning_rate=0.01)
@@ -287,13 +217,13 @@ class HodgkinHuxley():
             sess.run(tf.global_variables_initializer())
             train_loss = 0
 
-            results, cacl = sess.run([res, cac_lum], feed_dict={
+            results, cacl = sess.run([res, V], feed_dict={
                 xs_: X,
                 ys_: Y,
                 init_state: INIT_STATE
             })
-            plots_results(self, T, X, results, suffix=0, show=False)
-            plots_output(T, X, cacl, Y, suffix=0, show=False)
+            self.plots_results(T, X, results, suffix=0, show=False)
+            self.plots_output(T, X, cacl, Y, suffix=0, show=False)
 
             for i in tqdm(range(epochs)):
                 final_state = INIT_STATE
@@ -323,11 +253,92 @@ class HodgkinHuxley():
                     ys_: Y,
                     init_state: INIT_STATE
                 })
-                plots_results(self, T, X, results, suffix=i+1, show=False, save=True)
-                plots_output(T, X, cacl, Y, suffix=i+1, show=False, save=True)
+                self.plots_results(T, X, results, suffix=i+1, show=False)
+                self.plots_output(T, X, cacl, Y, suffix=i+1, show=False)
 
 
 
+
+
+
+    def plots_output(self, ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True):
+
+        plt.figure()
+
+
+        plt.subplot(3, 1, 1)
+        plt.plot(ts, cac_lum, 'r')
+        plt.ylabel('Ca2+ concentration predicted')
+
+        plt.subplot(3, 1, 2)
+        plt.plot(ts, y_cac_lum, 'r')
+        plt.ylabel('Ca2+ concentration true')
+
+        plt.subplot(3, 1, 3)
+        plt.plot(ts, i_inj, 'k')
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+        plt.ylim(-1, 40)
+
+        if(show):
+            plt.show()
+
+        plt.savefig('images/output_%s.png' % suffix)
+
+
+    def plots_results(self, ts, i_inj_values, results, suffix="", show=True):
+        print(results.shape)
+        V = results[:, 0]
+        p = results[:, 1]
+        q = results[:, 2]
+        n = results[:, 3]
+        e = results[:, 4]
+        f = results[:, 5]
+        cac = results[:, 6]
+
+        h = self.h_notensor(cac)
+        ica = self.I_Ca(V, e, f, h)
+        ik = self.I_Ks(V, n) + self.I_Kf(V, p, q)
+        il = self.I_L(V)
+
+        plt.figure()
+
+        plt.subplot(5, 1, 1)
+        plt.title('Hodgkin-Huxley Neuron')
+        plt.plot(ts, V, 'k')
+        plt.ylabel('V (mV)')
+
+        plt.subplot(5, 1, 2)
+        plt.plot(ts, cac, 'r')
+        plt.ylabel('Ca2+ concentration')
+
+        plt.subplot(5, 1, 3)
+        plt.plot(ts, ica, 'c', label='$I_{Ca}$')
+        plt.plot(ts, ik, 'y', label='$I_{K}$')
+        plt.plot(ts, il, 'm', label='$I_{L}$')
+        plt.ylabel('Current')
+        plt.legend()
+
+        plt.subplot(5, 1, 4)
+        plt.plot(ts, p, RATE_COLORS['p'], label='p')
+        plt.plot(ts, q, RATE_COLORS['q'], label='q')
+        plt.plot(ts, n, RATE_COLORS['n'], label='n')
+        plt.plot(ts, e, RATE_COLORS['e'], label='e')
+        plt.plot(ts, f, RATE_COLORS['f'], label='f')
+        plt.plot(ts, h, RATE_COLORS['h'], label='h')
+        plt.ylabel('Gating Value')
+        plt.legend()
+
+        plt.subplot(5, 1, 5)
+        plt.plot(ts, i_inj_values, 'k')
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+        plt.ylim(-1, 40)
+
+        if(show):
+            plt.show()
+
+        plt.savefig('images/results_%s.png'%suffix)
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()

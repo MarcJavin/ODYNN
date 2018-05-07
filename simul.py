@@ -2,8 +2,8 @@ import scipy as sp
 import pylab as plt
 from scipy.integrate import odeint
 import time
-
-from params import PARAM_CHANNELS, RATE_COLORS
+from utils import plots_results
+from params import PARAM_CHANNELS
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
@@ -30,8 +30,8 @@ class HodgkinHuxley():
     E_L  = -50.0
     """Leak Nernst reversal potentials, in mV"""
 
-    DECAY_CA = 11.6  # s
-    RHO_CA = 0.000239e-11  # mol_per_cm_per_uA_per_ms
+    DECAY_CA = 11.6  # ms
+    RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
     REST_CA = 0  # M
 
 
@@ -62,6 +62,8 @@ class HodgkinHuxley():
         """Channel gating kinetics. Functions of membrane voltage"""
         q = 1 / (1 + sp.exp((PARAM_CHANNELS['h__ca_half'] - cac)/PARAM_CHANNELS['h__k']))
         return 1 + (q-1)*PARAM_CHANNELS['h__alpha']
+
+    h_notensor = h
 
     def I_Ca(self, V, e, f, h):
         """
@@ -149,57 +151,9 @@ class HodgkinHuxley():
         start = time.time()
         X = odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], self.t, args=(self,))
         print(time.time() - start)
-        self.plots(X, self.t, [self.I_inj(t) for t in self.t])
+        plots_results(self, self.t, [self.I_inj(t) for t in self.t], X)
 
-    def plots(self, results, ts, i_inj_values):
-        V = results[:, 0]
-        p = results[:, 1]
-        q = results[:, 2]
-        n = results[:, 3]
-        e = results[:, 4]
-        f = results[:, 5]
-        cac = results[:, 6]
 
-        h = self.h(cac)
-        ica = self.I_Ca(V, e, f, h)
-        ik = self.I_Ks(V, n) + self.I_Kf(V, p, q)
-        il = self.I_L(V)
-
-        plt.figure()
-
-        plt.subplot(5, 1, 1)
-        plt.title('Hodgkin-Huxley Neuron')
-        plt.plot(ts, V, 'k')
-        plt.ylabel('V (mV)')
-
-        plt.subplot(5, 1, 2)
-        plt.plot(ts, cac, 'r')
-        plt.ylabel('Ca2+ concentration')
-
-        plt.subplot(5, 1, 3)
-        plt.plot(ts, ica, 'c', label='$I_{Ca}$')
-        plt.plot(ts, ik, 'y', label='$I_{K}$')
-        plt.plot(ts, il, 'm', label='$I_{L}$')
-        plt.ylabel('Current')
-        plt.legend()
-
-        plt.subplot(5, 1, 4)
-        plt.plot(ts, p, RATE_COLORS['p'], label='p')
-        plt.plot(ts, q, RATE_COLORS['q'], label='q')
-        plt.plot(ts, n, RATE_COLORS['n'], label='n')
-        plt.plot(ts, e, RATE_COLORS['e'], label='e')
-        plt.plot(ts, f, RATE_COLORS['f'], label='f')
-        plt.plot(ts, h, RATE_COLORS['h'], label='h')
-        plt.ylabel('Gating Value')
-        plt.legend()
-
-        plt.subplot(5, 1, 5)
-        plt.plot(ts, i_inj_values, 'k')
-        plt.xlabel('t (ms)')
-        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-        plt.ylim(-1, 40)
-
-        plt.show()
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
