@@ -9,7 +9,7 @@ from utils import plots_output, plots_results
 
 FILE = 'AVAL_test.csv'
 NB_SER = 15
-BATCH_SIZE = 5
+BATCH_SIZE = 50
 df = pd.read_csv(FILE)#.head(NB_SER)
 Y = np.array(df['trace'])
 X = np.array(df['inputCurrent'])*10 + np.full(Y.shape, 0.001)
@@ -52,7 +52,7 @@ class HodgkinHuxley():
     RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
     REST_CA = 0  # M
 
-    dt = 0.05
+    dt = 0.1
     t = sp.arange(0.0, 450, dt)
 
     """ The time to  integrate over """
@@ -251,7 +251,7 @@ class HodgkinHuxley():
         plots_results(self, self.t, [self.I_inj(t, True) for t in self.t], results)
 
 
-    def Main(self):
+    def Main(self, prefix = ""):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
@@ -268,16 +268,17 @@ class HodgkinHuxley():
         cacs = res[:, -1]
         cacs_pow = tf.pow(cacs, 3.8)
         cac_lum = cacs #cacs_pow / (cacs_pow + N_HILL)
-        cac_lum = cac_lum * tf.reduce_max(ys_) / tf.reduce_max(cac_lum)
+        cac_lum = cac_lum * 0.01
         losses = tf.square(tf.subtract(cac_lum, ys_))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
-        opt = tf.train.AdamOptimizer(learning_rate=0.01)
+        opt = tf.train.AdamOptimizer()
         grads = opt.compute_gradients(loss)
         # capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads)
 
         epochs = 200
+        start = time.time()
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             train_loss = 0
@@ -287,27 +288,32 @@ class HodgkinHuxley():
                 ys_: Y,
                 init_state: INIT_STATE
             })
-            plots_results(self, T, X, results, suffix=0, show=False)
-            plots_output(T, X, cacl, Y, suffix=0, show=False)
+            plots_results(self, T, X, results, suffix='%s_integ_0'%prefix, show=False, save=True)
+            plots_output(T, X, cacl, Y, suffix='%s_integ_0'%prefix, show=False, save=True)
+            print(time.time() - start)
 
             for i in tqdm(range(epochs)):
                 final_state = INIT_STATE
-                for j in range(0, X.shape[0], BATCH_SIZE):
-
-                    grad = sess.run(grads, feed_dict={
-                        xs_: X[j:j + BATCH_SIZE],
-                        ys_: Y[j:j + BATCH_SIZE],
-                        init_state: final_state
-                    })
-                    for v, g in grad:
-                        print(v, g)
-                    results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
-                        xs_: X[j:j+BATCH_SIZE],
-                        ys_: Y[j:j+BATCH_SIZE],
-                        init_state: final_state
-                    })
-                    final_state = results[-1,:]
-                    train_loss += train_loss
+                results, train_loss, grad, _ = sess.run([res, loss, grads, train_op], feed_dict={
+                    xs_: X,
+                    ys_: Y,
+                    init_state: final_state
+                })
+                for v, g in grad:
+                    print(v, g)
+                final_state = results[-1, :]
+                train_loss += train_loss
+                # for j in range(0, X.shape[0], BATCH_SIZE):
+                #
+                #     results, train_loss, grad, _ = sess.run([res, loss, grads, train_op], feed_dict={
+                #         xs_: X[j:j+BATCH_SIZE],
+                #         ys_: Y[j:j+BATCH_SIZE],
+                #         init_state: final_state
+                #     })
+                #     for v, g in grad:
+                #         print(v, g)
+                #     final_state = results[-1,:]
+                #     train_loss += train_loss
 
                 # self.plots_output(T, X, cacl, Y)
                 print('[{}] loss : {}'.format(i, train_loss))
@@ -318,12 +324,12 @@ class HodgkinHuxley():
                     ys_: Y,
                     init_state: INIT_STATE
                 })
-                plots_results(self, T, X, results, suffix=i+1, show=False, save=True)
-                plots_output(T, X, cacl, Y, suffix=i+1, show=False, save=True)
+                plots_results(self, T, X, results, suffix="%s_integ_%s"%(prefix, i+1), show=False, save=True)
+                plots_output(T, X, cacl, Y, suffix="%s_integ_%s"%(prefix, i+1), show=False, save=True)
 
 
 
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.test()
+    runner.Main('fixfac_0.001')

@@ -3,7 +3,7 @@ import pylab as plt
 from scipy.integrate import odeint
 import time
 from utils import plots_results
-from params import PARAM_CHANNELS
+from params import PARAM_GATES
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
@@ -33,35 +33,22 @@ class HodgkinHuxley():
     DECAY_CA = 11.6  # ms
     RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
     REST_CA = 0  # M
+    
+    param_gates = PARAM_GATES
 
 
     t = sp.arange(0.0, 450.0, 0.05)
     """ The time to integrate over """
 
-    def inf_e(self, V):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        return 1 / (1 + sp.exp((PARAM_CHANNELS['e__midpoint'] - V)/PARAM_CHANNELS['e__scale']))
+    def inf(self, V, rate, p=param_gates):
+        mdp = p['%s__mdp'%rate]
+        scale = p['%s__scale'%rate]
+        return 1 / (1 + sp.exp((mdp - V)/scale))
 
-    def inf_f(self, V):
+    def h(self, cac, p=param_gates):
         """Channel gating kinetics. Functions of membrane voltage"""
-        return 1 / (1 + sp.exp((PARAM_CHANNELS['f__midpoint'] - V)/PARAM_CHANNELS['f__scale']))
-
-    def inf_p(self, V):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        return 1 / (1 + sp.exp((PARAM_CHANNELS['p__midpoint'] - V)/PARAM_CHANNELS['p__scale']))
-
-    def inf_q(self, V):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        return 1 / (1 + sp.exp((PARAM_CHANNELS['q__midpoint'] - V)/PARAM_CHANNELS['q__scale']))
-
-    def inf_n(self, V):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        return 1 / (1 + sp.exp((PARAM_CHANNELS['n__midpoint'] - V)/PARAM_CHANNELS['n__scale']))
-
-    def h(self, cac):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        q = 1 / (1 + sp.exp((PARAM_CHANNELS['h__ca_half'] - cac)/PARAM_CHANNELS['h__k']))
-        return 1 + (q-1)*PARAM_CHANNELS['h__alpha']
+        q = self.inf(cac, 'h')
+        return 1 + (q-1)*p['h__alpha']
 
     h_notensor = h
 
@@ -136,13 +123,15 @@ class HodgkinHuxley():
 
         h = self.h(cac)
         dVdt = (self.I_inj(t) - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m
-        dpdt = (self.inf_p(V) - p) / PARAM_CHANNELS['p__tau']
-        dqdt = (self.inf_q(V) - q) / PARAM_CHANNELS['q__tau']
-        dedt = (self.inf_e(V) - e) / PARAM_CHANNELS['e__tau']
-        dfdt = (self.inf_f(V) - f) / PARAM_CHANNELS['f__tau']
-        dndt = (self.inf_n(V) - n) / PARAM_CHANNELS['n__tau']
+        dpdt = (self.inf(V, 'p') - p) / self.param_gates['p__tau']
+        dqdt = (self.inf(V, 'q') - q) / self.param_gates['q__tau']
+        dedt = (self.inf(V, 'e') - e) / self.param_gates['e__tau']
+        dfdt = (self.inf(V, 'f') - f) / self.param_gates['f__tau']
+        dndt = (self.inf(V, 'n') - n) / self.param_gates['n__tau']
         dcacdt = - self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)
         return dVdt, dpdt, dqdt, dndt, dedt, dfdt, dcacdt
+
+
 
     def Main(self):
         """
