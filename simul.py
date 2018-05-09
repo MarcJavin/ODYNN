@@ -2,8 +2,12 @@ import scipy as sp
 import pylab as plt
 from scipy.integrate import odeint
 import time
-from utils import plots_results
+from utils import plots_results, get_data
 from params import PARAM_GATES
+import numpy as np
+
+T, X, Y = get_data()
+DT = T[1] - T[0]
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
@@ -36,8 +40,8 @@ class HodgkinHuxley():
     
     param_gates = PARAM_GATES
 
-
-    t = sp.arange(0.0, 450.0, 0.05)
+    dt = 0.05
+    t = sp.arange(0.0, 450., dt)
     """ The time to integrate over """
 
     def inf(self, V, rate, p=param_gates):
@@ -108,6 +112,7 @@ class HodgkinHuxley():
         |           step up to 35 uA/cm^2 at t>300
         |           step down to 0 uA/cm^2 at t>400
         """
+        #return X[min(int(t/DT), X.shape[0]-1)]
         return 10*(t>100) - 10*(t>200) + 35*(t>300) - 35*(t>400)
 
     @staticmethod
@@ -130,6 +135,42 @@ class HodgkinHuxley():
         dndt = (self.inf(V, 'n') - n) / self.param_gates['n__tau']
         dcacdt = - self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)
         return dVdt, dpdt, dqdt, dndt, dedt, dfdt, dcacdt
+    
+    
+    def integ_comp(self, X, t, dt):
+        """
+        Integrate
+
+        |  :param X:
+        |  :param t:
+        |  :return: calculate membrane potential & activation variables
+        """
+        V = X[0]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[6]
+
+
+        h = self.h(cac)
+        V += ((self.I_inj(t) - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
+        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
+        tau = self.param_gates['p__tau']
+        p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
+        tau = self.param_gates['q__tau']
+        q = ((tau*dt) / (tau+dt)) * ((q/dt) + (self.inf(V, 'q')/tau))
+        tau = self.param_gates['e__tau']
+        e = ((tau*dt) / (tau+dt)) * ((e/dt) + (self.inf(V, 'e')/tau))
+        tau = self.param_gates['f__tau']
+        f = ((tau*dt) / (tau+dt)) * ((f/dt) + (self.inf(V, 'f')/tau))
+        tau = self.param_gates['n__tau']
+        n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
+        return [V, p, q, n, e, f, cac]
+
+
 
 
 
@@ -139,8 +180,13 @@ class HodgkinHuxley():
         """
         start = time.time()
         X = odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], self.t, args=(self,))
+
+        # X =  [[-65, 0., 0.95, 0, 0, 1, 0]]
+        # for t in self.t:
+        #     X.append(self.integ_comp(X[-1], t, self.dt))
+
         print(time.time() - start)
-        plots_results(self, self.t, [self.I_inj(t) for t in self.t], X)
+        plots_results(self, self.t, [self.I_inj(t) for t in self.t], np.array(X))
 
 
 

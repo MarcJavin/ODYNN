@@ -28,5 +28,30 @@ PARAM_GATES = {
         'h__mdp' : 6.41889
 }
 
+PARAM_MEMB = {
+
+        'C_m' : 1.0,
+        #membrane capacitance, in uF/cm^2
+        
+        'g_Ca' : 3.0,
+        #Calcium (Na) maximum conductances, in mS/cm^2
+        
+        'g_Ks' : 3.0,
+        'g_Kf' : 0.0712,
+        #Postassium (K) maximum conductances, in mS/cm^2
+        
+        'g_L' : 0.005,
+        #Leak maximum conductances, in mS/cm^2
+        
+        'E_Ca' : 40.0,
+        #Sodium (Na) Nernst reversal potentials, in mV
+        
+        'E_K' : -60.0,
+        #Postassium (K) Nernst reversal potentials, in mV
+        
+        'E_L' : -50.0
+        #Leak Nernst reversal potentials, in mV
+}
+
 
 

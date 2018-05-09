@@ -1,26 +1,20 @@
 import scipy as sp
-import pylab as plt
-import numpy as np
-import pandas as pd
+
 import tensorflow as tf
 import time
 from tqdm import tqdm
-from utils import plots_output, plots_results
+from utils import plots_output, plots_results, get_data
 
-FILE = 'AVAL_test.csv'
 NB_SER = 15
 BATCH_SIZE = 50
-df = pd.read_csv(FILE)#.head(NB_SER)
-Y = np.array(df['trace'])
-X = np.array(df['inputCurrent'])*10 + np.full(Y.shape, 0.001)
-T = np.array(df['timeVector'])*1000
+T, X, Y = get_data()
 DT = T[1] - T[0]
 
 INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 N_HILL = 0.189 #mM
 
-from params import PARAM_GATES
+from params import PARAM_GATES, PARAM_MEMB
 
 
 class HodgkinHuxley():
@@ -53,15 +47,16 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
     dt = 0.1
-    t = sp.arange(0.0, 450, dt)
+    t = sp.arange(0.0, 450., dt)
 
     """ The time to  integrate over """
 
     def __init__(self):
         # build graph
         tf.reset_default_graph()
-        self.index = tf.constant(0, dtype=tf.int32)
         self.rates = {}
+        for var, val in PARAM_MEMB.items():
+            self.rates[var] = tf.get_variable(var, initializer=val)
         for var, val in PARAM_GATES.items():
             self.rates[var] = tf.get_variable(var, initializer=val)
 
@@ -145,11 +140,13 @@ class HodgkinHuxley():
         if no_tensor:
             return 10 * (t > 100) - 10 * (t > 200) + 35 * (t > 300) - 35 * (t > 400)
         else:
+            # idx = tf.minimum(tf.cast((t / DT), tf.int32), X.shape[0] - 1)
+            # return tf.cast(tf.gather(X, idx), tf.float32)
             return 10. * tf.cast((t > 100), tf.float32) - 10. * tf.cast((t > 200), tf.float32) + 35. * tf.cast((t > 300),
                                                             tf.float32) - 35. * tf.cast((t > 400), tf.float32)
 
     #@staticmethod
-    def dALLdt(self, Xt, t):
+    def dALLdt(self, X, t):
         """
         Integrate
 
@@ -157,15 +154,13 @@ class HodgkinHuxley():
         |  :param t:
         |  :return: calculate membrane potential & activation variables
         """
-        V = Xt[0]
-        p = Xt[1]
-        q = Xt[2]
-        n = Xt[3]
-        e = Xt[4]
-        f = Xt[5]
-        cac = Xt[6]
-
-
+        V = X[0]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[6]
 
         h = self.h(cac)
         dVdt = (self.I_inj(t) - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m
@@ -199,7 +194,7 @@ class HodgkinHuxley():
 
         h = self.h(cac)
         V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        #cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
         cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
         tau = self.rates['p__tau']
         p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
@@ -223,6 +218,8 @@ class HodgkinHuxley():
         div= tf.cast(div, tf.float32)
         dt = DT / div
         index = tf.constant(0.)
+        # t = sp.arange(0, DT, self.dt)
+        # h = tf.contrib.integrate.odeint(self.dALLdt, hprev, t)[-1] #put x in the object
         h = tf.while_loop(self.condition, self.integ_comp, (hprev, x, dt, index))[0]
         return h
 
@@ -238,6 +235,7 @@ class HodgkinHuxley():
         res = tf.scan(self.step_test,
                       ts_,
                       initializer=init_state)
+        # res = tf.contrib.integrate.odeint(self.dALLdt, init_state, self.t)
 
 
         with tf.Session() as sess:
@@ -260,10 +258,10 @@ class HodgkinHuxley():
         ys_ = tf.placeholder(shape=[None], dtype=tf.float32)
         init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
-        #res = tf.contrib.integrate.odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], T)
+        # res = tf.contrib.integrate.odeint(self.dALLdt, init_state, T)
         res = tf.scan(self.step,
-                      xs_,
-                     initializer=init_state)
+                     xs_,
+                    initializer=init_state)
 
         cacs = res[:, -1]
         cacs_pow = tf.pow(cacs, 3.8)
@@ -272,7 +270,7 @@ class HodgkinHuxley():
         losses = tf.square(tf.subtract(cac_lum, ys_))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
-        opt = tf.train.AdamOptimizer()
+        opt = tf.train.AdamOptimizer(0.1)
         grads = opt.compute_gradients(loss)
         # capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads)
@@ -294,7 +292,7 @@ class HodgkinHuxley():
 
             for i in tqdm(range(epochs)):
                 final_state = INIT_STATE
-                results, train_loss, grad, _ = sess.run([res, loss, grads, train_op], feed_dict={
+                results, cacl, train_loss, grad, _ = sess.run([res, cac_lum, loss, grads, train_op], feed_dict={
                     xs_: X,
                     ys_: Y,
                     init_state: final_state
@@ -319,11 +317,11 @@ class HodgkinHuxley():
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
-                results, cacl = sess.run([res, cac_lum], feed_dict={
-                    xs_: X,
-                    ys_: Y,
-                    init_state: INIT_STATE
-                })
+                # results, cacl = sess.run([res, cac_lum], feed_dict={
+                #     xs_: X,
+                #     ys_: Y,
+                #     init_state: INIT_STATE
+                # })
                 plots_results(self, T, X, results, suffix="%s_integ_%s"%(prefix, i+1), show=False, save=True)
                 plots_output(T, X, cacl, Y, suffix="%s_integ_%s"%(prefix, i+1), show=False, save=True)
 
@@ -332,4 +330,4 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.Main('fixfac_0.001')
+    runner.test()

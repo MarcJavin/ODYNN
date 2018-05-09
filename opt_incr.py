@@ -3,19 +3,22 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from utils import plots_output
+from utils import plots_output, plots_results_ca, plots_results
+from params import PARAM_MEMB, PARAM_GATES
 from tqdm import tqdm
+import time
 
 FILE = 'AVAL_test.csv'
 NB_SER = 15
-BATCH_SIZE = 20
+BATCH_SIZE = 60
 df = pd.read_csv(FILE)#.head(NB_SER)
 Y = np.array(df['trace'])
 X = np.array(df['inputCurrent'])*10 + np.full(Y.shape, 0.001)
 T = np.array(df['timeVector'])*1000
 DT = T[1] - T[0]
 
-INIT_STATE = [-65]
+INIT_STATE = [-65, 0, 1, 0]
+INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 
 
@@ -23,10 +26,11 @@ INIT_STATE = [-65]
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
+    DECAY_CA = 11.6  # ms
+    RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
+    REST_CA = 0  # M
 
-
-
-    dt = 1
+    dt = 0.1
     t = sp.arange(0.0, 450, dt)
 
     """ The time to  integrate over """
@@ -34,35 +38,62 @@ class HodgkinHuxley():
     def __init__(self):
         # build graph
         tf.reset_default_graph()
-        self.C_m = tf.get_variable('Cm', initializer=1.0)
-        """membrane capacitance, in uF/cm^2"""
+        self.C_m = tf.get_variable('Cm', initializer=PARAM_MEMB['C_m'])
 
-        self.g_L = tf.get_variable('g_L', initializer=0.005)
-        """Leak maximum conductances, in mS/cm^2"""
+        self.memb = {}
+        for var, val in PARAM_MEMB.items():
+            self.memb[var] = tf.get_variable(var, initializer=val)
 
-        self.E_L = tf.get_variable('E_L', initializer=-50.0)
+        self.rates = {}
+        for var, val in PARAM_GATES.items():
+            self.rates[var] = tf.get_variable(var, initializer=val)
+
+    def inf(self, V, rate):
+        mdp = self.rates['%s__mdp' % rate]
+        scale = self.rates['%s__scale' % rate]
+        return tf.sigmoid((V - mdp) / scale)
+
+    def h(self, cac):
+        """Channel gating kinetics. Functions of membrane voltage"""
+        mdp = self.rates['h__mdp']
+        scale = self.rates['h__scale']
+        alpha = self.rates['h__alpha']
+        q = tf.sigmoid((cac - mdp) / scale)
+        return 1 + (q - 1) * alpha
+
+
+    def I_Ca(self, V, e, f, h):
+        """
+        Membrane current (in uA/cm^2)
+        Sodium (Na = element name)
+        """
+        return self.memb['g_Ca'] * e ** 2 * f * h * (V - self.memb['E_Ca'])
+
+    def I_Kf(self, V, p, q):
+        """
+        Membrane current (in uA/cm^2)
+        Potassium (K = element name)
+        """
+        return self.memb['g_Kf'] * p ** 4 * q * (V - self.memb['E_K'])
+
+    def I_Ks(self, V, n):
+        """
+        Membrane current (in uA/cm^2)
+        Potassium (K = element name)
+        """
+        return self.memb['g_Ks'] * n * (V - self.memb['E_K'])
 
     #  Leak
     def I_L(self, V):
         """
         Membrane current (in uA/cm^2)
         Leak
-
-        |  :param V:
-        |  :param h:
-        |  :return:
         """
-        return self.g_L * (V - self.E_L)
+        return self.memb['g_L'] * (V - self.memb['E_L'])
 
     def I_inj(self, t, no_tensor=False):
         """
         External Current
-
-        |  :param t: time
-        |  :return: step up to 10 uA/cm^2 at t>100
-        |           step down to 0 uA/cm^2 at t>200
-        |           step up to 35 uA/cm^2 at t>300
-        |           step down to 0 uA/cm^2 at t>400
         """
         if no_tensor:
             return 10 * (t > 100) - 10 * (t > 200) + 35 * (t > 300) - 35 * (t > 400)
@@ -74,18 +105,53 @@ class HodgkinHuxley():
     def integ_comp(self, X, i_sin, dt, index=0):
         """
         Integrate
-
-        |  :param X:
-        |  :param t:
-        |  :return: calculate membrane potential & activation variables
         """
         index += 1
 
         V = X[0]
+        e = X[-3]
+        f = X[-2]
+        cac = X[-1]
+
+        h = self.h(cac)
+        V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_L(V)) / self.C_m) * dt
+        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+        tau = self.rates['e__tau']
+        e = ((tau * dt) / (tau + dt)) * ((e / dt) + (self.inf(V, 'e') / tau))
+        tau = self.rates['f__tau']
+        f = ((tau * dt) / (tau + dt)) * ((f / dt) + (self.inf(V, 'f') / tau))
+        return tf.stack([V, e, f, cac], 0), i_sin, dt, index
 
 
-        V += ((i_sin - self.I_L(V)) / self.C_m) * dt
-        return tf.stack([V], 0), i_sin, dt, index
+    def integ_complete(self, X, i_sin, dt, index=0):
+        """
+        Integrate
+        """
+        index += 1
+
+        V = X[0]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[6]
+
+
+        h = self.h(cac)
+        V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
+        cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
+        tau = self.rates['p__tau']
+        p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
+        tau = self.rates['q__tau']
+        q = ((tau*dt) / (tau+dt)) * ((q/dt) + (self.inf(V, 'q')/tau))
+        tau = self.rates['e__tau']
+        e = ((tau*dt) / (tau+dt)) * ((e/dt) + (self.inf(V, 'e')/tau))
+        tau = self.rates['f__tau']
+        f = ((tau*dt) / (tau+dt)) * ((f/dt) + (self.inf(V, 'f')/tau))
+        tau = self.rates['n__tau']
+        n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
+        return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
 
 
     def condition(self, hprev, x, dt, index):
@@ -97,29 +163,45 @@ class HodgkinHuxley():
         div= tf.cast(div, tf.float32)
         dt = DT / div
         index = tf.constant(0.)
-        h = tf.while_loop(self.condition, self.integ_comp, (hprev, x, dt, index))[0]
+        h = tf.while_loop(self.condition, self.integ_complete, (hprev, x, dt, index))[0]
         return h
 
     def step_test(self, X, t):
-        return self.integ_comp(X, self.I_inj(t), self.dt)[0]
+        return self.integ_complete(X, self.I_inj(t), self.dt)[0]
+
+    def test(self):
+
+        ts_ = tf.placeholder(shape=[None], dtype=tf.float32)
+        init_state = tf.placeholder(shape=[7], dtype=tf.float32)
+
+        res = tf.scan(self.step_test,
+                      ts_,
+                      initializer=init_state)
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            start = time.time()
+            results = sess.run(res, feed_dict={
+                ts_: self.t,
+                init_state: INIT_STATE
+            })
+            print('time spent : %.2f s' % (time.time() - start))
+        plots_results_ca(self, self.t, [self.I_inj(t, True) for t in self.t], results)
 
 
-    def Main(self):
-        """
-        Main demo for the Hodgkin Huxley neuron model
-        """
+    def Main(self, prefix):
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[1], dtype=tf.float32)
+        init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
         res = tf.scan(self.step,
                       xs_,
                      initializer=init_state)
 
-        V = res[:, 0]
+        cac = res[:, 0]
         #V = V * tf.reduce_max(ys_) / tf.reduce_max(V)
-        losses = tf.square(tf.subtract(V, ys_))
+        losses = tf.square(tf.subtract(cac, ys_))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
         opt = tf.train.AdamOptimizer(learning_rate=0.01)
@@ -132,44 +214,22 @@ class HodgkinHuxley():
             sess.run(tf.global_variables_initializer())
             train_loss = 0
 
-            results, cacl = sess.run([res, V], feed_dict={
-                xs_: X,
-                ys_: Y,
-                init_state: INIT_STATE
-            })
-            plots_output(T, X, cacl, Y, suffix=0, show=False, save=True)
-
             for i in tqdm(range(epochs)):
-                final_state = INIT_STATE
-                for j in range(0, X.shape[0], BATCH_SIZE):
-
-                    # grad = sess.run(grads, feed_dict={
-                    #     xs_: X[j:j + BATCH_SIZE],
-                    #     ys_: Y[j:j + BATCH_SIZE],
-                    #     init_state: final_state
-                    # })
-                    # for v, g in grad:
-                    #     print(v, g)
-                    results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
-                        xs_: X[j:j+BATCH_SIZE],
-                        ys_: Y[j:j+BATCH_SIZE],
-                        init_state: final_state
-                    })
-                    final_state = results[-1,:]
-                    train_loss += train_loss
+                results, cacl, _, train_loss = sess.run([res, cac, train_op, loss], feed_dict={
+                    xs_: X,
+                    ys_: Y,
+                    init_state: INIT_STATE
+                })
+                train_loss += train_loss
 
                 # self.plots_output(T, X, cacl, Y)
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
-                results, cacl = sess.run([res, V], feed_dict={
-                    xs_: X,
-                    ys_: Y,
-                    init_state: INIT_STATE
-                })
-                plots_output(T, X, cacl, Y, suffix=i+1, show=False, save=True)
+                plots_output(T, X, cacl, Y, suffix='%s_%s'%(prefix,i + 1), show=False, save=True)
+                # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.Main()
+    runner.Main('variables')

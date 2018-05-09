@@ -1,4 +1,6 @@
 import pylab as plt
+import numpy as np
+import pandas as pd
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -7,6 +9,13 @@ RATE_COLORS = {'p' : '#00ccff',
                'f' : '#ff9900',
                'h' : '#ff1a1a'
                 }
+
+def get_data(file='AVAL_test.csv'):
+    df = pd.read_csv(file)
+    Y = np.array(df['trace'])
+    X = np.array(df['inputCurrent']) * 10 + np.full(Y.shape, 0.001)
+    T = np.array(df['timeVector']) * 1000
+    return T, X, Y
 
 def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
     plt.figure()
@@ -31,6 +40,45 @@ def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False
     if(save):
         plt.savefig('images/output_%s.png' % suffix)
 
+
+def plots_results_ca(model, ts, i_inj_values, results, suffix="", show=True, save=False):
+    print(results.shape)
+    V = results[:, 0]
+    e = results[:, -3]
+    f = results[:, -2]
+    cac = results[:, -1]
+
+    h = model.h_notensor(cac)
+
+    plt.figure()
+
+    plt.subplot(4, 1, 1)
+    plt.title('Hodgkin-Huxley Neuron')
+    plt.plot(ts, V, 'k')
+    plt.ylabel('V (mV)')
+
+    plt.subplot(4, 1, 2)
+    plt.plot(ts, cac, 'r')
+    plt.ylabel('Ca2+ concentration')
+
+    plt.subplot(4, 1, 3)
+    plt.plot(ts, e, RATE_COLORS['e'], label='e')
+    plt.plot(ts, f, RATE_COLORS['f'], label='f')
+    plt.plot(ts, h, RATE_COLORS['h'], label='h')
+    plt.ylabel('Gating Value')
+    plt.legend()
+
+    plt.subplot(4, 1, 4)
+    plt.plot(ts, i_inj_values, 'k')
+    plt.xlabel('t (ms)')
+    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+    plt.ylim(-1, 40)
+
+    if(show):
+        plt.show()
+
+    if(save):
+        plt.savefig('images/results_%s.png'%suffix)
 
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
     print(results.shape)
