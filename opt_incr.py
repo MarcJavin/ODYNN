@@ -18,7 +18,7 @@ X = X
 DT = T[1] - T[0]
 
 INIT_STATE = [-65, 0, 1, 0]
-# INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
+INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 
 
@@ -239,7 +239,7 @@ class HodgkinHuxley():
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[4], dtype=tf.float32)
+        init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
         res = tf.scan(self.step,
                       xs_,
@@ -288,5 +288,5 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.loop_func = runner.notau_simp
-    runner.Main('output_var')
+    runner.loop_func = runner.no_tau
+    runner.Main('notau')
