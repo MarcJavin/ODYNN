@@ -6,7 +6,7 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 
-
+IMG_REP = 'images/'
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -22,6 +22,16 @@ def get_data(file='AVAL_test.csv'):
     X = np.array(df['inputCurrent']) * 10 + np.full(Y.shape, 0.001)
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
+
+def plot_loss(losses, suffix="", show=True, save=False):
+    plt.figure()
+    plt.plot(losses)
+
+    if (show):
+        plt.show()
+
+    if(save):
+        plt.savefig('%slosses_%s.png' % (IMG_REP,suffix))
 
 def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
     plt.figure()
@@ -44,7 +54,7 @@ def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False
         plt.show()
 
     if(save):
-        plt.savefig('images/output_%s.png' % suffix)
+        plt.savefig('%soutput_%s.png' % (IMG_REP,suffix))
 
 
 def plots_results_ca(model, ts, i_inj_values, results, suffix="", show=True, save=False):
@@ -84,7 +94,7 @@ def plots_results_ca(model, ts, i_inj_values, results, suffix="", show=True, sav
         plt.show()
 
     if(save):
-        plt.savefig('images/results_%s.png'%suffix)
+        plt.savefig('%sresults_%s.png'%(IMG_REP,suffix))
 
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False, cur=True):
     print(results.shape)
@@ -142,4 +152,4 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
         plt.show()
 
     if(save):
-        plt.savefig('images/results_%s.png'%suffix)
+        plt.savefig('%sresults_%s.png'%(IMG_REP,suffix))
