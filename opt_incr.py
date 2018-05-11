@@ -1,7 +1,4 @@
-import scipy as sp
-import pylab as plt
-import numpy as np
-import pandas as pd
+
 import tensorflow as tf
 from utils import plots_output, plots_results_ca, plots_results, get_data
 from params import PARAM_MEMB, PARAM_GATES

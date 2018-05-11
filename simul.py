@@ -1,5 +1,4 @@
 import scipy as sp
-import pylab as plt
 from scipy.integrate import odeint
 import time
 from utils import plots_results, get_data
