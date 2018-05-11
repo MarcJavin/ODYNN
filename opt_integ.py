@@ -48,7 +48,7 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
     dt = 0.1
-    t = params.TEST_T
+    t = params.test_t
 
     """ The time to  integrate over """
 

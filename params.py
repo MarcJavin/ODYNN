@@ -1,4 +1,6 @@
 import scipy as sp
+import numpy as np
+from scipy.stats import norm
 
 PARAM_GATES = {
         'p__tau': 2.25518, #ms
@@ -57,4 +59,11 @@ PARAM_MEMB = {
 
 
 DT = 0.1
-TEST_T = sp.arange(0.0, 5000., DT)
+t = np.array(sp.arange(0.0, 6000., DT))
+i_inj = {}
+sigma = 1000
+mu = 5000
+n = 0
+i_inj = 5*((t>000)&(t<500)) + 10*((t>1000)&(t<1500)) + 15*((t>2000)&(t<2500)) + 20*((t>3000)&(t<3500))\
+           + 70*norm(mu, sigma).pdf(t)*sigma
+i_inj = np.array(i_inj, dtype=np.float32)

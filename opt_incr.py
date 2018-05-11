@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="-1"  
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 import tensorflow as tf
 from utils import plots_output, plots_results_ca, plots_results, get_data
 from params import PARAM_MEMB, PARAM_GATES
@@ -26,7 +26,8 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
     dt = 0.1
-    t = params.TEST_T
+    t = params.t
+    i_inj = params.i_inj
 
     """ The time to  integrate over """
 
@@ -86,19 +87,6 @@ class HodgkinHuxley():
         """
         return self.memb['g_L'] * (V - self.memb['E_L'])
 
-    def I_inj(self, t, no_tensor=False):
-        """
-        External Current
-        """
-        if no_tensor:
-            return 5*((t>000) and (t<500)) + 10*((t>1000) and (t<1500)) + 15*((t>2000) and (t<2500)) + 20*\
-                   ((t>3000) and (t<3500)) + 25*((t>4000) and (t<4500))
-
-        else:
-            return 5 * (tf.cast((t > 000), tf.float32) - tf.cast((t > 500), tf.float32)) + 10 * (tf.cast((t > 1000), tf.float32) -
-                        tf.cast((t > 1500), tf.float32)) + 15 * (tf.cast((t > 2000), tf.float32) - tf.cast((t > 2500), tf.float32)) + 20 *\
-                   (tf.cast((t > 3000), tf.float32) - tf.cast((t > 3500), tf.float32)) + 25 * \
-                   (tf.cast((t > 4000), tf.float32) - tf.cast((t > 4500), tf.float32))
 
     def integ_comp(self, X, i_sin, dt, index=0):
         """
@@ -164,8 +152,8 @@ class HodgkinHuxley():
         h = tf.while_loop(self.condition, self.integ_complete, (hprev, x, dt, index))[0]
         return h
 
-    def step_test(self, X, t):
-        return self.integ_complete(X, self.I_inj(t), self.dt)[0]
+    def step_test(self, X, i):
+        return self.integ_complete(X, i, self.dt)[0]
 
     def test(self):
 
@@ -173,7 +161,7 @@ class HodgkinHuxley():
         init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
         res = tf.scan(self.step_test,
-                      ts_,
+                      self.i_inj,
                       initializer=init_state)
 
         with tf.Session() as sess:
@@ -184,7 +172,7 @@ class HodgkinHuxley():
                 init_state: INIT_STATE
             })
             print('time spent : %.2f s' % (time.time() - start))
-        plots_results(self, self.t, [self.I_inj(t, True) for t in self.t], results, cur=False)
+        plots_results(self, self.t, self.i_inj, results, cur=False)
 
 
     def Main(self, prefix):
