@@ -15,6 +15,7 @@ INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 N_HILL = 0.189 #mM
 
 from params import PARAM_GATES, PARAM_MEMB
+import params
 
 
 class HodgkinHuxley():
@@ -47,7 +48,7 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
     dt = 0.1
-    t = sp.arange(0.0, 450., dt)
+    t = params.TEST_T
 
     """ The time to  integrate over """
 
@@ -232,10 +233,10 @@ class HodgkinHuxley():
         ts_ = tf.placeholder(shape=[None], dtype=tf.float32)
         init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
-        res = tf.scan(self.step_test,
-                      ts_,
-                      initializer=init_state)
-        # res = tf.contrib.integrate.odeint(self.dALLdt, init_state, self.t)
+        # res = tf.scan(self.step_test,
+        #               ts_,
+        #               initializer=init_state)
+        res = tf.contrib.integrate.odeint(self.dALLdt, init_state, self.t)
 
 
         with tf.Session() as sess:

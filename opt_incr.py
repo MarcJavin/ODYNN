@@ -3,23 +3,20 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from utils import plots_output, plots_results_ca, plots_results
+from utils import plots_output, plots_results_ca, plots_results, get_data
 from params import PARAM_MEMB, PARAM_GATES
+import params
 from tqdm import tqdm
 import time
 
 FILE = 'AVAL_test.csv'
 NB_SER = 15
 BATCH_SIZE = 60
-df = pd.read_csv(FILE)#.head(NB_SER)
-Y = np.array(df['trace'])
-X = np.array(df['inputCurrent'])*10 + np.full(Y.shape, 0.001)
-T = np.array(df['timeVector'])*1000
+T, X, Y = get_data()
 DT = T[1] - T[0]
 
 INIT_STATE = [-65, 0, 1, 0]
 INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
-
 
 
 
@@ -31,7 +28,7 @@ class HodgkinHuxley():
     REST_CA = 0  # M
 
     dt = 0.1
-    t = sp.arange(0.0, 450, dt)
+    t = params.TEST_T
 
     """ The time to  integrate over """
 
@@ -96,11 +93,14 @@ class HodgkinHuxley():
         External Current
         """
         if no_tensor:
-            return 10 * (t > 100) - 10 * (t > 200) + 35 * (t > 300) - 35 * (t > 400)
-        else:
-            return 10. * tf.cast((t > 100), tf.float32) - 10. * tf.cast((t > 200), tf.float32) + 35. * tf.cast((t > 300),
-                                                            tf.float32) - 35. * tf.cast((t > 400), tf.float32)
+            return 5*((t>000) and (t<500)) + 10*((t>1000) and (t<1500)) + 15*((t>2000) and (t<2500)) + 20*\
+                   ((t>3000) and (t<3500)) + 25*((t>4000) and (t<4500))
 
+        else:
+            return 5 * (tf.cast((t > 000), tf.float32) - tf.cast((t > 500), tf.float32)) + 10 * (tf.cast((t > 1000), tf.float32) -
+                        tf.cast((t > 1500), tf.float32)) + 15 * (tf.cast((t > 2000), tf.float32) - tf.cast((t > 2500), tf.float32)) + 20 *\
+                   (tf.cast((t > 3000), tf.float32) - tf.cast((t > 3500), tf.float32)) + 25 * \
+                   (tf.cast((t > 4000), tf.float32) - tf.cast((t > 4500), tf.float32))
 
     def integ_comp(self, X, i_sin, dt, index=0):
         """
@@ -186,7 +186,7 @@ class HodgkinHuxley():
                 init_state: INIT_STATE
             })
             print('time spent : %.2f s' % (time.time() - start))
-        plots_results_ca(self, self.t, [self.I_inj(t, True) for t in self.t], results)
+        plots_results(self, self.t, [self.I_inj(t, True) for t in self.t], results, cur=False)
 
 
     def Main(self, prefix):
@@ -232,4 +232,4 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.Main('variables')
+    runner.test()

@@ -4,6 +4,7 @@ from scipy.integrate import odeint
 import time
 from utils import plots_results, get_data
 from params import PARAM_GATES
+import params
 import numpy as np
 
 T, X, Y = get_data()
@@ -40,8 +41,7 @@ class HodgkinHuxley():
     
     param_gates = PARAM_GATES
 
-    dt = 0.05
-    t = sp.arange(0.0, 450., dt)
+    t = params.TEST_T
     """ The time to integrate over """
 
     def inf(self, V, rate, p=param_gates):
@@ -105,15 +105,8 @@ class HodgkinHuxley():
     def I_inj(self, t):
         """
         External Current
-
-        |  :param t: time
-        |  :return: step up to 10 uA/cm^2 at t>100
-        |           step down to 0 uA/cm^2 at t>200
-        |           step up to 35 uA/cm^2 at t>300
-        |           step down to 0 uA/cm^2 at t>400
         """
-        #return X[min(int(t/DT), X.shape[0]-1)]
-        return 10*(t>100) - 10*(t>200) + 35*(t>300) - 35*(t>400)
+        return 5*((t>000) and (t<500)) + 10*((t>1000) and (t<1500)) + 15*((t>2000) and (t<2500)) + 20*((t>3000) and (t<3500)) + 25*((t>4000) and (t<4500))
 
     @staticmethod
     def dALLdt(X, t, self):

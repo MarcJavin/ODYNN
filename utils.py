@@ -2,6 +2,8 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 
+
+
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
                'n' : '#cc00ff',
@@ -80,7 +82,7 @@ def plots_results_ca(model, ts, i_inj_values, results, suffix="", show=True, sav
     if(save):
         plt.savefig('images/results_%s.png'%suffix)
 
-def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
+def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False, cur=True):
     print(results.shape)
     V = results[:, 0]
     p = results[:, 1]
@@ -90,10 +92,11 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     f = results[:, 5]
     cac = results[:, 6]
 
-    h = model.h_notensor(cac)
-    ica = model.I_Ca(V, e, f, h)
-    ik = model.I_Ks(V, n) + model.I_Kf(V, p, q)
-    il = model.I_L(V)
+    if(cur):
+        h = model.h_notensor(cac)
+        ica = model.I_Ca(V, e, f, h)
+        ik = model.I_Ks(V, n) + model.I_Kf(V, p, q)
+        il = model.I_L(V)
 
     plt.figure()
 
@@ -106,12 +109,13 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.plot(ts, cac, 'r')
     plt.ylabel('Ca2+ concentration')
 
-    plt.subplot(5, 1, 3)
-    plt.plot(ts, ica, 'c', label='$I_{Ca}$')
-    plt.plot(ts, ik, 'y', label='$I_{K}$')
-    plt.plot(ts, il, 'm', label='$I_{L}$')
-    plt.ylabel('Current')
-    plt.legend()
+    if(cur):
+        plt.subplot(5, 1, 3)
+        plt.plot(ts, ica, 'c', label='$I_{Ca}$')
+        plt.plot(ts, ik, 'y', label='$I_{K}$')
+        plt.plot(ts, il, 'm', label='$I_{L}$')
+        plt.ylabel('Current')
+        plt.legend()
 
     plt.subplot(5, 1, 4)
     plt.plot(ts, p, RATE_COLORS['p'], label='p')
@@ -119,7 +123,8 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.plot(ts, n, RATE_COLORS['n'], label='n')
     plt.plot(ts, e, RATE_COLORS['e'], label='e')
     plt.plot(ts, f, RATE_COLORS['f'], label='f')
-    plt.plot(ts, h, RATE_COLORS['h'], label='h')
+    if(cur):
+        plt.plot(ts, h, RATE_COLORS['h'], label='h')
     plt.ylabel('Gating Value')
     plt.legend()
 
@@ -127,7 +132,7 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.plot(ts, i_inj_values, 'k')
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-    plt.ylim(-1, 40)
+    # plt.ylim(-1, 40)
 
     if(show):
         plt.show()

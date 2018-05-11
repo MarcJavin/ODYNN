@@ -1,3 +1,5 @@
+import scipy as sp
+
 PARAM_GATES = {
         'p__tau': 2.25518, #ms
         'p__scale': 7.42636, #mV
@@ -54,4 +56,5 @@ PARAM_MEMB = {
 }
 
 
-
+DT = 0.1
+TEST_T = sp.arange(0.0, 5000., DT)
