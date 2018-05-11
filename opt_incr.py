@@ -1,4 +1,5 @@
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"  
 import tensorflow as tf
 from utils import plots_output, plots_results_ca, plots_results, get_data
 from params import PARAM_MEMB, PARAM_GATES
