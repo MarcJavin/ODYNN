@@ -11,6 +11,7 @@ FILE = 'AVAL_test.csv'
 NB_SER = 15
 BATCH_SIZE = 60
 T, X, Y = get_data()
+Y = Y*75 - 65
 DT = T[1] - T[0]
 
 INIT_STATE = [-65, 0, 1, 0]
@@ -218,4 +219,4 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.test()
+    runner.Main('increased')

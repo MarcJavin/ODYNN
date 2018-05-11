@@ -1,4 +1,7 @@
+import socket
 import matplotlib
+if (socket.gethostname()=='1080'):
+    matplotlib.use("Agg")
 import pylab as plt
 import numpy as np
 import pandas as pd
