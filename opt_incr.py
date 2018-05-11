@@ -20,6 +20,8 @@ INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
 
 
 
+
+
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
@@ -30,6 +32,8 @@ class HodgkinHuxley():
     dt = 0.1
     t = params.t
     i_inj = params.i_inj
+
+
 
     """ The time to  integrate over """
 
@@ -141,6 +145,33 @@ class HodgkinHuxley():
         n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
         return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
 
+    def no_tau(self, X, i_sin, dt, index=0):
+        """
+        Integrate
+        """
+        index += 1
+        V = X[0]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[6]
+        h = self.h(cac)
+        V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
+            V)) / self.C_m) * dt
+        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
+                    cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+        p = self.inf(V, 'p')
+        q = self.inf(V, 'q')
+        e = self.inf(V, 'e')
+        f = self.inf(V, 'f')
+        n = self.inf(V, 'n')
+        return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
+
+    loop_func = integ_complete
+
 
     def condition(self, hprev, x, dt, index):
         return tf.less(index * dt, DT)
@@ -151,11 +182,11 @@ class HodgkinHuxley():
         div= tf.cast(div, tf.float32)
         dt = DT / div
         index = tf.constant(0.)
-        h = tf.while_loop(self.condition, self.integ_complete, (hprev, x, dt, index))[0]
+        h = tf.while_loop(self.condition, self.loop_func, (hprev, x, dt, index))[0]
         return h
 
     def step_test(self, X, i):
-        return self.integ_complete(X, i, self.dt)[0]
+        return self.loop_func(X, i, self.dt)[0]
 
     def test(self):
 
@@ -220,4 +251,5 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.Main('20current')
+    runner.loop_func = runner.no_tau
+    runner.Main('notau')
