@@ -59,11 +59,12 @@ PARAM_MEMB = {
 
 
 DT = 0.1
-t = np.array(sp.arange(0.0, 6000., DT))
+t = np.array(sp.arange(0.0, 5200., DT))
 i_inj = {}
 sigma = 500
 mu = 5000
 n = 0
-i_inj = 5*((t>000)&(t<500)) + 10*((t>1000)&(t<1500)) + 15*((t>2000)&(t<2500)) + 20*((t>3000)&(t<3500))\
-           + 70*norm(mu, sigma).pdf(t)*sigma
+i_inj = 0.01*(5200-t)*((t>100)&(t<5000))
+# i_inj = 5*((t>000)&(t<500)) + 10*((t>1000)&(t<1500)) + 15*((t>2000)&(t<2500)) + 20*((t>3000)&(t<3500))\
+#            + 70*norm(mu, sigma).pdf(t)*sigma
 i_inj = np.array(i_inj, dtype=np.float32)

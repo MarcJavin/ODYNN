@@ -250,7 +250,7 @@ class HodgkinHuxley():
         losses = tf.square(tf.subtract(cac, ys_*self.fac - self.inter))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
-        opt = tf.train.AdamOptimizer(learning_rate=0.01)
+        opt = tf.train.AdamOptimizer(learning_rate=0.1)
         grads = opt.compute_gradients(loss)
         # capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads)
@@ -288,5 +288,5 @@ class HodgkinHuxley():
 
 if __name__ == '__main__':
     runner = HodgkinHuxley()
-    runner.loop_func = runner.no_tau
-    runner.Main('notau')
+    # runner.loop_func = runner.no_tau
+    runner.Main('high_grad')
