@@ -189,7 +189,7 @@ class HodgkinHuxley():
 
         todump = np.vstack((self.t, self.i_inj, X[:,0], X[:,-1]))
 
-        with open(utils.DUMP_FILE, 'w') as f:
+        with open(utils.DUMP_FILE, 'wb') as f:
             pickle.dump(todump, f)
 
 

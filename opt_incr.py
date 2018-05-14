@@ -253,7 +253,6 @@ class HodgkinHuxley():
                     ys_: np.vstack((V, Ca)),
                     init_state: INIT_STATE
                 })
-                train_loss += train_loss
 
                 with open(prefix + OUT, 'w') as f:
                     for v in tf.trainable_variables():

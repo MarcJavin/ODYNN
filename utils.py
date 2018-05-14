@@ -20,7 +20,8 @@ RATE_COLORS = {'p' : '#00ccff',
                 }
 
 def get_data_dump(file=DUMP_FILE):
-    with open(file, 'r') as f:
+    with open(file, 'rb') as f:
+        print(f)
         T, X, V, Ca = pickle.load(f)
     return T, X, V, Ca
 
