@@ -3,7 +3,6 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 import tensorflow as tf
 import numpy as np
 from utils import plots_output, plots_results_ca, plots_results, get_data, plot_loss
-from params import PARAM_MEMB, PARAM_GATES
 import params
 from tqdm import tqdm
 import time
@@ -17,8 +16,8 @@ Y = Y
 X = X
 DT = T[1] - T[0]
 
-INIT_STATE = [-65, 0, 1, 0]
-INIT_STATE = [-65, 0., 0.95, 0, 0, 1, 1e-7]
+INIT_STATE = [-50, 0, 1, 0]
+INIT_STATE = [-50, 0., 0.95, 0, 0, 1, 1e-7]
 
 
 
@@ -42,18 +41,18 @@ class HodgkinHuxley():
     def __init__(self):
         # build graph
         tf.reset_default_graph()
-        self.C_m = tf.get_variable('Cm', initializer=PARAM_MEMB['C_m'])
+        self.C_m = tf.get_variable('Cm', initializer=params.memb['C_m'])
 
         self.memb = {}
-        for var, val in PARAM_MEMB.items():
+        for var, val in params.memb.items():
             self.memb[var] = tf.get_variable(var, initializer=val)
 
         self.rates = {}
-        for var, val in PARAM_GATES.items():
+        for var, val in params.gates.items():
             self.rates[var] = tf.get_variable(var, initializer=val)
 
-        self.fac = tf.get_variable('fac', initializer=75.)
-        self.inter = tf.constant(65.)
+        self.fac = tf.get_variable('fac', initializer=60.)
+        self.inter = tf.constant(50.)
         self.input = tf.get_variable('input', initializer=2.)
 
 
