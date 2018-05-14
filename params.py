@@ -2,13 +2,18 @@ import scipy as sp
 import numpy as np
 from scipy.stats import norm
 from collections import OrderedDict
+import random
 
 #'[k|c]a?_[^_]*__(.*)': ['"](.*) .*["']
 
+DECAY_CA = 110.
+RHO_CA = 0.23
+REST_CA = 0.
+
 PARAMS = {
-        'p__tau': 100, #ms
-        'p__scale': 7.42636, #mV
-        'p__mdp': -8.05232, #mV
+        'p__tau': 100.,  # ms
+        'p__scale': 7.42636,  # mV
+        'p__mdp': -8.05232,  # mV
 
         'q__tau': 149.963,
         'q__scale': -9.97468,
@@ -22,90 +27,106 @@ PARAMS = {
         'f__scale': -5.03176,
         'f__mdp': 25.1815,
 
-        'e__tau': 10,
+        'e__tau': 10.,
         'e__scale': 6.74821,
         'e__mdp': -3.3568,
 
-        'h__alpha' : 0.282473, #None
-        'h__scale' : -1.00056, #mol per m3
-        'h__mdp' : 6.41889,
+        'h__alpha': 0.282473,  # None
+        'h__scale': -1.00056,  # mol per m3
+        'h__mdp': 6.41889,
 
+        'C_m': 20.0,
+        # membrane capacitance, in uF/cm^2
 
-        'C_m' : 20.0,
-        #membrane capacitance, in uF/cm^2
-        
-        'g_Ca' : 3.0,
-        #Calcium (Na) maximum conductances, in mS/cm^2
-        
-        'g_Ks' : 10.0,
-        'g_Kf' : 0.07,
-        #Postassium (K) maximum conductances, in mS/cm^2
-        
-        'g_L' : 0.005,
-        #Leak maximum conductances, in mS/cm^2
-        
-        'E_Ca' : 20.0,
-        #Sodium (Na) Nernst reversal potentials, in mV
-        
-        'E_K' : -60.0,
-        #Postassium (K) Nernst reversal potentials, in mV
-        
-        'E_L' : -60.0
-        #Leak Nernst reversal potentials, in mV
+        'g_Ca': 3.0,
+        # Calcium (Na) maximum conductances, in mS/cm^2
+
+        'g_Ks': 10.0,
+        'g_Kf': 0.07,
+        # Postassium (K) maximum conductances, in mS/cm^2
+
+        'g_L': 0.005,
+        # Leak maximum conductances, in mS/cm^2
+
+        'E_Ca': 20.0,
+        # Sodium (Na) Nernst reversal potentials, in mV
+
+        'E_K': -60.0,
+        # Postassium (K) Nernst reversal potentials, in mV
+
+        'E_L': -60.0
+        # Leak Nernst reversal potentials, in mV
 }
 
-PARAM_GATES2 = {
-        'p__tau' : 3,
-        'p__scale' : 5,
-        'p__mdp' : 7.4,
+MAX_TAU = 300.
+MIN_SCALE = 0.5
+MAX_SCALE = 100.
+MIN_MDP = -65.
+MAX_MDP = 40.
+MAX_G = 12.
 
-        'q__tau' : 50,
-        'q__scale' : -200,
-        'q__mdp' : -0.65,
+PARAMS_RAND = {
+        'p__tau': random.uniform(0.1,MAX_TAU),
+        'p__scale':random.uniform(MIN_SCALE,MAX_SCALE),
+        'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'n__tau' : 4000,
-        'n__scale' : 16,
-        'n__mdp' : 15,
+        'q__tau': random.uniform(0.1,MAX_TAU),
+        'q__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+        'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'e__tau' : 70,
-        'e__scale' : 10.7,
-        'e__mdp' : 0,
+        'n__tau': random.uniform(0.1,MAX_TAU),
+        'n__scale': random.uniform(MIN_SCALE,MAX_SCALE),
+        'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'f__tau' : 1000,
-        'f__scale' : -5,
-        'f__mdp' : 25,
+        'f__tau': random.uniform(0.1,MAX_TAU),
+        'f__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+        'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'h__alpha': 0.1,
-        'h__scale' : -1e-8,
-        'h__mdp' : 6.4e-8,
-        
+        'e__tau': random.uniform(0.1,MAX_TAU),
+        'e__scale': random.uniform(MIN_SCALE,MAX_SCALE),
+        'e__mdp': random.uniform(MIN_MDP, MAX_MDP),
+
+        'h__alpha': random.uniform(0.1,0.9),
+        'h__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+        'h__mdp': random.uniform(1,100),
+
+        'C_m': random.uniform(0.1, 50.),
+        # membrane capacitance, in uF/cm^2
+
+        'g_Ca': random.uniform(0.1,MAX_G),
+        # Calcium (Na) maximum conductances, in mS/cm^2
+
+        'g_Ks': random.uniform(0.1,MAX_G),
+        'g_Kf': random.uniform(0.1,MAX_G),
+        # Postassium (K) maximum conductances, in mS/cm^2
+
+        'g_L': random.uniform(0.1,MAX_G),
+        # Leak maximum conductances, in mS/cm^2
+
+        'E_Ca': random.uniform(0., MAX_MDP),
+        # Sodium (Na) Nernst reversal potentials, in mV
+
+        'E_K': random.uniform(MIN_MDP, 0.),
+        # Postassium (K) Nernst reversal potentials, in mV
+
+        'E_L': random.uniform(MIN_MDP, 0.),
+        # Leak Nernst reversal potentials, in mV
 }
 
-PARAM_MEMB2 = {
-
-        "g_L": 0.1,
-        "g_Kf": 3,
-        "g_Ks": 0.07,
-        "g_Ca": 3,
-
-        'E_Ca' : 40.0,
-        'E_K': -60,
-        'E_L': -50
-    }
-
-params = PARAMS
+params = PARAMS_RAND
 
 params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
 
 
 DT = 0.1
-t = np.array(sp.arange(0.0, 5200., DT))
+t = np.array(sp.arange(0.0, 5000., DT))
 i_inj = {}
 sigma = 500
 mu = 5000
 n = 0
 # i_inj = 0.01*(t)*((t>1000)&(t<4000))
-i_inj = 5*((t>000)&(t<500)) + 10*((t>1000)&(t<1500)) + 15*((t>2000)&(t<2500)) + 20*((t>3000)&(t<3500))\
-           + 70*norm(mu, sigma).pdf(t)*sigma
-i_inj = np.array(i_inj*2, dtype=np.float32)
+i_inj = 10.*((t>000)&(t<1000)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
+        # + 20*((t>3000)&(t<3500))\
+        #    + 70*norm(mu, sigma).pdf(t)*sigma
+i_inj = np.array(i_inj, dtype=np.float32)

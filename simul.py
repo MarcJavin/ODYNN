@@ -1,10 +1,11 @@
 import scipy as sp
-from scipy.stats import norm
 from scipy.integrate import odeint
 import time
 from utils import plots_results, get_data
+import utils
 import params
 import numpy as np
+import pickle
 
 T, X, Y = get_data()
 Y = (Y-50)*60
@@ -15,9 +16,9 @@ class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    DECAY_CA = 200.6  # ms
-    RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
-    REST_CA = 0  # M
+    DECAY_CA = params.DECAY_CA
+    RHO_CA = params.RHO_CA
+    REST_CA = params.REST_CA
     
     param = params.params
 
@@ -109,7 +110,7 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.param['C_m']) * dt
         cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
-        cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
+        # cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
         tau = self.param['p__tau']
         p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
         tau = self.param['q__tau']
@@ -184,7 +185,13 @@ class HodgkinHuxley():
         X =  [[-50, 0., 0.95, 0, 0, 1, 0]]
         for i in self.i_inj:
             X.append(self.integ_comp(X[-1], i, self.dt))
-        X = X[1:]
+        X = np.array(X[1:])
+
+        todump = np.vstack((self.t, self.i_inj, X[:,0], X[:,-1]))
+
+        with open(utils.DUMP_FILE, 'w') as f:
+            pickle.dump(todump, f)
+
 
         print(time.time() - start)
         plots_results(self, self.t, self.i_inj, np.array(X))

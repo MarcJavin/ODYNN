@@ -6,7 +6,10 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 
+import pickle
+
 IMG_REP = 'images/'
+DUMP_FILE = 'data.txt'
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -15,6 +18,12 @@ RATE_COLORS = {'p' : '#00ccff',
                'f' : '#ff9900',
                'h' : '#ff1a1a'
                 }
+
+def get_data_dump(file=DUMP_FILE):
+    with open(file, 'r') as f:
+        T, X, V, Ca = pickle.load(f)
+    return T, X, V, Ca
+
 
 def get_data(file='AVAL_test.csv'):
     df = pd.read_csv(file)
@@ -56,35 +65,48 @@ def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False
     if(save):
         plt.savefig('%soutput_%s.png' % (IMG_REP,suffix))
 
+def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
+    plt.figure()
 
-def plots_results_ca(model, ts, i_inj_values, results, suffix="", show=True, save=False):
-    print(results.shape)
+    plt.subplot(3, 1, 2)
+    plt.plot(ts, y_cac, 'g')
+    plt.plot(ts, cac, 'r')
+    plt.ylabel('Ca2+ concentration predicted')
+
+    plt.subplot(3, 1, 1)
+    plt.plot(ts, y_v, 'g')
+    plt.plot(ts, v, 'r')
+    plt.ylabel('Ca2+ concentration true')
+
+    plt.subplot(3, 1, 3)
+    plt.plot(ts, i_inj, 'k')
+    plt.xlabel('t (ms)')
+    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+    plt.ylim(-1, 40)
+
+    if (show):
+        plt.show()
+
+    if(save):
+        plt.savefig('%soutput_%s.png' % (IMG_REP,suffix))
+
+
+def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=False):
     V = results[:, 0]
-    e = results[:, -3]
-    f = results[:, -2]
     cac = results[:, -1]
-
-    h = model.h_notensor(cac)
 
     plt.figure()
 
-    plt.subplot(4, 1, 1)
+    plt.subplot(3, 1, 1)
     plt.title('Hodgkin-Huxley Neuron')
     plt.plot(ts, V, 'k')
     plt.ylabel('V (mV)')
 
-    plt.subplot(4, 1, 2)
+    plt.subplot(3, 1, 2)
     plt.plot(ts, cac, 'r')
     plt.ylabel('Ca2+ concentration')
 
-    plt.subplot(4, 1, 3)
-    plt.plot(ts, e, RATE_COLORS['e'], label='e')
-    plt.plot(ts, f, RATE_COLORS['f'], label='f')
-    plt.plot(ts, h, RATE_COLORS['h'], label='h')
-    plt.ylabel('Gating Value')
-    plt.legend()
-
-    plt.subplot(4, 1, 4)
+    plt.subplot(3, 1, 3)
     plt.plot(ts, i_inj_values, 'k')
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')

@@ -2,33 +2,27 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 import tensorflow as tf
 import numpy as np
-from utils import plots_output, plots_results_ca, plots_results, get_data, plot_loss
+from utils import plots_output, plots_output_double, plots_results, get_data, plot_loss, get_data_dump
 import params
 from tqdm import tqdm
 import time
 
-FILE = 'AVAL_test.csv'
 OUT = '_params.txt'
 NB_SER = 15
 BATCH_SIZE = 60
-T, X, Y = get_data()
-Y = Y
-X = X
+T, X, V, Ca = get_data_dump()
 DT = T[1] - T[0]
 
-INIT_STATE = [-50, 0, 1, 0]
-INIT_STATE = [-50, 0., 0.95, 0, 0, 1, 1e-7]
-
-
-
+# INIT_STATE = [-50, 0, 1, 0]
+INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
 
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-    DECAY_CA = 11.6  # ms
-    RHO_CA = 0.000239e3  # mol_per_cm_per_uA_per_ms
-    REST_CA = 0  # M
+    DECAY_CA = params.DECAY_CA
+    RHO_CA = params.RHO_CA
+    REST_CA = params.REST_CA
 
     dt = 0.1
     t = params.t
@@ -41,33 +35,25 @@ class HodgkinHuxley():
     def __init__(self):
         # build graph
         tf.reset_default_graph()
-        self.C_m = tf.get_variable('Cm', initializer=params.memb['C_m'])
+        self.C_m = tf.get_variable('Cm', initializer=params.params['C_m'])
 
-        self.memb = {}
-        for var, val in params.memb.items():
-            self.memb[var] = tf.get_variable(var, initializer=val)
-
-        self.rates = {}
-        for var, val in params.gates.items():
-            self.rates[var] = tf.get_variable(var, initializer=val)
-
-        self.fac = tf.get_variable('fac', initializer=60.)
-        self.inter = tf.constant(50.)
-        self.input = tf.get_variable('input', initializer=2.)
+        self.param = {}
+        for var, val in params.params.items():
+            self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
 
 
 
 
     def inf(self, V, rate):
-        mdp = self.rates['%s__mdp' % rate]
-        scale = self.rates['%s__scale' % rate]
+        mdp = self.param['%s__mdp' % rate]
+        scale = self.param['%s__scale' % rate]
         return tf.sigmoid((V - mdp) / scale)
 
     def h(self, cac):
         """Channel gating kinetics. Functions of membrane voltage"""
-        mdp = self.rates['h__mdp']
-        scale = self.rates['h__scale']
-        alpha = self.rates['h__alpha']
+        mdp = self.param['h__mdp']
+        scale = self.param['h__scale']
+        alpha = self.param['h__alpha']
         q = tf.sigmoid((cac - mdp) / scale)
         return 1 + (q - 1) * alpha
 
@@ -77,21 +63,21 @@ class HodgkinHuxley():
         Membrane current (in uA/cm^2)
         Sodium (Na = element name)
         """
-        return self.memb['g_Ca'] * e ** 2 * f * h * (V - self.memb['E_Ca'])
+        return self.param['g_Ca'] * e ** 2 * f * h * (V - self.param['E_Ca'])
 
     def I_Kf(self, V, p, q):
         """
         Membrane current (in uA/cm^2)
         Potassium (K = element name)
         """
-        return self.memb['g_Kf'] * p ** 4 * q * (V - self.memb['E_K'])
+        return self.param['g_Kf'] * p ** 4 * q * (V - self.param['E_K'])
 
     def I_Ks(self, V, n):
         """
         Membrane current (in uA/cm^2)
         Potassium (K = element name)
         """
-        return self.memb['g_Ks'] * n * (V - self.memb['E_K'])
+        return self.param['g_Ks'] * n * (V - self.param['E_K'])
 
     #  Leak
     def I_L(self, V):
@@ -99,7 +85,7 @@ class HodgkinHuxley():
         Membrane current (in uA/cm^2)
         Leak
         """
-        return self.memb['g_L'] * (V - self.memb['E_L'])
+        return self.param['g_L'] * (V - self.param['E_L'])
 
 
     def integ_simp(self, X, i_sin, dt, index=0):
@@ -116,11 +102,11 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_L(V)) / self.C_m) * dt
         cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
-        tau = self.rates['e__tau']
+        tau = self.param['e__tau']
         e = ((tau * dt) / (tau + dt)) * ((e / dt) + (self.inf(V, 'e') / tau))
-        tau = self.rates['f__tau']
+        tau = self.param['f__tau']
         f = ((tau * dt) / (tau + dt)) * ((f / dt) + (self.inf(V, 'f') / tau))
-        return tf.stack([V, e, f, cac], 0), i_sin, dt, index
+        return tf.stack([V, e, f, cac], 0)
 
     def notau_simp(self, X, i_sin, dt, index=0):
         """
@@ -138,15 +124,13 @@ class HodgkinHuxley():
         cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
         e = self.inf(V, 'e')
         f = self.inf(V, 'f')
-        return tf.stack([V, e, f, cac], 0), i_sin, dt, index
+        return tf.stack([V, e, f, cac], 0)
 
 
-    def integ_complete(self, X, i_sin, dt, index=0):
+    def integ_complete(self, X, i_sin, dt):
         """
         Integrate
         """
-        index += 1
-
         V = X[0]
         p = X[1]
         q = X[2]
@@ -159,17 +143,17 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.C_m) * dt
         cac = (self.DECAY_CA/(dt+self.DECAY_CA)) * (cac - self.I_Ca(V, e, f, h)*self.RHO_CA*dt + self.REST_CA*self.DECAY_CA/dt)
-        tau = self.rates['p__tau']
+        tau = self.param['p__tau']
         p = ((tau*dt) / (tau+dt)) * ((p/dt) + (self.inf(V, 'p')/tau))
-        tau = self.rates['q__tau']
+        tau = self.param['q__tau']
         q = ((tau*dt) / (tau+dt)) * ((q/dt) + (self.inf(V, 'q')/tau))
-        tau = self.rates['e__tau']
+        tau = self.param['e__tau']
         e = ((tau*dt) / (tau+dt)) * ((e/dt) + (self.inf(V, 'e')/tau))
-        tau = self.rates['f__tau']
+        tau = self.param['f__tau']
         f = ((tau*dt) / (tau+dt)) * ((f/dt) + (self.inf(V, 'f')/tau))
-        tau = self.rates['n__tau']
+        tau = self.param['n__tau']
         n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
-        return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
+        return tf.stack([V, p, q, n, e, f, cac], 0)
 
     def no_tau(self, X, i_sin, dt, index=0):
         """
@@ -186,7 +170,7 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_sin - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.C_m) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        # cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
         cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
                     cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
         p = self.inf(V, 'p')
@@ -194,7 +178,7 @@ class HodgkinHuxley():
         e = self.inf(V, 'e')
         f = self.inf(V, 'f')
         n = self.inf(V, 'n')
-        return tf.stack([V, p, q, n, e, f, cac], 0), i_sin, dt, index
+        return tf.stack([V, p, q, n, e, f, cac], 0)
 
     loop_func = integ_complete
 
@@ -203,22 +187,24 @@ class HodgkinHuxley():
         return tf.less(index * dt, DT)
 
 
-    def step(self, hprev, x):
+    def step_long(self, hprev, x):
         div = DT/self.dt
         div= tf.cast(div, tf.float32)
         dt = DT / div
         index = tf.constant(0.)
-        h = tf.while_loop(self.condition, self.loop_func, (hprev, x*self.input, dt, index))[0]
+        h = tf.while_loop(self.condition, self.loop_func, (hprev, x, dt, index))
         return h
 
+    def step(self, hprev, x):
+        return self.integ_complete(hprev, x, DT)
+
     def step_test(self, X, i):
-        return self.loop_func(X, i, self.dt)[0]
+        return self.loop_func(X, i, self.dt)
 
     def test(self):
 
         ts_ = tf.placeholder(shape=[None], dtype=tf.float32)
         init_state = tf.placeholder(shape=[7], dtype=tf.float32)
-
         res = tf.scan(self.step_test,
                       self.i_inj,
                       initializer=init_state)
@@ -226,9 +212,10 @@ class HodgkinHuxley():
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             start = time.time()
+            print(INIT_STATE)
             results = sess.run(res, feed_dict={
                 ts_: self.t,
-                init_state: INIT_STATE
+                init_state: np.array(INIT_STATE)
             })
             print('time spent : %.2f s' % (time.time() - start))
         plots_results(self, self.t, self.i_inj, results, cur=False)
@@ -237,19 +224,19 @@ class HodgkinHuxley():
     def Main(self, prefix):
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        ys_ = tf.placeholder(shape=[None], dtype=tf.float32)
+        ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
         init_state = tf.placeholder(shape=[7], dtype=tf.float32)
 
         res = tf.scan(self.step,
                       xs_,
                      initializer=init_state)
 
-        cac = res[:, 0]
-        #V = V * tf.reduce_max(ys_) / tf.reduce_max(V)
-        losses = tf.square(tf.subtract(cac, ys_*self.fac - self.inter))
+        cac = res[:, -1]
+        volt = res[:, 0]
+        losses = tf.square(tf.subtract(volt, ys_[0])) + tf.square(tf.subtract(cac, ys_[-1]))
         loss = tf.reduce_mean(losses)
         loss = tf.Print(loss, [loss], 'loss : ')
-        opt = tf.train.AdamOptimizer(learning_rate=0.1)
+        opt = tf.train.AdamOptimizer(learning_rate=0.01)
         grads = opt.compute_gradients(loss)
         # capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads)
@@ -261,16 +248,15 @@ class HodgkinHuxley():
             train_loss = 0
 
             for i in tqdm(range(epochs)):
-                fa, it, ip, results, cacl, _, train_loss = sess.run([self.fac, self.inter, self.input, res, cac, train_op, loss], feed_dict={
+                results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: X,
-                    ys_: Y,
+                    ys_: np.vstack((V, Ca)),
                     init_state: INIT_STATE
                 })
                 train_loss += train_loss
 
                 with open(prefix + OUT, 'w') as f:
                     for v in tf.trainable_variables():
-                        print(v)
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (v, v_))
 
@@ -279,7 +265,7 @@ class HodgkinHuxley():
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
-                plots_output(T, X*ip, cacl, Y*fa - it, suffix='%s_%s'%(prefix,i + 1), show=False, save=True)
+                plots_output_double(T, X, results[:,0], V, results[:,-1], Ca, suffix='%s_%s'%(prefix,i + 1), show=False, save=True)
                 plot_loss(losses, suffix=prefix, show=False, save=True)
                 # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
@@ -288,4 +274,4 @@ class HodgkinHuxley():
 if __name__ == '__main__':
     runner = HodgkinHuxley()
     # runner.loop_func = runner.no_tau
-    runner.Main('high_grad')
+    runner.Main('own_data')
