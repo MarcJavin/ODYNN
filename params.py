@@ -9,8 +9,39 @@ import random
 DECAY_CA = 110.
 RHO_CA = 0.23
 REST_CA = 0.
+INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
 
-PARAMS = {
+RES = {
+        'Cm' : 21.79517,
+        'C_m' : 26.057444,
+        'E_Ca' : 14.850545,
+        'E_K' : -40.62314,
+        'E_L' : -25.78042,
+        'e__mdp' : 4.935627,
+        'e__scale' : 24.047474,
+        'e__tau' : 31.966341,
+        'f__mdp' : -61.386616,
+        'f__scale' : -34.79839,
+        'f__tau' : 58.10077,
+        'g_Ca' : 5.9096923,
+        'g_Kf' : -2.9872065,
+        'g_Ks' : 2.9289305,
+        'g_L' : -0.11360436,
+        'h__alpha' : 4.8876266,
+        'h__mdp' : 9.4649,
+        'h__scale' : -44.16387,
+        'n__mdp' : -17.819798,
+        'n__scale' : 26.955765,
+        'n__tau' : 66.007095,
+        'p__mdp' : -17.149368,
+        'p__scale' : 22.812742,
+        'p__tau' : 78.51109,
+        'q__mdp' : -23.938337,
+        'q__scale' : -27.434593,
+        'q__tau' : 124.33194
+}
+
+DEFAULT = {
         'p__tau': 100.,  # ms
         'p__scale': 7.42636,  # mV
         'p__mdp': -8.05232,  # mV
@@ -58,12 +89,12 @@ PARAMS = {
         # Leak Nernst reversal potentials, in mV
 }
 
-MAX_TAU = 300.
+MAX_TAU = 200.
 MIN_SCALE = 0.5
-MAX_SCALE = 100.
+MAX_SCALE = 50.
 MIN_MDP = -65.
-MAX_MDP = 40.
-MAX_G = 12.
+MAX_MDP = 20.
+MAX_G = 10.
 
 PARAMS_RAND = {
         'p__tau': random.uniform(0.1,MAX_TAU),
@@ -113,20 +144,17 @@ PARAMS_RAND = {
         # Leak Nernst reversal potentials, in mV
 }
 
-params = PARAMS_RAND
-
+params = DEFAULT
 params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
 
 
 DT = 0.1
-t = np.array(sp.arange(0.0, 5000., DT))
-i_inj = {}
-sigma = 500
-mu = 5000
-n = 0
+
 # i_inj = 0.01*(t)*((t>1000)&(t<4000))
-i_inj = 10.*((t>000)&(t<1000)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
-        # + 20*((t>3000)&(t<3500))\
-        #    + 70*norm(mu, sigma).pdf(t)*sigma
+t_train = np.array(sp.arange(0.0, 1200., DT))
+i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
+i_inj_train = np.array(i_inj_train, dtype=np.float32)
+t = np.array(sp.arange(0.0, 5000., DT))
+i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
 i_inj = np.array(i_inj, dtype=np.float32)

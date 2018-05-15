@@ -20,11 +20,12 @@ class HodgkinHuxley():
     RHO_CA = params.RHO_CA
     REST_CA = params.REST_CA
     
-    param = params.params
 
-    dt = 0.1
-    t = params.t
-    i_inj = params.i_inj
+
+    dt = params.DT
+    t = params.t_train
+    i_inj = params.i_inj_train
+    param = params.DEFAULT
     """ The time to integrate over """
 
     def inf(self, V, rate, p=param):
@@ -123,6 +124,33 @@ class HodgkinHuxley():
         n = ((tau*dt) / (tau+dt)) * ((n/dt) + (self.inf(V, 'n')/tau))
         return [V, p, q, n, e, f, cac]
 
+    def no_tau_ca(self, X, i_inj, dt):
+        """
+        Integrate
+        """
+        V = X[0]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[6]
+        h = self.h(cac)
+        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
+            V)) / self.param['C_m']) * dt
+        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
+                    cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+        tau = self.param['p__tau']
+        p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(V, 'p') / tau))
+        tau = self.param['q__tau']
+        q = ((tau * dt) / (tau + dt)) * ((q / dt) + (self.inf(V, 'q') / tau))
+        tau = self.param['n__tau']
+        n = ((tau * dt) / (tau + dt)) * ((n / dt) + (self.inf(V, 'n') / tau))
+        e = self.inf(V, 'e')
+        f = self.inf(V, 'f')
+        return [V, p, q, n, e, f, cac]
+
     def no_tau(self, X, i_inj, dt):
         """
         Integrate
@@ -184,7 +212,7 @@ class HodgkinHuxley():
         #
         X =  [[-50, 0., 0.95, 0, 0, 1, 0]]
         for i in self.i_inj:
-            X.append(self.integ_comp(X[-1], i, self.dt))
+            X.append(self.no_tau_ca(X[-1], i, self.dt))
         X = np.array(X[1:])
 
         todump = np.vstack((self.t, self.i_inj, X[:,0], X[:,-1]))

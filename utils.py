@@ -5,10 +5,11 @@ if (socket.gethostname()=='1080'):
 import pylab as plt
 import numpy as np
 import pandas as pd
-
+import os
 import pickle
 
-IMG_REP = 'images/'
+RES_DIR = 'results/'
+DIR = RES_DIR
 DUMP_FILE = 'data.txt'
 
 RATE_COLORS = {'p' : '#00ccff',
@@ -19,9 +20,15 @@ RATE_COLORS = {'p' : '#00ccff',
                'h' : '#ff1a1a'
                 }
 
+def set_dir(subdir):
+    global DIR
+    DIR = RES_DIR + subdir
+    if not os.path.exists(DIR):
+        os.makedirs(DIR)
+    return DIR
+
 def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:
-        print(f)
         T, X, V, Ca = pickle.load(f)
     return T, X, V, Ca
 
@@ -41,7 +48,7 @@ def plot_loss(losses, suffix="", show=True, save=False):
         plt.show()
 
     if(save):
-        plt.savefig('%slosses_%s.png' % (IMG_REP,suffix))
+        plt.savefig('%slosses_%s.png' % (DIR,suffix))
 
 def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
     plt.figure()
@@ -64,7 +71,7 @@ def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False
         plt.show()
 
     if(save):
-        plt.savefig('%soutput_%s.png' % (IMG_REP,suffix))
+        plt.savefig('%soutput_%s.png' % (DIR,suffix))
 
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
     plt.figure()
@@ -89,7 +96,7 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
         plt.show()
 
     if(save):
-        plt.savefig('%soutput_%s.png' % (IMG_REP,suffix))
+        plt.savefig('%soutput_%s.png' % (DIR,suffix))
 
 
 def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=False):
@@ -117,7 +124,7 @@ def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=Fal
         plt.show()
 
     if(save):
-        plt.savefig('%sresults_%s.png'%(IMG_REP,suffix))
+        plt.savefig('%sresults_%s.png'%(DIR,suffix))
 
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False, cur=True):
     print(results.shape)
@@ -175,4 +182,4 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
         plt.show()
 
     if(save):
-        plt.savefig('%sresults_%s.png'%(IMG_REP,suffix))
+        plt.savefig('%sresults_%s.png'%(DIR,suffix))
