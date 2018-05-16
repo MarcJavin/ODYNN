@@ -109,7 +109,7 @@ class HH_opt(HodgkinHuxley):
                     init_state: self.init_state
                 })
 
-                with open(DIR + OUT_PARAMS, 'wb') as f:
+                with open(DIR + OUT_PARAMS, 'w') as f:
                     for v in tf.trainable_variables():
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (v, v_))
