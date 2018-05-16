@@ -1,4 +1,4 @@
-import simul
+import HH_simul
 import pygmo as pg
 import params
 
@@ -8,7 +8,7 @@ import params
 
 
 if __name__ == '__main__':
-    runner = simul.HodgkinHuxley()
+    runner = HH_simul.HodgkinHuxley()
 
     prob = pg.problem(runner)
     print(prob)

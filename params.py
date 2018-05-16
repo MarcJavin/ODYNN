@@ -10,6 +10,7 @@ DECAY_CA = 110.
 RHO_CA = 0.23
 REST_CA = 0.
 INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
+INIT_STATE_ica = [0., 0, 1, 1, 0]
 
 RES = {
         'Cm' : 21.79517,
@@ -155,6 +156,9 @@ DT = 0.1
 t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
+
 t = np.array(sp.arange(0.0, 5000., DT))
 i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
+v_inj = 100*(t/5000) - np.full(t.shape,50)
 i_inj = np.array(i_inj, dtype=np.float32)
+
