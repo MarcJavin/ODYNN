@@ -38,7 +38,11 @@ if __name__ == '__main__':
         name = 'Notau'
         loop_func = HodgkinHuxley.no_tau
 
-        
+    elif(xp== 'classic'):
+        name = 'integcomp'
+        loop_func = HodgkinHuxley.integ_comp
+
+
     print(name, w_v, w_ca, loop_func)
     opt.loop_func = loop_func
     sim.loop_func = loop_func
