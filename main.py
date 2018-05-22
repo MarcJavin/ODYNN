@@ -8,7 +8,7 @@ import sys
 
 
 """Single optimisation"""
-def single_exp(xp, w_v, w_ca, sufix=''):
+def single_exp(xp, w_v, w_ca, sufix=None):
     v_fix = False
     name = 'Classic'
     opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE)
@@ -38,7 +38,9 @@ def single_exp(xp, w_v, w_ca, sufix=''):
     opt.loop_func = loop_func
     sim.loop_func = loop_func
     sim.Main(v_fix=v_fix, dump=True)
-    dir = '%s_v=%s_ca=%s'%(name+sufix, w_v, w_ca)
+    dir = '%s_v=%s_ca=%s'%(name, w_v, w_ca)
+    if(sufix is not None):
+        dir = '%s_%s' % (dir, sufix)
     opt.Main(dir, w=[w_v, w_ca])
     return dir
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     if(len(sys.argv) > 2):
         w_v, w_ca = sys.argv[1:3]
 
-    dir = single_exp('ica', 1, 0, name)
+    dir = single_exp('ica', 1, 0, sufix='%s%s%s' % (name,w_v,w_ca))
 
     params = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=params.params, init_state=params.INIT_STATE)
