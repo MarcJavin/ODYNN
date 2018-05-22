@@ -98,13 +98,14 @@ class HH_opt(HodgkinHuxley):
         grads = opt.compute_gradients(loss)
         train_op = opt.apply_gradients(grads, global_step=global_step)
 
-        c_e = tf.assign(self.param['e__tau'], tf.clip_by_value(self.param['e__tau'], 1e-3, np.infty))
-        c_f = tf.assign(self.param['f__tau'], tf.clip_by_value(self.param['f__tau'], 1e-3, np.infty))
-        c_p = tf.assign(self.param['p__tau'], tf.clip_by_value(self.param['p__tau'], 1e-3, np.infty))
-        c_q = tf.assign(self.param['q__tau'], tf.clip_by_value(self.param['q__tau'], 1e-3, np.infty))
-        c_n = tf.assign(self.param['n__tau'], tf.clip_by_value(self.param['n__tau'], 1e-3, np.infty))
-        c_h = tf.assign(self.param['h__alpha'], tf.clip_by_value(self.param['h__alpha'], 0., 1.))
-        constraints = tf.stack([c_e, c_f, c_p, c_q, c_n, c_h], 0)
+        if('e__tau' not in self.consts):
+            c_e = tf.assign(self.param['e__tau'], tf.clip_by_value(self.param['e__tau'], 1e-3, np.infty))
+            c_f = tf.assign(self.param['f__tau'], tf.clip_by_value(self.param['f__tau'], 1e-3, np.infty))
+            c_p = tf.assign(self.param['p__tau'], tf.clip_by_value(self.param['p__tau'], 1e-3, np.infty))
+            c_q = tf.assign(self.param['q__tau'], tf.clip_by_value(self.param['q__tau'], 1e-3, np.infty))
+            c_n = tf.assign(self.param['n__tau'], tf.clip_by_value(self.param['n__tau'], 1e-3, np.infty))
+            c_h = tf.assign(self.param['h__alpha'], tf.clip_by_value(self.param['h__alpha'], 0., 1.))
+            constraints = tf.stack([c_e, c_f, c_p, c_q, c_n, c_h], 0)
 
         losses = np.zeros(EPOCHS)
         rates = np.zeros(EPOCHS)
@@ -122,7 +123,8 @@ class HH_opt(HodgkinHuxley):
                     ys_: np.vstack((self.V, self.Ca)),
                     init_state: self.init_state
                 })
-                _ = sess.run(constraints)
+                if ('e__tau' not in self.consts):
+                    _ = sess.run(constraints)
 
                 with open(DIR + OUT_PARAMS, 'w') as f:
 

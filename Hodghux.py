@@ -14,6 +14,7 @@ class HodgkinHuxley():
 
     def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, tensors=False, consts=[]):
         self.tensors = tensors
+        self.consts = consts
         self.init_state = init_state
         if(self.tensors):
             tf.reset_default_graph()
