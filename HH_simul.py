@@ -44,7 +44,7 @@ class HH_simul(HodgkinHuxley):
     #     return (low, up)
 
 
-    def Main(self, v_fix=False, dump=False):
+    def Main(self, v_fix=False, dump=False, sufix=''):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
@@ -61,7 +61,7 @@ class HH_simul(HodgkinHuxley):
             todump = np.vstack((self.t, self.v_inj, X[:, 0], X[:, -1]))
 
             print(time.time() - start)
-            plots_ica_from_v(self.t, self.v_inj, np.array(X))
+            plots_ica_from_v(self.t, self.v_inj, np.array(X), suffix='target_%s'%sufix, save=True)
 
 
         else:
@@ -73,7 +73,7 @@ class HH_simul(HodgkinHuxley):
             todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
 
             print(time.time() - start)
-            plots_results(self, self.t, self.i_inj, np.array(X))
+            plots_results(self, self.t, self.i_inj, np.array(X), suffix='target_%s'%sufix, show=False, save=True)
 
         if (dump):
             with open(utils.DUMP_FILE, 'wb') as f:

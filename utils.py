@@ -37,7 +37,6 @@ def set_dir(subdir):
 def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:
         T, X, V, Ca = pickle.load(f)
-        print(T.shape)
     return T, X, V, Ca
 
 
@@ -244,9 +243,9 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
 
     if (show):
         plt.show()
-
     if (save):
         plt.savefig('%sresults_%s.png' % (DIR, suffix))
+    plt.close()
 
 
 def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=False):
@@ -278,7 +277,6 @@ def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=Fal
 
 """plot all dynamics"""
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
-    print(results.shape)
     V = results[:, 0]
     p = results[:, 1]
     q = results[:, 2]
@@ -328,6 +326,6 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
 
     if(show):
         plt.show()
-
     if(save):
         plt.savefig('%sresults_%s.png'%(DIR,suffix))
+    plt.close()

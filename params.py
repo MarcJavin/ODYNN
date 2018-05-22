@@ -93,8 +93,8 @@ DEFAULT = {
 MAX_TAU = 200.
 MIN_SCALE = 0.5
 MAX_SCALE = 50.
-MIN_MDP = -65.
-MAX_MDP = 20.
+MIN_MDP = -40.
+MAX_MDP = 30.
 MAX_G = 10.
 
 PARAMS_RAND = {
@@ -135,13 +135,13 @@ PARAMS_RAND = {
         'g_L': random.uniform(0.1,MAX_G),
         # Leak maximum conductances, in mS/cm^2
 
-        'E_Ca': random.uniform(0., MAX_MDP),
+        'E_Ca': random.uniform(0., 40),
         # Sodium (Na) Nernst reversal potentials, in mV
 
-        'E_K': random.uniform(MIN_MDP, 0.),
+        'E_K': random.uniform(-80, -40.),
         # Postassium (K) Nernst reversal potentials, in mV
 
-        'E_L': random.uniform(MIN_MDP, 0.),
+        'E_L': random.uniform(-80, -40.),
         # Leak Nernst reversal potentials, in mV
 }
 
@@ -157,9 +157,10 @@ t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 
-t = np.array(sp.arange(0.0, 2000., DT))
+t_len = 1000.
+t = np.array(sp.arange(0.0, t_len, DT))
 i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
-v_inj = 100*(t/2000) - np.full(t.shape,50)
+v_inj = 115*(t/t_len) - np.full(t.shape,65)
 v_inj_rev = np.full(t.shape, 50) - v_inj
 i_inj = np.array(i_inj, dtype=np.float32)
 

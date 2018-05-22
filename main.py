@@ -4,8 +4,13 @@ from Hodghux import HodgkinHuxley
 import params
 import utils
 import sys
-import numpy as np
-import pickle
+
+
+CA_VAR = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']
+CA_CONST = []
+for k in params.DEFAULT.keys():
+    if k not in CA_VAR:
+        CA_CONST.append(k)
 
 
 """Single optimisation"""
@@ -20,7 +25,7 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     if (xp == 'ica'):
         v_fix = True
         name = 'Icafromv'
-        opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE_ica)
+        opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE_ica, consts=CA_CONST)
         sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE_ica, t=params.t, i_inj=params.v_inj)
         loop_func = HodgkinHuxley.ica_from_v
 
@@ -59,7 +64,7 @@ def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
-    sim.Main(dump=True)
+    sim.Main(dump=True, sufix='step2')
     opt.Main(dir, w=[w_v2, w_ca2], sufix='step2')
 
 

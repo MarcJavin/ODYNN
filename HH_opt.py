@@ -13,10 +13,10 @@ import time
 NB_SER = 15
 BATCH_SIZE = 60
 
-DECAY_STEP = 9
-START_RATE = 0.9
-DECAY_RATE = 0.9
-EPOCHS = 3
+DECAY_STEP = 10
+START_RATE = 1.
+DECAY_RATE = 0.95
+EPOCHS = 200
 
 
 
@@ -96,16 +96,31 @@ class HH_opt(HodgkinHuxley):
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)
+        grads = [(tf.clip_by_value(grad, -50., 50.), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads, global_step=global_step)
 
         if('e__tau' not in self.consts):
             c_e = tf.assign(self.param['e__tau'], tf.clip_by_value(self.param['e__tau'], 1e-3, np.infty))
+            c_e2 = tf.assign(self.param['e__scale'], tf.clip_by_value(self.param['e__scale'], 1e-3, np.infty))
             c_f = tf.assign(self.param['f__tau'], tf.clip_by_value(self.param['f__tau'], 1e-3, np.infty))
-            c_p = tf.assign(self.param['p__tau'], tf.clip_by_value(self.param['p__tau'], 1e-3, np.infty))
-            c_q = tf.assign(self.param['q__tau'], tf.clip_by_value(self.param['q__tau'], 1e-3, np.infty))
-            c_n = tf.assign(self.param['n__tau'], tf.clip_by_value(self.param['n__tau'], 1e-3, np.infty))
+            c_f2 = tf.assign(self.param['f__scale'], tf.clip_by_value(self.param['f__scale'], -np.infty, -1e-3))
             c_h = tf.assign(self.param['h__alpha'], tf.clip_by_value(self.param['h__alpha'], 0., 1.))
-            constraints = tf.stack([c_e, c_f, c_p, c_q, c_n, c_h], 0)
+            c_h2 = tf.assign(self.param['h__scale'], tf.clip_by_value(self.param['h__scale'], -np.infty, -1e-3))
+            c_ca = tf.assign(self.param['g_Ca'], tf.clip_by_value(self.param['g_Ca'], 1e-5, np.infty))
+            constraints = tf.stack([c_e, c_e2, c_f, c_f2, c_h, c_h2, c_ca], 0)
+        else:
+            c_p = tf.assign(self.param['p__tau'], tf.clip_by_value(self.param['p__tau'], 1e-3, np.infty))
+            c_p2 = tf.assign(self.param['p__scale'], tf.clip_by_value(self.param['p__scale'], 1e-3, np.infty))
+            c_q = tf.assign(self.param['q__tau'], tf.clip_by_value(self.param['q__tau'], 1e-3, np.infty))
+            c_q2 = tf.assign(self.param['q__scale'], tf.clip_by_value(self.param['q__scale'], 1e-3, np.infty))
+            c_n = tf.assign(self.param['n__tau'], tf.clip_by_value(self.param['n__tau'], 1e-3, np.infty))
+            c_n2 = tf.assign(self.param['n__scale'], tf.clip_by_value(self.param['n__scale'], 1e-3, np.infty))
+            c_kf = tf.assign(self.param['g_Kf'], tf.clip_by_value(self.param['g_Kf'], 1e-5, np.infty))
+            c_ks = tf.assign(self.param['g_Ks'], tf.clip_by_value(self.param['g_Ks'], 1e-5, np.infty))
+            c_l = tf.assign(self.param['g_L'], tf.clip_by_value(self.param['g_L'], 1e-5, np.infty))
+            constraints = tf.stack([c_p, c_p2, c_q, c_q2, c_n, c_n2, c_kf, c_ks, c_l], 0)
+
+
 
         losses = np.zeros(EPOCHS)
         rates = np.zeros(EPOCHS)
@@ -123,8 +138,7 @@ class HH_opt(HodgkinHuxley):
                     ys_: np.vstack((self.V, self.Ca)),
                     init_state: self.init_state
                 })
-                if ('e__tau' not in self.consts):
-                    _ = sess.run(constraints)
+                _ = sess.run(constraints)
 
                 with open(DIR + OUT_PARAMS, 'w') as f:
 
