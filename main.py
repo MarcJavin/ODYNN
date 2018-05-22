@@ -45,11 +45,10 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     return dir
 
 
-def steps2_exp(args):
+def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
     name = '_2steps'
-    w_v1, w_ca1, w_v2, w_ca2 = args
 
-    dir = single_exp('ica', w_ca1, w_ca2, sufix='%s%s%s' % (name, w_v2, w_ca2))
+    dir = single_exp('ica', w_v1, w_ca1, sufix='%s%s%s' % (name, w_v2, w_ca2))
 
     params = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=params.params, init_state=params.INIT_STATE)
@@ -66,9 +65,12 @@ if __name__ == '__main__':
 
     xp = sys.argv[1]
     if(xp == 'single'):
-        single_exp(sys.argv[2:5])
+        xp = sys.argv[2]
+        w_v, w_ca = list(map(int, sys.argv[3:5]))
+        single_exp(xp, w_v, w_ca)
     elif(xp == '2steps'):
-        steps2_exp(sys.argv[2:6])
+        w_v1, w_ca1, w_v2, w_ca2 = list(map(int, sys.argv[2:6]))
+        steps2_exp(w_v1, w_ca1, w_v2, w_ca2)
 
 
 
