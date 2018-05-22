@@ -7,10 +7,14 @@ import numpy as np
 import pandas as pd
 import os
 import pickle
+import re
 
 RES_DIR = 'results/'
 DIR = RES_DIR
 DUMP_FILE = 'data.txt'
+OUT_PARAMS = 'params.txt'
+OUT_SETTINGS = 'settings.txt'
+REGEX_VARS = '<tf\.Variable \'(.*):0\' shape=\(\) dtype=float32_ref> : (.*)'
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -31,6 +35,19 @@ def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:
         T, X, V, Ca = pickle.load(f)
     return T, X, V, Ca
+
+
+"""Get variables values into a dictionnary"""
+def get_dic_from_var(dir):
+    file = RES_DIR + dir + '/' + OUT_PARAMS
+    dic = {}
+    with open(file, 'r') as f:
+        for line in f:
+            m = re.search(REGEX_VARS, line)
+            dic[m.group(1)] = float(m.group(2))
+    return dic
+
+
 
 
 def get_data(file='AVAL_test.csv'):

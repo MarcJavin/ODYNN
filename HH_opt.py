@@ -3,15 +3,13 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from Hodghux import HodgkinHuxley
 import tensorflow as tf
 import numpy as np
-from utils import plots_output, plots_output_double, plots_results, get_data, plot_loss, get_data_dump, DIR, set_dir
-import utils
-import pickle
+from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss, get_data_dump, set_dir
+
 import params
 from tqdm import tqdm
 import time
 
-OUT_PARAMS = 'params.txt'
-OUT_SETTINGS = 'settings.txt'
+
 NB_SER = 15
 BATCH_SIZE = 60
 
@@ -58,7 +56,7 @@ class HH_opt(HodgkinHuxley):
             print('time spent : %.2f s' % (time.time() - start))
 
 
-    def Main(self, subdir, w=[1,0]):
+    def Main(self, subdir, w=[1,0], sufix=''):
         DIR = set_dir(subdir+'/')
 
         with open(DIR + OUT_SETTINGS, 'w') as f:
@@ -119,7 +117,7 @@ class HH_opt(HodgkinHuxley):
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
-                plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s'%(i + 1), show=False, save=True)
+                plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
                 plot_loss(losses, show=False, save=True)
                 # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
