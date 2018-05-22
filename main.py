@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if(xp == 'single'):
         single_exp(sys.argv[2:5])
     elif(xp == '2steps'):
-        steps2_exp(sys.args[2:6])
+        steps2_exp(sys.argv[2:6])
 
 
 
