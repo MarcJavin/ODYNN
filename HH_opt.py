@@ -97,7 +97,7 @@ class HH_opt(HodgkinHuxley):
         grads = opt.compute_gradients(loss)
         grad_check = tf.check_numerics(grads)
         with tf.control_dependencies([grad_check]):
-            train_op = opt.apply_gradients(grads, global_step=global_step)
+            train_op = opt.apply_gradients(grad_check, global_step=global_step)
 
         epochs = 200
         losses = np.zeros(epochs)
