@@ -160,5 +160,6 @@ i_inj_train = np.array(i_inj_train, dtype=np.float32)
 t = np.array(sp.arange(0.0, 2000., DT))
 i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
 v_inj = 100*(t/2000) - np.full(t.shape,50)
+v_inj_rev = np.full(t.shape, 50) - v_inj
 i_inj = np.array(i_inj, dtype=np.float32)
 

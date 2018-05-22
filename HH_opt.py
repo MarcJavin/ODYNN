@@ -13,9 +13,10 @@ import time
 NB_SER = 15
 BATCH_SIZE = 60
 
-DECAY_STEP = 8
-START_RATE = 0.8
-DECAY_RATE = 0.95
+DECAY_STEP = 9
+START_RATE = 0.9
+DECAY_RATE = 0.9
+EPOCHS = 3
 
 
 
@@ -23,8 +24,8 @@ class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE):
-        HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
+    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, consts=[]):
+        HodgkinHuxley.__init__(self, init_p, init_state, tensors=True, consts=consts)
 
 
     def condition(self, hprev, x, dt, index, mod):
@@ -71,7 +72,7 @@ class HH_opt(HodgkinHuxley):
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (START_RATE, DECAY_STEP, DECAY_RATE) + '\n')
 
         self.T, self.X, self.V, self.Ca = get_data_dump()
-        self.DT = self.T[1] - self.T[0]
+        self.DT = params.DT
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
@@ -105,18 +106,17 @@ class HH_opt(HodgkinHuxley):
         c_h = tf.assign(self.param['h__alpha'], tf.clip_by_value(self.param['h__alpha'], 0., 1.))
         constraints = tf.stack([c_e, c_f, c_p, c_q, c_n, c_h], 0)
 
-        epochs = 200
-        losses = np.zeros(epochs)
-        rates = np.zeros(epochs)
+        losses = np.zeros(EPOCHS)
+        rates = np.zeros(EPOCHS)
 
         vars = {}
-        for v in tf.trainable_variables():
-            vars[v.name[:-2]] = np.zeros(epochs)
+        for v in self.param.keys():
+            vars[v] = np.zeros(EPOCHS)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
-            for i in tqdm(range(epochs)):
+            for i in tqdm(range(EPOCHS)):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
                     ys_: np.vstack((self.V, self.Ca)),
@@ -126,10 +126,10 @@ class HH_opt(HodgkinHuxley):
 
                 with open(DIR + OUT_PARAMS, 'w') as f:
 
-                    for v in tf.trainable_variables():
+                    for name, v in self.param.items():
                         v_ = sess.run(v)
-                        vars[v.name[:-2]][i] = v_
-                        f.write('%s : %s\n' % (v.name, v_))
+                        vars[name][i] = v_
+                        f.write('%s : %s\n' % (name, v_))
 
                 rates[i] = sess.run(learning_rate)
                 losses[i] = train_loss
@@ -140,7 +140,6 @@ class HH_opt(HodgkinHuxley):
                 if(i%10==0):
                     plot_vars(vars, i, suffix=sufix, show=False, save=True)
                     plot_loss_rate(losses, rates, i, suffix=sufix, show=False, save=True)
-                # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
 
 

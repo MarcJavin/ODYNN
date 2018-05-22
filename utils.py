@@ -10,11 +10,12 @@ import pickle
 import re
 
 RES_DIR = 'results/'
+IMG_DIR = 'img/'
 DIR = RES_DIR
 DUMP_FILE = 'data.txt'
 OUT_PARAMS = 'params.txt'
 OUT_SETTINGS = 'settings'
-REGEX_VARS = '(.*):0 : (.*)'
+REGEX_VARS = '(.*) : (.*)'
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -29,11 +30,14 @@ def set_dir(subdir):
     DIR = RES_DIR + subdir
     if not os.path.exists(DIR):
         os.makedirs(DIR)
+    if not os.path.exists(DIR+IMG_DIR):
+        os.makedirs(DIR+IMG_DIR)
     return DIR
 
 def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:
         T, X, V, Ca = pickle.load(f)
+        print(T.shape)
     return T, X, V, Ca
 
 
@@ -116,6 +120,8 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     if (save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix))
 
+    plt.close('all')
+
 
 
 
@@ -135,9 +141,9 @@ def plot_vars_gate(name, mdp, scale, tau, suffix="", show=True, save=False):
 
     if (show):
         plt.show()
-
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, name, suffix))
+
 
 def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
     plt.figure()
@@ -152,9 +158,9 @@ def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
 
     if (show):
         plt.show()
-
     if(save):
         plt.savefig('%slosses_%s.png' % (DIR,suffix))
+    plt.close()
 
 def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
     plt.figure()
@@ -199,9 +205,9 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
 
     if (show):
         plt.show()
-
     if(save):
-        plt.savefig('%soutput_%s.png' % (DIR,suffix))
+        plt.savefig('%s%soutput_%s.png' % (DIR,IMG_DIR,suffix))
+    plt.close()
 
 """plot i_ca and Ca conc depending on the voltage"""
 def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
