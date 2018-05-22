@@ -13,6 +13,10 @@ import time
 NB_SER = 15
 BATCH_SIZE = 60
 
+DECAY_STEP = 5
+START_RATE = 1.
+DECAY_RATE = 0.95
+
 
 
 class HH_opt(HodgkinHuxley):
@@ -63,7 +67,8 @@ class HH_opt(HodgkinHuxley):
             f.write('Initial params : %s' % self.init_p + '\n'+
                     'Initial state : %s' % self.init_state + '\n' +
                     'Model solver : %s' % self.loop_func + '\n' +
-                    'Weights (out, cac) : %s' % w + '\n')
+                    'Weights (out, cac) : %s' % w + '\n' +
+                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (START_RATE, DECAY_STEP, DECAY_RATE) + '\n')
 
         self.T, self.X, self.V, self.Ca = get_data_dump()
         self.DT = self.T[1] - self.T[0]
@@ -82,12 +87,11 @@ class HH_opt(HodgkinHuxley):
         loss = tf.reduce_mean(losses)
 
         global_step = tf.Variable(0, trainable=False)
-        start_rate = 1.
         learning_rate = tf.train.exponential_decay(
-            start_rate,  # Base learning rate.
+            START_RATE,  # Base learning rate.
             global_step,  # Current index into the dataset.
-            5,  # Decay step.
-            0.95,  # Decay rate.
+            DECAY_STEP,  # Decay step.
+            DECAY_RATE,  # Decay rate.
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)
