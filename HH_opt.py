@@ -3,7 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from Hodghux import HodgkinHuxley
 import tensorflow as tf
 import numpy as np
-from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss, get_data_dump, set_dir
+from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate, get_data_dump, set_dir
 
 import params
 from tqdm import tqdm
@@ -95,15 +95,13 @@ class HH_opt(HodgkinHuxley):
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)
-        grad_check = tf.check_numerics(grads)
-        with tf.control_dependencies([grad_check]):
-            train_op = opt.apply_gradients(grad_check, global_step=global_step)
+        train_op = opt.apply_gradients(grads, global_step=global_step)
 
         epochs = 200
         losses = np.zeros(epochs)
+        rates = np.zeros(epochs)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            train_loss = 0
 
             for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
@@ -117,13 +115,13 @@ class HH_opt(HodgkinHuxley):
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (v, v_))
 
-                # self.plots_output(T, X, cacl, Y)
+                rates[i] = sess.run(learning_rate)
                 losses[i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
                 train_loss = 0
 
                 plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
-                plot_loss(losses, show=False, save=True)
+                plot_loss_rate(losses, rates, show=False, save=True)
                 # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
 

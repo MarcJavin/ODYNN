@@ -57,9 +57,16 @@ def get_data(file='AVAL_test.csv'):
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
 
-def plot_loss(losses, suffix="", show=True, save=False):
+def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.figure()
-    plt.plot(losses)
+
+    plt.subplot(2,1,1)
+    plt.plot(losses, 'r')
+    plt.ylabel('Loss')
+
+    plt.subplot(2,1,2)
+    plt.plot(rates)
+    plt.ylabel('Learning rate')
 
     if (show):
         plt.show()
