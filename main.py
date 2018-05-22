@@ -45,16 +45,11 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     return dir
 
 
-if __name__ == '__main__':
-
+def steps2_exp(args):
     name = '_2steps'
-    w_v = 1
-    w_ca = 0
+    w_v1, w_ca1, w_v2, w_ca2 = args
 
-    if(len(sys.argv) > 2):
-        w_v, w_ca = sys.argv[1:3]
-
-    dir = single_exp('ica', 1, 0, sufix='%s%s%s' % (name,w_v,w_ca))
+    dir = single_exp('ica', w_ca1, w_ca2, sufix='%s%s%s' % (name, w_v2, w_ca2))
 
     params = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=params.params, init_state=params.INIT_STATE)
@@ -64,7 +59,17 @@ if __name__ == '__main__':
     sim.loop_func = loop_func
     sim.Main(dump=True)
     dir = '%s_v=%s_ca=%s'
-    opt.Main(dir, w=[w_v, w_ca], sufix='step2')
+    opt.Main(dir, w=[w_v2, w_ca2], sufix='step2')
+
+
+if __name__ == '__main__':
+
+    xp = sys.argv[1]
+    if(xp == 'single'):
+        single_exp(sys.argv[2:5])
+    elif(xp == '2steps'):
+        steps2_exp(sys.args[2:6])
+
 
 
     exit(0)
