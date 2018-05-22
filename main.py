@@ -41,7 +41,7 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     dir = '%s_v=%s_ca=%s'%(name, w_v, w_ca)
     if(sufix is not None):
         dir = '%s_%s' % (dir, sufix)
-    # opt.Main(dir, w=[w_v, w_ca])
+    opt.Main(dir, w=[w_v, w_ca])
     return dir
 
 

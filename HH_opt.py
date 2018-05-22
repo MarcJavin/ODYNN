@@ -3,7 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from Hodghux import HodgkinHuxley
 import tensorflow as tf
 import numpy as np
-from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate, get_data_dump, set_dir
+from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate, get_data_dump, set_dir, plot_vars
 
 import params
 from tqdm import tqdm
@@ -100,6 +100,11 @@ class HH_opt(HodgkinHuxley):
         epochs = 200
         losses = np.zeros(epochs)
         rates = np.zeros(epochs)
+
+        vars = {}
+        for v in tf.trainable_variables():
+            vars[v.name[:-2]] = np.zeros(epochs)
+
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
@@ -111,9 +116,11 @@ class HH_opt(HodgkinHuxley):
                 })
 
                 with open(DIR + OUT_PARAMS, 'w') as f:
+
                     for v in tf.trainable_variables():
                         v_ = sess.run(v)
-                        f.write('%s : %s\n' % (v, v_))
+                        vars[v.name[:-2]][i] = v_
+                        f.write('%s : %s\n' % (v.name, v_))
 
                 rates[i] = sess.run(learning_rate)
                 losses[i] = train_loss
@@ -121,7 +128,9 @@ class HH_opt(HodgkinHuxley):
                 train_loss = 0
 
                 plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
-                plot_loss_rate(losses, rates, suffix=sufix, show=False, save=True)
+                if(i%10==0):
+                    plot_vars(vars, i, suffix=sufix, show=False, save=True)
+                    plot_loss_rate(losses, rates, i, suffix=sufix, show=False, save=True)
                 # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
 

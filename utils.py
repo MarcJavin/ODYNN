@@ -14,7 +14,7 @@ DIR = RES_DIR
 DUMP_FILE = 'data.txt'
 OUT_PARAMS = 'params.txt'
 OUT_SETTINGS = 'settings'
-REGEX_VARS = '<tf\.Variable \'(.*):0\' shape=\(\) dtype=float32_ref> : (.*)'
+REGEX_VARS = '(.*):0 : (.*)'
 
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
@@ -57,15 +57,97 @@ def get_data(file='AVAL_test.csv'):
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
 
-def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
+"""plot variation of all variables organized by categories"""
+def plot_vars(var_dic, lim, suffix="", show=True, save=False):
+    for gate in ['e', 'f', 'n', 'p', 'q']:
+        plot_vars_gate(gate, var_dic['%s__mdp'%gate][:lim+1], var_dic['%s__scale'%gate][:lim+1], var_dic['%s__tau'%gate][:lim+1], suffix, show, save)
+
+    plt.figure()
+    plt.subplot(3, 1, 1)
+    plt.plot(var_dic['h__mdp'][:lim+1], 'r')
+    plt.ylabel('Midpoint')
+    plt.title('h')
+    plt.subplot(3, 1, 2)
+    plt.plot(var_dic['h__scale'][:lim+1], 'g')
+    plt.ylabel('Scale')
+    plt.subplot(3, 1, 3)
+    plt.plot(var_dic['h__alpha'][:lim+1])
+    plt.ylabel('Time constant')
+    if (show):
+        plt.show()
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'h', suffix))
+
+    plt.figure()
+    plt.subplot(4, 1, 1)
+    plt.plot(var_dic['g_Ks'][:lim + 1], RATE_COLORS['n'])
+    plt.ylabel('KS conductance')
+    plt.title('Conductances')
+    plt.subplot(4, 1, 2)
+    plt.plot(var_dic['g_Kf'][:lim + 1], RATE_COLORS['p'])
+    plt.ylabel('KF conductance')
+    plt.subplot(4, 1, 3)
+    plt.plot(var_dic['g_Ca'][:lim + 1], RATE_COLORS['e'])
+    plt.ylabel('Ca conductance')
+    plt.subplot(4, 1, 4)
+    plt.plot(var_dic['g_L'][:lim + 1], 'k')
+    plt.ylabel('Leak conductance')
+    if (show):
+        plt.show()
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Conductances', suffix))
+
+    plt.figure()
+    plt.subplot(4, 1, 1)
+    plt.plot(var_dic['C_m'][:lim + 1])
+    plt.ylabel('Capacitance')
+    plt.title('Membrane')
+    plt.subplot(4, 1, 2)
+    plt.plot(var_dic['E_K'][:lim + 1], RATE_COLORS['n'])
+    plt.ylabel('K E_rev')
+    plt.subplot(4, 1, 3)
+    plt.plot(var_dic['E_Ca'][:lim + 1], RATE_COLORS['e'])
+    plt.ylabel('Ca E_rev')
+    plt.subplot(4, 1, 4)
+    plt.plot(var_dic['E_L'][:lim + 1], 'k')
+    plt.ylabel('Leak E_rev')
+    if (show):
+        plt.show()
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix))
+
+
+
+
+def plot_vars_gate(name, mdp, scale, tau, suffix="", show=True, save=False):
+    plt.figure()
+
+    plt.subplot(3,1,1)
+    plt.plot(mdp, 'r')
+    plt.ylabel('Midpoint')
+    plt.title(name)
+    plt.subplot(3, 1, 2)
+    plt.plot(scale, 'g')
+    plt.ylabel('Scale')
+    plt.subplot(3, 1, 3)
+    plt.plot(tau)
+    plt.ylabel('Time constant')
+
+    if (show):
+        plt.show()
+
+    if(save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, name, suffix))
+
+def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(2,1,1)
-    plt.plot(losses, 'r')
+    plt.plot(losses[:lim+1], 'r')
     plt.ylabel('Loss')
 
     plt.subplot(2,1,2)
-    plt.plot(rates)
+    plt.plot(rates[:lim+1])
     plt.ylabel('Learning rate')
 
     if (show):
@@ -121,6 +203,7 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     if(save):
         plt.savefig('%soutput_%s.png' % (DIR,suffix))
 
+"""plot i_ca and Ca conc depending on the voltage"""
 def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
 
 
@@ -187,6 +270,7 @@ def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=Fal
     if(save):
         plt.savefig('%sresults_%s.png'%(DIR,suffix))
 
+"""plot all dynamics"""
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
     print(results.shape)
     V = results[:, 0]
