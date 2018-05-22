@@ -63,7 +63,7 @@ class HH_opt(HodgkinHuxley):
     def Main(self, subdir, w=[1,0], sufix=''):
         DIR = set_dir(subdir+'/')
 
-        with open(DIR + OUT_SETTINGS, 'w') as f:
+        with open('%s%s_%s.txt' % (DIR, OUT_SETTINGS, sufix), 'w') as f:
             f.write('Initial params : %s' % self.init_p + '\n'+
                     'Initial state : %s' % self.init_state + '\n' +
                     'Model solver : %s' % self.loop_func + '\n' +
@@ -121,7 +121,7 @@ class HH_opt(HodgkinHuxley):
                 train_loss = 0
 
                 plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
-                plot_loss_rate(losses, rates, show=False, save=True)
+                plot_loss_rate(losses, rates, suffix=sufix, show=False, save=True)
                 # plots_results_ca(self, T, X, results, suffix=0, show=False, save=True)
 
 

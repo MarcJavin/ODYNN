@@ -13,7 +13,7 @@ RES_DIR = 'results/'
 DIR = RES_DIR
 DUMP_FILE = 'data.txt'
 OUT_PARAMS = 'params.txt'
-OUT_SETTINGS = 'settings.txt'
+OUT_SETTINGS = 'settings'
 REGEX_VARS = '<tf\.Variable \'(.*):0\' shape=\(\) dtype=float32_ref> : (.*)'
 
 RATE_COLORS = {'p' : '#00ccff',
