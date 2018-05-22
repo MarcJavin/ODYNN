@@ -95,8 +95,9 @@ class HH_opt(HodgkinHuxley):
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)
-        # capped_grads = capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads]
-        train_op = opt.apply_gradients(grads, global_step=global_step)
+        grad_check = tf.check_numerics(grads)
+        with tf.control_dependencies([grad_check]):
+            train_op = opt.apply_gradients(grads, global_step=global_step)
 
         epochs = 200
         losses = np.zeros(epochs)
