@@ -111,10 +111,11 @@ class HH_opt(HodgkinHuxley):
             self.decay_rate,  # Decay rate.
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
-        grads = opt.compute_gradients(loss)
+        gvs = opt.compute_gradients(loss)
         #check if nan and clip the values
-        grads = [(tf.cond(tf.is_nan(grad), lambda : 0., lambda : tf.clip_by_value(grad, -5., 5.)), var) for grad, var in grads]
-        train_op = opt.apply_gradients(grads, global_step=global_step)
+        grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda : 0., lambda : grad), var) for grad, var in gvs])
+        grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
+        train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
         constraints = self.apply_constraints()
 
