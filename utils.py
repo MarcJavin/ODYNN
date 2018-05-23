@@ -161,28 +161,6 @@ def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
-    plt.figure()
-
-    plt.subplot(3, 1, 1)
-    plt.plot(ts, cac_lum, 'r')
-    plt.ylabel('Ca2+ concentration predicted')
-
-    plt.subplot(3, 1, 2)
-    plt.plot(ts, y_cac_lum, 'r')
-    plt.ylabel('Ca2+ concentration true')
-
-    plt.subplot(3, 1, 3)
-    plt.plot(ts, i_inj, 'k')
-    plt.xlabel('t (ms)')
-    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-    plt.ylim(-1, 40)
-
-    if(save):
-        plt.savefig('%soutput_%s.png' % (DIR,suffix))
-    if(show):
-        plt.show()
-
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
     plt.figure()
 
@@ -209,8 +187,6 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
 
 """plot i_ca and Ca conc depending on the voltage"""
 def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
-
-
     ica = results[:, 0]
     e = results[:, 1]
     f = results[:, 2]
@@ -241,37 +217,43 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.xlabel('t (ms)')
 
     if(save):
-        plt.savefig('%sresults_%s.png' % (DIR, suffix))
+        plt.savefig('%sresults_ica_%s.png' % (DIR, suffix))
     if(show):
         plt.show()
     plt.close()
 
-
-def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=False):
-    V = results[:, 0]
-    cac = results[:, -1]
+"""plot i_k depending on the voltage"""
+def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
+    ik = results[:, 0]
+    p = results[:, 1]
+    q = results[:, 2]
+    n = results[:, 3]
 
     plt.figure()
 
     plt.subplot(3, 1, 1)
-    plt.title('Hodgkin-Huxley Neuron')
-    plt.plot(ts, V, 'k')
-    plt.ylabel('V (mV)')
+    plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
+    plt.plot(ts, ik, 'b')
+    plt.ylabel('I_k')
 
     plt.subplot(3, 1, 2)
-    plt.plot(ts, cac, 'r')
-    plt.ylabel('Ca2+ concentration')
+    plt.plot(ts, p, RATE_COLORS['p'], label='p')
+    plt.plot(ts, q, RATE_COLORS['q'], label='q')
+    plt.plot(ts, n, RATE_COLORS['n'], label='n')
+    plt.ylabel('Gating Value')
+    plt.legend()
 
     plt.subplot(3, 1, 3)
-    plt.plot(ts, i_inj_values, 'k')
+    plt.plot(ts, V, 'k')
+    plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
-    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-    plt.ylim(-1, 40)
 
-    if(save):
-        plt.savefig('%sresults_%s.png' % (DIR,suffix))
-    if(show):
+    if (save):
+        plt.savefig('%sresults_ik_%s.png' % (DIR, suffix))
+    if (show):
         plt.show()
+    plt.close()
+
 
 """plot all dynamics"""
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):

@@ -1,6 +1,0 @@
-nohup python3 main.py 2steps 1 1 1 1 &
-nohup python3 main.py 2steps 1 1 1 0 &
-nohup python3 main.py 2steps 1 0 1 1 &
-nohup python3 main.py 2steps 1 0 1 0 &
-nohup python3 main.py 2steps 0 1 1 1 & 
-nohup python3 main.py 2steps 0 1 1 0 &

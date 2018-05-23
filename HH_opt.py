@@ -19,8 +19,8 @@ class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9]):
-        HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
+    def __init__(self, init_p=params.PARAMS_RAND, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9]):
+        HodgkinHuxley.__init__(self, init_p, tensors=True)
         self.fixed = fixed
         self.epochs = epochs
         self.start_rate, self.decay_step, self.decay_rate = l_rate
@@ -79,20 +79,24 @@ class HH_opt(HodgkinHuxley):
 
     def Main(self, subdir, w=[1,0], sufix=''):
         DIR = set_dir(subdir+'/')
+        init = self.get_init_state()
 
         with open('%s%s_%s.txt' % (DIR, OUT_SETTINGS, sufix), 'w') as f:
             f.write('Initial params : %s' % self.init_p + '\n'+
-                    'Initial state : %s' % self.init_state + '\n' +
+                    'Fixed variables : %s' % [c for c in self.fixed] + '\n'+
+                    'Initial state : %s' % init + '\n' +
                     'Model solver : %s' % self.loop_func + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
 
         self.T, self.X, self.V, self.Ca = get_data_dump()
+        if(self.loop_func == self.ik_from_v):
+            self.Ca = self.V
         self.DT = params.DT
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[len(self.init_state)], dtype=tf.float32)
+        init_state = tf.placeholder(shape=[len(init)], dtype=tf.float32)
 
         res = tf.scan(self.step,
                       xs_,
@@ -104,6 +108,7 @@ class HH_opt(HodgkinHuxley):
         loss = tf.reduce_mean(losses)
 
         global_step = tf.Variable(0, trainable=False)
+        #progressive learning rate
         learning_rate = tf.train.exponential_decay(
             self.start_rate,  # Base learning rate.
             global_step,  # Current index to the dataset.
@@ -133,7 +138,7 @@ class HH_opt(HodgkinHuxley):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
                     ys_: np.vstack((self.V, self.Ca)),
-                    init_state: self.init_state
+                    init_state: init
                 })
                 _ = sess.run(constraints)
 

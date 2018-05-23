@@ -9,10 +9,14 @@ import scipy as sp
 
 
 CA_VAR = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']
+K_VAR = ['p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau', 'n__mdp', 'n__scale', 'g_Kf', 'g_Ks', 'E_K']
 CA_CONST = []
+K_CONST = []
 for k in params.DEFAULT.keys():
     if k not in CA_VAR:
         CA_CONST.append(k)
+    if k not in K_VAR:
+        K_CONST.append(k)
 
 
 """Single optimisation"""
@@ -20,16 +24,21 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     v_fix = False
     name = 'Classic'
 
-    opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE)
-    sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE, t=params.t_train, i_inj=params.i_inj_train)
+    opt = HH_opt(init_p=params.PARAMS_RAND)
+    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
 
     if (xp == 'ica'):
-        v_fix = True
         name = 'Icafromv'
-        opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE_ica, fixed=CA_CONST, epochs=180)
-        sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE_ica, t=params.t, i_inj=params.v_inj)
+        opt = HH_opt(init_p=params.PARAMS_RAND, fixed=CA_CONST, epochs=180)
+        sim = HH_simul(init_p=params.DEFAULT, t=params.t, i_inj=params.v_inj)
         loop_func = HodgkinHuxley.ica_from_v
+
+    elif(xp == 'ik'):
+        name = 'Ikfromv'
+        opt = HH_opt(init_p=params.PARAMS_RAND, fixed=K_CONST, epochs=180)
+        sim = HH_simul(init_p=params.DEFAULT, t=params.t, i_inj=params.v_inj_rev)
+        loop_func = HodgkinHuxley.ik_from_v
 
     elif (xp == 'notauca'):
         name = 'Notauca'
@@ -47,22 +56,38 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     dir = '%s_v=%s_ca=%s' % (name, w_v, w_ca)
     if (sufix is not None):
         dir = '%s_%s' % (dir, sufix)
+    utils.set_dir(dir)
     opt.loop_func = loop_func
     sim.loop_func = loop_func
-    sim.Main(v_fix=v_fix, dump=True)
+    sim.Main(show=True, dump=True)
     opt.Main(dir, w=[w_v, w_ca])
     return dir
 
 
-def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
+def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
     name = '_2steps'
 
     dir = single_exp('ica', w_v1, w_ca1, sufix='%s%s%s' % (name, w_v2, w_ca2))
 
     param = utils.get_dic_from_var(dir)
-    consts = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']
-    opt = HH_opt(init_p=param, init_state=params.INIT_STATE, fixed=consts, l_rate=[0.1,9,0.9])
-    sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE, t=params.t_train, i_inj=params.i_inj_train)
+    opt = HH_opt(init_p=param, fixed=CA_VAR, l_rate=[0.1,9,0.9])
+    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
+    loop_func = HodgkinHuxley.integ_comp
+    opt.loop_func = loop_func
+    sim.loop_func = loop_func
+    sim.Main(dump=True, sufix='step2')
+    opt.Main(dir, w=[w_v2, w_ca2], sufix='step2')
+
+    test_xp(dir)
+
+def steps2_exp_k(w_v2, w_ca2):
+    name = '_2steps'
+
+    dir = single_exp('ik', 1, 0, sufix='%s%s%s' % (name, w_v2, w_ca2))
+
+    param = utils.get_dic_from_var(dir)
+    opt = HH_opt(init_p=param, fixed=K_VAR, l_rate=[0.1,9,0.9])
+    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
@@ -99,9 +124,12 @@ if __name__ == '__main__':
         xp = sys.argv[2]
         w_v, w_ca = list(map(int, sys.argv[3:5]))
         single_exp(xp, w_v, w_ca)
-    elif(xp == '2steps'):
+    elif(xp == '2stepsca'):
         w_v1, w_ca1, w_v2, w_ca2 = list(map(int, sys.argv[2:6]))
-        steps2_exp(w_v1, w_ca1, w_v2, w_ca2)
+        steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2)
+    elif (xp == '2stepsk'):
+        w_v2, w_ca2 = list(map(int, sys.argv[2:4]))
+        steps2_exp_k(w_v2, w_ca2)
 
 
 

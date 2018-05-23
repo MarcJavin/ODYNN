@@ -9,9 +9,20 @@ import random
 DECAY_CA = 110.
 RHO_CA = 0.23
 REST_CA = 0.
-INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
-INIT_STATE_ica = [0., 0, 1, 1, 0]
-
+INITS = {
+        'i' : 0,
+        'V' : -50.,
+        'p' : 0.,
+        'q' : 0.95,
+        'n' : 0.,
+        'e' : 0.,
+        'f' : 1.,
+        'h' : 0.,
+        'cac' : 1.e-7
+}
+INIT_STATE = [INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']]
+INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
+INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 CONSTRAINTS = {
         'C_m' : [1e-5,np.infty],

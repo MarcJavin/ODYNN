@@ -12,10 +12,11 @@ class HodgkinHuxley():
     RHO_CA = params.RHO_CA
     REST_CA = params.REST_CA
 
-    def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, tensors=False):
+    def __init__(self, init_p=params.DEFAULT, tensors=False):
         self.tensors = tensors
-        self.init_state = init_state
         self.param = init_p
+        self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
+                   self.ica_from_v: params.INIT_STATE_ica}
 
 
 
@@ -179,6 +180,29 @@ class HodgkinHuxley():
             cac = max(cac, 0.)
             return [ica, e, f, h, cac]
 
+    @staticmethod
+    def ik_from_v(X, v_fix, dt, self):
+        p = X[1]
+        q = X[2]
+        n = X[3]
+
+        tau = self.param['p__tau']
+        p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(v_fix, 'p') / tau))
+        tau = self.param['q__tau']
+        q = ((tau * dt) / (tau + dt)) * ((q / dt) + (self.inf(v_fix, 'q') / tau))
+        tau = self.param['n__tau']
+        n = ((tau * dt) / (tau + dt)) * ((n / dt) + (self.inf(v_fix, 'n') / tau))
+        ik = self.I_Kf(v_fix, p, q) + self.I_Ks(v_fix, n)
+
+        if (self.tensors):
+            return tf.stack([ik, p, q, n], 0)
+        else:
+            return [ik, p, q, n]
 
     loop_func = integ_comp
+
+
+
+    def get_init_state(self):
+        return self.inits_p.get(self.loop_func, params.INIT_STATE)
 

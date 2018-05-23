@@ -1,7 +1,7 @@
 import scipy as sp
 from Hodghux import HodgkinHuxley
 import time
-from utils import plots_results, get_data, plots_ica_from_v
+from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
 import params
 import numpy as np
@@ -13,7 +13,7 @@ class HH_simul(HodgkinHuxley):
 
 
     def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, t=params.t, i_inj=params.i_inj):
-        HodgkinHuxley.__init__(self, init_p, init_state, tensors=False)
+        HodgkinHuxley.__init__(self, init_p, tensors=False)
         self.t = t
         self.i_inj = i_inj
         self.dt = t[1] - t[0]
@@ -44,36 +44,31 @@ class HH_simul(HodgkinHuxley):
     #     return (low, up)
 
 
-    def Main(self, v_fix=False, dump=False, sufix='', show=False, save=True):
+    def Main(self, dump=False, sufix='', show=False, save=True):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
         start = time.time()
         # X = odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], self.t, args=(self,))
         #
-        if(v_fix):
-            self.v_inj = self.i_inj
-            X =  [params.INIT_STATE_ica]
-            for v in self.v_inj:
-                X.append(self.ica_from_v(X[-1], v, self.dt, self))
-            X = np.array(X[1:])
 
-            todump = np.vstack((self.t, self.v_inj, X[:, 0], X[:, -1]))
-
-            print(time.time() - start)
-            plots_ica_from_v(self.t, self.v_inj, np.array(X), suffix='target_%s'%sufix, show=show, save=save)
+        X = [self.get_init_state()]
 
 
+        for i in self.i_inj:
+            X.append(self.loop_func(X[-1], i, self.dt, self))
+        X = np.array(X[1:])
+
+        todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
+
+        print(time.time() - start)
+
+        if (self.loop_func == self.ica_from_v):
+            plots_ica_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
+        elif (self.loop_func == self.ik_from_v):
+            plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
         else:
-            X = [params.INIT_STATE]
-            for i in self.i_inj:
-                X.append(self.loop_func(X[-1], i, self.dt, self))
-            X = np.array(X[1:])
-
-            todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
-
-            print(time.time() - start)
-            plots_results(self, self.t, self.i_inj, np.array(X), suffix='target_%s'%sufix, show=show, save=save)
+            plots_results(self, self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
 
         if (dump):
             with open(utils.DUMP_FILE, 'wb') as f:
