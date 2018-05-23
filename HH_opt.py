@@ -13,20 +13,17 @@ import time
 NB_SER = 15
 BATCH_SIZE = 60
 
-DECAY_STEP = 9
-START_RATE = 0.9
-DECAY_RATE = 0.9
-
 
 
 class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS, epochs=200):
+    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9]):
         HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
         self.fixed = fixed
         self.epochs = epochs
+        self.start_rate, self.decay_step, self.decay_rate = l_rate
         self.constraints = {}
         if (self.tensors):
             tf.reset_default_graph()
@@ -88,7 +85,7 @@ class HH_opt(HodgkinHuxley):
                     'Initial state : %s' % self.init_state + '\n' +
                     'Model solver : %s' % self.loop_func + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
-                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (START_RATE, DECAY_STEP, DECAY_RATE) + '\n')
+                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
 
         self.T, self.X, self.V, self.Ca = get_data_dump()
         self.DT = params.DT
@@ -108,10 +105,10 @@ class HH_opt(HodgkinHuxley):
 
         global_step = tf.Variable(0, trainable=False)
         learning_rate = tf.train.exponential_decay(
-            START_RATE,  # Base learning rate.
+            self.start_rate,  # Base learning rate.
             global_step,  # Current index to the dataset.
-            DECAY_STEP,  # Decay step.
-            DECAY_RATE,  # Decay rate.
+            self.decay_step,  # Decay step.
+            self.decay_rate,  # Decay rate.
             staircase=True)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)

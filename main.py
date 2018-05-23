@@ -61,7 +61,7 @@ def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     consts = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']
-    opt = HH_opt(init_p=param, init_state=params.INIT_STATE, fixed=consts)
+    opt = HH_opt(init_p=param, init_state=params.INIT_STATE, fixed=consts, l_rate=[0.1,9,0.9])
     sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
