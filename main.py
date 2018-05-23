@@ -73,19 +73,24 @@ def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
 
 
 
-def test_xp(dir):
+def test_xp(dir, show=False):
 
     dt = params.DT
     t = np.array(sp.arange(0.0, 4000, dt))
+    t3 = np.array(sp.arange(0.0, 6000, dt))
     i1 = (t-1000)*(30./200)*((t>1000)&(t<=1200)) + 30*((t>1200)&(t<=3000)) - (t-2800)*(30./200)*((t>2800)&(t<=3000))
-    i2 = (t-1000)*(50./1000)*((t>1000)&(t<=2000)) + (3000-t)*(50./1000)*((t>2000)&(t<=3000))
+    i2 = (t - 1000) * (50. / 1000) * ((t > 1000) & (t <= 2000)) + (3000 - t) * (50. / 1000) * ((t > 2000) & (t <= 3000))
+    i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
 
     utils.set_dir(dir)
     param = utils.get_dic_from_var(dir)
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
-    sim.Main(show=False, sufix='xp1')
-    sim.i_inj=i2
-    sim.Main(show=False, sufix='xp2')
+    sim.Main(show=show, sufix='xp1')
+    sim.i_inj = i2
+    sim.Main(show=show, sufix='xp2')
+    sim.i_inj=i3
+    sim.t = t3
+    sim.Main(show=show, sufix='xp3')
 
 
 if __name__ == '__main__':
