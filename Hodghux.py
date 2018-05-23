@@ -12,21 +12,10 @@ class HodgkinHuxley():
     RHO_CA = params.RHO_CA
     REST_CA = params.REST_CA
 
-    def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, tensors=False, consts=[]):
+    def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, tensors=False):
         self.tensors = tensors
-        self.consts = consts
         self.init_state = init_state
-        if(self.tensors):
-            tf.reset_default_graph()
-            self.init_p = init_p
-            self.param = {}
-            for var, val in self.init_p.items():
-                if(var in consts):
-                    self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
-                else:
-                    self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
-        else:
-            self.param = init_p
+        self.param = init_p
 
 
 

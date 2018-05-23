@@ -12,34 +12,23 @@ REST_CA = 0.
 INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
 INIT_STATE_ica = [0., 0, 1, 1, 0]
 
-RES = {
-        'Cm' : 21.79517,
-        'C_m' : 26.057444,
-        'E_Ca' : 14.850545,
-        'E_K' : -40.62314,
-        'E_L' : -25.78042,
-        'e__mdp' : 4.935627,
-        'e__scale' : 24.047474,
-        'e__tau' : 31.966341,
-        'f__mdp' : -61.386616,
-        'f__scale' : -34.79839,
-        'f__tau' : 58.10077,
-        'g_Ca' : 5.9096923,
-        'g_Kf' : -2.9872065,
-        'g_Ks' : 2.9289305,
-        'g_L' : -0.11360436,
-        'h__alpha' : 4.8876266,
-        'h__mdp' : 9.4649,
-        'h__scale' : -44.16387,
-        'n__mdp' : -17.819798,
-        'n__scale' : 26.955765,
-        'n__tau' : 66.007095,
-        'p__mdp' : -17.149368,
-        'p__scale' : 22.812742,
-        'p__tau' : 78.51109,
-        'q__mdp' : -23.938337,
-        'q__scale' : -27.434593,
-        'q__tau' : 124.33194
+CONSTRAINTS = {
+        'C_m' : [1e-5,np.infty],
+        'e__scale' : [1e-3,np.infty],
+        'e__tau' : [1e-3,np.infty],
+        'f__scale' : [-np.infty, 1e-3],
+        'f__tau' : [1e-3,np.infty],
+        'g_Ca' : [1e-5,np.infty],
+        'g_Kf' : [1e-5,np.infty],
+        'g_Ks' : [1e-5,np.infty],
+        'g_L' : [1e-5,np.infty],
+        'h__alpha' : [0,1],
+        'h__scale' : [-np.infty, 1e-3],
+        'n__scale' : [1e-3,np.infty],
+        'n__tau' : [1e-3,np.infty],
+        'p__scale' : [1e-3,np.infty],
+        'p__tau' : [1e-3,np.infty],
+        'q__scale' : [-np.infty, 1e-3],
 }
 
 DEFAULT = {
