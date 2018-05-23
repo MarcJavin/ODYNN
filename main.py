@@ -25,7 +25,7 @@ def single_exp(xp, w_v, w_ca, sufix=None):
     if (xp == 'ica'):
         v_fix = True
         name = 'Icafromv'
-        opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE_ica, fixed=CA_CONST, epochs=4)
+        opt = HH_opt(init_p=params.PARAMS_RAND, init_state=params.INIT_STATE_ica, fixed=CA_CONST, epochs=180)
         sim = HH_simul(init_p=params.DEFAULT, init_state=params.INIT_STATE_ica, t=params.t, i_inj=params.v_inj)
         loop_func = HodgkinHuxley.ica_from_v
 
