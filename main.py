@@ -55,7 +55,7 @@ def single_exp(xp, w_v, w_ca, sufix=None):
 def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
     name = '_2steps'
 
-    dir = single_exp('ica', w_v1, w_ca1, sufix='%s%s%s' % (name, w_v2, w_ca2))
+    dir = single_exp('ica', w_v1, w_ca1, sufix='caca%s%s%s' % (name, w_v2, w_ca2))
 
     param = utils.get_dic_from_var(dir)
     consts = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']

@@ -24,7 +24,7 @@ class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints={}):
+    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
         self.fixed = fixed
         self.constraints = constraints
@@ -74,11 +74,8 @@ class HH_opt(HodgkinHuxley):
 
             
     def apply_constraints(self):
-        ret = []
-        for var, con in self.constraints:
-            c = tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1]))
-            ret = tf.stack([ret, c], 0)
-        return ret
+        c = [tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])) for var, con in self.constraints.items()]
+        return c
 
 
     def Main(self, subdir, w=[1,0], sufix=''):

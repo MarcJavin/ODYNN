@@ -28,7 +28,7 @@ CONSTRAINTS = {
         'n__tau' : [1e-3,np.infty],
         'p__scale' : [1e-3,np.infty],
         'p__tau' : [1e-3,np.infty],
-        'q__scale' : [-np.infty, 1e-3],
+        'q__scale' : [-np.infty, 1e-3]
 }
 
 DEFAULT = {
