@@ -16,7 +16,6 @@ BATCH_SIZE = 60
 DECAY_STEP = 10
 START_RATE = 1.
 DECAY_RATE = 0.95
-EPOCHS = 200
 
 
 
@@ -24,9 +23,10 @@ class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS):
+    def __init__(self, init_p=params.PARAMS_RAND, init_state=params.INIT_STATE, fixed=[], constraints=params.CONSTRAINTS, epochs=200):
         HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
         self.fixed = fixed
+        self.epochs = epochs
         self.constraints = constraints
         if (self.tensors):
             tf.reset_default_graph()
@@ -119,17 +119,17 @@ class HH_opt(HodgkinHuxley):
 
         constraints = self.apply_constraints()
 
-        losses = np.zeros(EPOCHS)
-        rates = np.zeros(EPOCHS)
+        losses = np.zeros(self.epochs)
+        rates = np.zeros(self.epochs)
 
         vars = {}
         for v in self.param.keys():
-            vars[v] = np.zeros(EPOCHS)
+            vars[v] = np.zeros(self.epochs)
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
-            for i in tqdm(range(EPOCHS)):
+            for i in tqdm(range(self.epochs)):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
                     ys_: np.vstack((self.V, self.Ca)),
