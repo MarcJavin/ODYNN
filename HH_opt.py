@@ -27,7 +27,7 @@ class HH_opt(HodgkinHuxley):
         HodgkinHuxley.__init__(self, init_p, init_state, tensors=True)
         self.fixed = fixed
         self.epochs = epochs
-        self.constraints = constraints
+        self.constraints = {}
         if (self.tensors):
             tf.reset_default_graph()
             self.init_p = init_p
@@ -35,9 +35,10 @@ class HH_opt(HodgkinHuxley):
             for var, val in self.init_p.items():
                 if (var in fixed):
                     self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
-                    constraints.pop(var, None)
                 else:
                     self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                    if var in constraints:
+                        self.constraints[var] = constraints[var]
 
 
     def condition(self, hprev, x, dt, index, mod):
@@ -75,6 +76,7 @@ class HH_opt(HodgkinHuxley):
             
     def apply_constraints(self):
         c = [tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])) for var, con in self.constraints.items()]
+        c = tf.Print(c, [tf.size(c)])
         return c
 
 
@@ -114,7 +116,7 @@ class HH_opt(HodgkinHuxley):
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         grads = opt.compute_gradients(loss)
         #check if nan and clip the values
-        grads = [(tf.cond(tf.is_nan(grad), lambda : 0., lambda : tf.clip_by_value(grad, -10., 10.)), var) for grad, var in grads]
+        grads = [(tf.cond(tf.is_nan(grad), lambda : 0., lambda : tf.clip_by_value(grad, -5., 5.)), var) for grad, var in grads]
         train_op = opt.apply_gradients(grads, global_step=global_step)
 
         constraints = self.apply_constraints()
