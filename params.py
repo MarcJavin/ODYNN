@@ -12,6 +12,7 @@ REST_CA = 0.
 INIT_STATE = [-50., 0., 0.95, 0., 0., 1., 1.e-7]
 INIT_STATE_ica = [0., 0, 1, 1, 0]
 
+
 CONSTRAINTS = {
         'C_m' : [1e-5,np.infty],
         'e__scale' : [1e-3,np.infty],
@@ -152,4 +153,6 @@ i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000)
 v_inj = 115*(t/t_len) - np.full(t.shape,65)
 v_inj_rev = np.full(t.shape, 50) - v_inj
 i_inj = np.array(i_inj, dtype=np.float32)
+
+
 

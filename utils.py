@@ -76,10 +76,10 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     plt.subplot(3, 1, 3)
     plt.plot(var_dic['h__alpha'][:lim+1])
     plt.ylabel('Time constant')
-    if (show):
-        plt.show()
-    if (save):
+    if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'h', suffix))
+    if(show):
+        plt.show()
 
     plt.figure()
     plt.subplot(4, 1, 1)
@@ -95,10 +95,10 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     plt.subplot(4, 1, 4)
     plt.plot(var_dic['g_L'][:lim + 1], 'k')
     plt.ylabel('Leak conductance')
-    if (show):
-        plt.show()
-    if (save):
+    if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Conductances', suffix))
+    if(show):
+        plt.show()
 
     plt.figure()
     plt.subplot(4, 1, 1)
@@ -114,10 +114,10 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     plt.subplot(4, 1, 4)
     plt.plot(var_dic['E_L'][:lim + 1], 'k')
     plt.ylabel('Leak E_rev')
-    if (show):
-        plt.show()
-    if (save):
+    if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix))
+    if(show):
+        plt.show()
 
     plt.close('all')
 
@@ -138,10 +138,10 @@ def plot_vars_gate(name, mdp, scale, tau, suffix="", show=True, save=False):
     plt.plot(tau)
     plt.ylabel('Time constant')
 
-    if (show):
-        plt.show()
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, name, suffix))
+    if(show):
+        plt.show()
 
 
 def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
@@ -155,10 +155,10 @@ def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
     plt.plot(rates[:lim+1])
     plt.ylabel('Learning rate')
 
-    if (show):
-        plt.show()
     if(save):
         plt.savefig('%slosses_%s.png' % (DIR,suffix))
+    if(show):
+        plt.show()
     plt.close()
 
 def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False):
@@ -178,11 +178,10 @@ def plots_output(ts, i_inj, cac_lum, y_cac_lum, suffix="", show=True, save=False
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     plt.ylim(-1, 40)
 
-    if (show):
-        plt.show()
-
     if(save):
         plt.savefig('%soutput_%s.png' % (DIR,suffix))
+    if(show):
+        plt.show()
 
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
     plt.figure()
@@ -202,10 +201,10 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
-    if (show):
-        plt.show()
     if(save):
         plt.savefig('%s%soutput_%s.png' % (DIR,IMG_DIR,suffix))
+    if(show):
+        plt.show()
     plt.close()
 
 """plot i_ca and Ca conc depending on the voltage"""
@@ -241,10 +240,10 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    if (show):
-        plt.show()
-    if (save):
+    if(save):
         plt.savefig('%sresults_%s.png' % (DIR, suffix))
+    if(show):
+        plt.show()
     plt.close()
 
 
@@ -269,11 +268,10 @@ def plots_results_simp(ts, i_inj_values, results, suffix="", show=True, save=Fal
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     plt.ylim(-1, 40)
 
+    if(save):
+        plt.savefig('%sresults_%s.png' % (DIR,suffix))
     if(show):
         plt.show()
-
-    if(save):
-        plt.savefig('%sresults_%s.png'%(DIR,suffix))
 
 """plot all dynamics"""
 def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
@@ -324,8 +322,8 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     # plt.ylim(-1, 40)
 
+    if(save):
+        plt.savefig('%sresults_%s.png' % (DIR,suffix))
     if(show):
         plt.show()
-    if(save):
-        plt.savefig('%sresults_%s.png'%(DIR,suffix))
     plt.close()

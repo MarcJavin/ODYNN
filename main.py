@@ -4,6 +4,8 @@ from Hodghux import HodgkinHuxley
 import params
 import utils
 import sys
+import numpy as np
+import scipy as sp
 
 
 CA_VAR = ['e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca']
@@ -67,9 +69,26 @@ def steps2_exp(w_v1, w_ca1, w_v2, w_ca2):
     sim.Main(dump=True, sufix='step2')
     opt.Main(dir, w=[w_v2, w_ca2], sufix='step2')
 
+    test_xp(dir)
+
+
+
+def test_xp(dir):
+
+    dt = params.DT
+    t = np.array(sp.arange(0.0, 4000, dt))
+    i1 = (t-1000)*(30./200)*((t>1000)&(t<=1200)) + 30*((t>1200)&(t<=3000)) - (t-2800)*(30./200)*((t>2800)&(t<=3000))
+    i2 = (t-1000)*(50./1000)*((t>1000)&(t<=2000)) + (3000-t)*(50./1000)*((t>2000)&(t<=3000))
+
+    utils.set_dir(dir)
+    param = utils.get_dic_from_var(dir)
+    sim = HH_simul(init_p=param, t=t, i_inj=i1)
+    sim.Main(show=False, sufix='xp1')
+    sim.i_inj=i2
+    sim.Main(show=False, sufix='xp2')
+
 
 if __name__ == '__main__':
-
     xp = sys.argv[1]
     if(xp == 'single'):
         xp = sys.argv[2]
