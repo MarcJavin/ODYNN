@@ -12,7 +12,7 @@ class HH_simul(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.DEFAULT, init_state=params.INIT_STATE, t=params.t, i_inj=params.i_inj):
+    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj):
         HodgkinHuxley.__init__(self, init_p, tensors=False)
         self.t = t
         self.i_inj = i_inj
@@ -43,21 +43,33 @@ class HH_simul(HodgkinHuxley):
     #     up = np.full((29), M)
     #     return (low, up)
 
+    def calculate(self):
+        X = [self.get_init_state()]
+
+        for i in self.i_inj:
+            X.append(self.loop_func(X[-1], i, self.dt, self))
+        return np.array(X[1:])
+
+    """Compare different parameter sets on the same experiment"""
+    def comp(self, ps):
+        Vs = []
+        Cacs = []
+        for p in ps:
+            self.param = p
+            X = self.calculate()
+            Vs.append(X[:,0])
+            Cacs.append(X[:,-1])
+        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, save=False, show=True)
+
+
 
     def Main(self, dump=False, sufix='', show=False, save=True):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
         start = time.time()
-        # X = odeint(self.dALLdt, [-65, 0., 0.95, 0, 0, 1, 0], self.t, args=(self,))
-        #
 
-        X = [self.get_init_state()]
-
-
-        for i in self.i_inj:
-            X.append(self.loop_func(X[-1], i, self.dt, self))
-        X = np.array(X[1:])
+        X = self.calculate()
 
         todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
 

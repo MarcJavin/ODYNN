@@ -13,7 +13,7 @@ RES_DIR = 'results/'
 IMG_DIR = 'img/'
 DIR = RES_DIR
 DUMP_FILE = 'data.txt'
-OUT_PARAMS = 'params.txt'
+OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
 REGEX_VARS = '(.*) : (.*)'
 
@@ -25,9 +25,11 @@ RATE_COLORS = {'p' : '#00ccff',
                'h' : '#ff1a1a'
                 }
 
+COLS_MULT = ['r', 'g', 'b', 'y', 'k']
+
 def set_dir(subdir):
     global DIR
-    DIR = RES_DIR + subdir
+    DIR = RES_DIR + subdir + '/'
     if not os.path.exists(DIR):
         os.makedirs(DIR)
     if not os.path.exists(DIR+IMG_DIR):
@@ -41,8 +43,8 @@ def get_data_dump(file=DUMP_FILE):
 
 
 """Get variables values into a dictionnary"""
-def get_dic_from_var(dir):
-    file = RES_DIR + dir + '/' + OUT_PARAMS
+def get_dic_from_var(dir, sufix=""):
+    file = '%s%s/%s_%s.txt' % (RES_DIR, dir, OUT_PARAMS, sufix)
     dic = {}
     with open(file, 'r') as f:
         for line in f:
@@ -161,18 +163,47 @@ def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
+
+def plots_output_mult(ts, i_inj, Vs, Cacs, suffix="", show=True, save=False):
+    plt.figure()
+
+    plt.subplot(3, 1, 1)
+    for idx in range(len(Vs)):
+        print(len(ts), len(Vs[idx]))
+        plt.plot(ts, Vs[idx], COLS_MULT[idx])
+    plt.ylabel('Voltage (mV)')
+
+    plt.subplot(3, 1, 2)
+    for idx in range(len(Cacs)):
+        plt.plot(ts, Cacs[idx], COLS_MULT[idx])
+    plt.ylabel('[Ca2+]')
+
+    plt.subplot(3, 1, 3)
+    plt.plot(ts, i_inj, 'k')
+    plt.xlabel('t (ms)')
+    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+
+    if (save):
+        plt.savefig('%s%soutput_%s.png' % (DIR, IMG_DIR, suffix))
+    if (show):
+        plt.show()
+    plt.close()
+
+
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(3, 1, 2)
-    plt.plot(ts, y_cac, 'g')
-    plt.plot(ts, cac, 'r')
-    plt.ylabel('Ca2+ concentration predicted')
+    plt.plot(ts, y_cac, 'g', label='target model')
+    plt.plot(ts, cac, 'r', label='current model')
+    plt.ylabel('[Ca2+]')
+    plt.legend()
 
     plt.subplot(3, 1, 1)
-    plt.plot(ts, y_v, 'g')
-    plt.plot(ts, v, 'r')
-    plt.ylabel('Ca2+ concentration true')
+    plt.plot(ts, y_v, 'g', label='target model')
+    plt.plot(ts, v, 'r', label='current model')
+    plt.ylabel('Voltage (mV)')
+    plt.legend()
 
     plt.subplot(3, 1, 3)
     plt.plot(ts, i_inj, 'k')

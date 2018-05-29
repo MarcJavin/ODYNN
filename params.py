@@ -159,12 +159,17 @@ t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 
-t_len = 1000.
+t_len = 5000.
 t = np.array(sp.arange(0.0, t_len, DT))
 i_inj = 10.*((t>100)&(t<750)) + 20.*((t>1500)&(t<2500)) + 40.*((t>3000)&(t<4000))
 v_inj = 115*(t/t_len) - np.full(t.shape,65)
 v_inj_rev = np.full(t.shape, 50) - v_inj
 i_inj = np.array(i_inj, dtype=np.float32)
+
+
+t_test = np.array(sp.arange(0.0, 2000, DT))
+i_test = 10.*((t_test>100)&(t_test<300)) + 20.*((t_test>400)&(t_test<600)) + 40.*((t_test>800)&(t_test<950)) + \
+         (t_test-1000)*(50./500)*((t_test>1000)&(t_test<1500))
 
 
 

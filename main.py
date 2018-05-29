@@ -119,6 +119,17 @@ def test_xp(dir, show=False):
 
 
 if __name__ == '__main__':
+
+    # p3 = utils.get_dic_from_var('YAY3---Icafromv_v=1_ca=0__2steps11', 'step2')
+    # p2 = utils.get_dic_from_var('YAY2---Icafromv_v=1_ca=0__2steps11')
+    # p = utils.get_dic_from_var('YAY---Icafromv_v=1_ca=0__2steps11')
+    # sim = HH_simul(t=params.t_test, i_inj=params.i_test)
+    # # sim.loop_func = sim.ica_from_v
+    # sim.comp([p, p2, p3])
+    #
+    # exit(0)
+
+
     xp = sys.argv[1]
     if(xp == 'single'):
         xp = sys.argv[2]

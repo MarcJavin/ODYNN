@@ -142,7 +142,7 @@ class HH_opt(HodgkinHuxley):
                 })
                 _ = sess.run(constraints)
 
-                with open(DIR + OUT_PARAMS, 'w') as f:
+                with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, sufix), 'w') as f:
 
                     for name, v in self.param.items():
                         v_ = sess.run(v)
