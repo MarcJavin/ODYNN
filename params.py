@@ -25,7 +25,7 @@ INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 CONSTRAINTS = {
-        'C_m' : [1e-5,np.infty],
+        'C_m' : [1e-3,np.infty],
         'e__scale' : [1e-3,np.infty],
         'e__tau' : [1e-3,np.infty],
         'f__scale' : [-np.infty, 1e-3],
@@ -169,7 +169,7 @@ i_inj = np.array(i_inj, dtype=np.float32)
 
 t_test = np.array(sp.arange(0.0, 2000, DT))
 i_test = 10.*((t_test>100)&(t_test<300)) + 20.*((t_test>400)&(t_test<600)) + 40.*((t_test>800)&(t_test<950)) + \
-         (t_test-1000)*(50./500)*((t_test>1000)&(t_test<1500))
+         (t_test-1200)*(50./500)*((t_test>1200)&(t_test<1700))
 
 
 

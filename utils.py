@@ -1,5 +1,7 @@
 import socket
 import matplotlib
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import FormatStrFormatter
 if (socket.gethostname()=='1080'):
     matplotlib.use("Agg")
 import pylab as plt
@@ -8,6 +10,13 @@ import pandas as pd
 import os
 import pickle
 import re
+
+SMALL_SIZE = 8
+MEDIUM_SIZE = 10
+BIGGER_SIZE = 12
+
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
@@ -24,6 +33,7 @@ RATE_COLORS = {'p' : '#00ccff',
                'f' : '#ff9900',
                'h' : '#ff1a1a'
                 }
+GATES = ['e', 'f', 'n', 'p', 'q']
 
 COLS_MULT = ['r', 'g', 'b', 'y', 'k']
 
@@ -64,86 +74,96 @@ def get_data(file='AVAL_test.csv'):
 
 """plot variation of all variables organized by categories"""
 def plot_vars(var_dic, lim, suffix="", show=True, save=False):
-    for gate in ['e', 'f', 'n', 'p', 'q']:
-        plot_vars_gate(gate, var_dic['%s__mdp'%gate][:lim+1], var_dic['%s__scale'%gate][:lim+1], var_dic['%s__tau'%gate][:lim+1], suffix, show, save)
-
-    plt.figure()
-    plt.subplot(3, 1, 1)
-    plt.plot(var_dic['h__mdp'][:lim+1], 'r')
-    plt.ylabel('Midpoint')
-    plt.title('h')
-    plt.subplot(3, 1, 2)
-    plt.plot(var_dic['h__scale'][:lim+1], 'g')
-    plt.ylabel('Scale')
-    plt.subplot(3, 1, 3)
-    plt.plot(var_dic['h__alpha'][:lim+1])
-    plt.ylabel('Time constant')
+    fig = plt.figure()
+    grid = plt.GridSpec(2, 3)
+    for nb in range(len(GATES)):
+        gate = GATES[nb]
+        plot_vars_gate(gate, var_dic['%s__mdp' % gate][:lim + 1], var_dic['%s__scale' % gate][:lim + 1],
+                       var_dic['%s__tau' % gate][:lim + 1], fig, grid[nb], (nb%3==0))
+    plot_vars_gate('h', var_dic['h__mdp'][:lim + 1], var_dic['h__scale'][:lim + 1],
+                   var_dic['h__alpha'][:lim + 1], fig, grid[5], False)
+    plt.tight_layout()
     if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'h', suffix))
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
     if(show):
         plt.show()
 
-    plt.figure()
-    plt.subplot(4, 1, 1)
-    plt.plot(var_dic['g_Ks'][:lim + 1], RATE_COLORS['n'])
-    plt.ylabel('KS conductance')
-    plt.title('Conductances')
-    plt.subplot(4, 1, 2)
-    plt.plot(var_dic['g_Kf'][:lim + 1], RATE_COLORS['p'])
-    plt.ylabel('KF conductance')
-    plt.subplot(4, 1, 3)
-    plt.plot(var_dic['g_Ca'][:lim + 1], RATE_COLORS['e'])
-    plt.ylabel('Ca conductance')
-    plt.subplot(4, 1, 4)
-    plt.plot(var_dic['g_L'][:lim + 1], 'k')
-    plt.ylabel('Leak conductance')
-    if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Conductances', suffix))
-    if(show):
-        plt.show()
+    fig = plt.figure()
+    grid = plt.GridSpec(1, 2)
+    subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
+    ax = plt.Subplot(fig, subgrid[0])
+    ax.plot(var_dic['g_Ks'][:lim + 1], RATE_COLORS['n'])
+    ax.set_ylabel('KS cond.')
+    ax.set_title('Conductances')
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[1])
+    ax.plot(var_dic['g_Kf'][:lim + 1], RATE_COLORS['n'])
+    ax.set_ylabel('KF cond.')
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[2])
+    ax.plot(var_dic['g_Ca'][:lim + 1], RATE_COLORS['e'])
+    ax.set_ylabel('Ca cond.')
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[3])
+    ax.plot(var_dic['g_L'][:lim + 1], 'k')
+    ax.set_ylabel('Leak cond.')
+    fig.add_subplot(ax)
 
-    plt.figure()
-    plt.subplot(4, 1, 1)
-    plt.plot(var_dic['C_m'][:lim + 1])
-    plt.ylabel('Capacitance')
-    plt.title('Membrane')
-    plt.subplot(4, 1, 2)
-    plt.plot(var_dic['E_K'][:lim + 1], RATE_COLORS['n'])
-    plt.ylabel('K E_rev')
-    plt.subplot(4, 1, 3)
-    plt.plot(var_dic['E_Ca'][:lim + 1], RATE_COLORS['e'])
-    plt.ylabel('Ca E_rev')
-    plt.subplot(4, 1, 4)
-    plt.plot(var_dic['E_L'][:lim + 1], 'k')
-    plt.ylabel('Leak E_rev')
+    subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[1], hspace=0.1)
+    ax = plt.Subplot(fig, subgrid[0])
+    ax.plot(var_dic['C_m'][:lim + 1])
+    ax.set_ylabel('Capacitance')
+    ax.yaxis.tick_right()
+    ax.set_title('Membrane')
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[1])
+    ax.plot(var_dic['E_K'][:lim + 1], RATE_COLORS['n'])
+    ax.set_ylabel('K E_rev')
+    ax.yaxis.tick_right()
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[2])
+    ax.plot(var_dic['E_Ca'][:lim + 1], RATE_COLORS['f'])
+    ax.set_ylabel('Ca E_rev')
+    ax.yaxis.tick_right()
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[3])
+    ax.plot(var_dic['E_L'][:lim + 1], 'k')
+    ax.set_ylabel('Leak E_rev')
+    ax.yaxis.tick_right()
+    fig.add_subplot(ax)
+    plt.tight_layout()
     if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix))
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
     if(show):
         plt.show()
 
     plt.close('all')
 
 
+def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
+    subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
+    ax = plt.Subplot(fig, subgrid[0])
+    ax.plot(mdp, 'r')
+    ax.set_xlabel([])
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    if(labs):
+        ax.set_ylabel('Midpoint')
+    ax.set_title(name)
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[1])
+    ax.plot(scale, 'g')
+    ax.set_xlabel([])
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    if (labs):
+        ax.set_ylabel('Scale')
+    fig.add_subplot(ax)
+    ax = plt.Subplot(fig, subgrid[2])
+    ax.plot(tau)
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    if (labs):
+        ax.set_ylabel('Tau')
+    fig.add_subplot(ax)
 
-
-def plot_vars_gate(name, mdp, scale, tau, suffix="", show=True, save=False):
-    plt.figure()
-
-    plt.subplot(3,1,1)
-    plt.plot(mdp, 'r')
-    plt.ylabel('Midpoint')
-    plt.title(name)
-    plt.subplot(3, 1, 2)
-    plt.plot(scale, 'g')
-    plt.ylabel('Scale')
-    plt.subplot(3, 1, 3)
-    plt.plot(tau)
-    plt.ylabel('Time constant')
-
-    if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, name, suffix))
-    if(show):
-        plt.show()
 
 
 def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):

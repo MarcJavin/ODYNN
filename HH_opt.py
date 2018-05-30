@@ -25,17 +25,21 @@ class HH_opt(HodgkinHuxley):
         self.epochs = epochs
         self.start_rate, self.decay_step, self.decay_rate = l_rate
         self.constraints = {}
-        if (self.tensors):
-            tf.reset_default_graph()
-            self.init_p = init_p
-            self.param = {}
-            for var, val in self.init_p.items():
-                if (var in fixed):
-                    self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
-                else:
-                    self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
-                    if var in constraints:
-                        self.constraints[var] = constraints[var]
+        tf.reset_default_graph()
+        self.init_p = init_p
+        self.param = {}
+        for var, val in self.init_p.items():
+            if (var in fixed):
+                self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
+            else:
+                self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                if var in constraints:
+                    self.constraints[var] = constraints[var]
+
+    def change_params(self, p):
+        self.init_p = p
+        for var, val in self.init_p.items():
+            tf.assign(self.param[var], val)
 
 
     def condition(self, hprev, x, dt, index, mod):
@@ -115,8 +119,10 @@ class HH_opt(HodgkinHuxley):
             self.decay_step,  # Decay step.
             self.decay_rate,  # Decay rate.
             staircase=True)
+        tf.summary.scalar('learning rate', learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
         gvs = opt.compute_gradients(loss)
+        tf.summary.histogram('gradients', gvs)
         #check if nan and clip the values
         grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda : 0., lambda : grad), var) for grad, var in gvs])
         grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
@@ -124,12 +130,14 @@ class HH_opt(HodgkinHuxley):
 
         constraints = self.apply_constraints()
 
+        summary = tf.summary.merge_all()
+
         losses = np.zeros(self.epochs)
         rates = np.zeros(self.epochs)
 
         vars = {}
         for v in self.param.keys():
-            vars[v] = np.zeros(self.epochs)
+            vars[v] = np.concatenate(([self.init_p[v]], np.zeros(self.epochs)))
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -143,10 +151,9 @@ class HH_opt(HodgkinHuxley):
                 _ = sess.run(constraints)
 
                 with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, sufix), 'w') as f:
-
                     for name, v in self.param.items():
                         v_ = sess.run(v)
-                        vars[name][i] = v_
+                        vars[name][i+1] = v_
                         f.write('%s : %s\n' % (name, v_))
 
                 rates[i] = sess.run(learning_rate)
@@ -156,7 +163,7 @@ class HH_opt(HodgkinHuxley):
 
                 plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
                 if(i%10==0):
-                    plot_vars(vars, i, suffix=sufix, show=False, save=True)
+                    plot_vars(vars, i+1, suffix=sufix, show=False, save=True)
                     plot_loss_rate(losses, rates, i, suffix=sufix, show=False, save=True)
 
 

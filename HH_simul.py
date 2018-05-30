@@ -61,6 +61,15 @@ class HH_simul(HodgkinHuxley):
             Cacs.append(X[:,-1])
         utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, save=False, show=True)
 
+    """Compare 2 parameters sets"""
+    def comp_targ(self, p, p_targ):
+        self.param = p
+        S = self.calculate()
+
+        self.param = p_targ
+        S_targ = self.calculate()
+
+        utils.plots_output_double(self.t, self.i_inj, S[:,0], S_targ[:,0], S[:,-1], S_targ[:,-1], save=False, show=True)
 
 
     def Main(self, dump=False, sufix='', show=False, save=True):
@@ -89,6 +98,12 @@ class HH_simul(HodgkinHuxley):
 
 
 if __name__ == '__main__':
-    runner = HH_simul()
-    runner.Main()
+    p3 = utils.get_dic_from_var('YAY3---Icafromv_v=1_ca=0__2steps11', 'step2')
+    p2 = utils.get_dic_from_var('YAY2---Icafromv_v=1_ca=0__2steps11')
+    p = utils.get_dic_from_var('YAY---Icafromv_v=1_ca=0__2steps11')
+    sim = HH_simul(t=params.t_train, i_inj=params.i_inj_train)
+    sim.comp([p,p2,p3,params.DEFAULT])
+    sim.comp_targ(p,params.DEFAULT)
+    #
+    # exit(0)
 

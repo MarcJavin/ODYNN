@@ -120,14 +120,25 @@ def test_xp(dir, show=False):
 
 if __name__ == '__main__':
 
-    # p3 = utils.get_dic_from_var('YAY3---Icafromv_v=1_ca=0__2steps11', 'step2')
-    # p2 = utils.get_dic_from_var('YAY2---Icafromv_v=1_ca=0__2steps11')
-    # p = utils.get_dic_from_var('YAY---Icafromv_v=1_ca=0__2steps11')
-    # sim = HH_simul(t=params.t_test, i_inj=params.i_test)
-    # # sim.loop_func = sim.ica_from_v
-    # sim.comp([p, p2, p3])
-    #
-    # exit(0)
+    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=50)
+    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
+    loop_func = HodgkinHuxley.integ_comp
+    opt.loop_func = loop_func
+    sim.loop_func = loop_func
+    sim.Main(show=True, dump=True)
+    dir = 'Integcomp_alternate'
+    wv = 0
+    wca = 1
+    opt.Main(dir, [wv, wca], 'step0')
+    for i in range(5):
+        new_params = utils.get_dic_from_var(dir, 'step%s' % i)
+        opt.change_params(new_params)
+        wv = 1-wv
+        wca = 1-wca
+        opt.Main(dir, [wv, wca], 'step%s'%(i+1))
+
+
+    exit(0)
 
 
     xp = sys.argv[1]
