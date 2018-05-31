@@ -3,7 +3,8 @@ os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from Hodghux import HodgkinHuxley
 import tensorflow as tf
 import numpy as np
-from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate, get_data_dump, set_dir, plot_vars
+from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate,set_dir, plot_vars
+from data import get_data_dump
 
 import params
 from tqdm import tqdm
@@ -24,7 +25,7 @@ class HH_opt(HodgkinHuxley):
         self.fixed = fixed
         self.epochs = epochs
         self.start_rate, self.decay_step, self.decay_rate = l_rate
-        self.constraints = {}
+        self.constraints = []
         tf.reset_default_graph()
         self.init_p = init_p
         self.param = {}
@@ -34,7 +35,8 @@ class HH_opt(HodgkinHuxley):
             else:
                 self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
                 if var in constraints:
-                    self.constraints[var] = constraints[var]
+                    con = constraints[var]
+                    self.constraints.append(tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
 
     def change_params(self, p):
         self.init_p = p
@@ -74,11 +76,7 @@ class HH_opt(HodgkinHuxley):
             })
             print('time spent : %.2f s' % (time.time() - start))
 
-            
-    def apply_constraints(self):
-        c = [tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])) for var, con in self.constraints.items()]
-        c = tf.Print(c, [tf.size(c)])
-        return c
+
 
 
     def Main(self, subdir, w=[1,0], sufix=''):
@@ -93,7 +91,7 @@ class HH_opt(HodgkinHuxley):
                     'Weights (out, cac) : %s' % w + '\n' +
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
 
-        self.T, self.X, self.V, self.Ca = get_data_dump()
+        # self.T, self.X, self.V, self.Ca = get_data_dump()
         if(self.loop_func == self.ik_from_v):
             self.Ca = self.V
         self.DT = params.DT
@@ -128,8 +126,6 @@ class HH_opt(HodgkinHuxley):
         grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
-        constraints = self.apply_constraints()
-
         summary = tf.summary.merge_all()
 
         losses = np.zeros(self.epochs)
@@ -148,12 +144,12 @@ class HH_opt(HodgkinHuxley):
                     ys_: np.vstack((self.V, self.Ca)),
                     init_state: init
                 })
-                _ = sess.run(constraints)
+                _ = sess.run(self.constraints)
 
                 with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, sufix), 'w') as f:
                     for name, v in self.param.items():
                         v_ = sess.run(v)
-                        vars[name][i+1] = v_
+                        vars[name][i + 1] = v_
                         f.write('%s : %s\n' % (name, v_))
 
                 rates[i] = sess.run(learning_rate)
@@ -162,9 +158,11 @@ class HH_opt(HodgkinHuxley):
                 train_loss = 0
 
                 plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
-                if(i%10==0):
+                print(i, (i%10==0 or i==self.epochs-1))
+                if(i%10==0 or i==self.epochs-1):
                     plot_vars(vars, i+1, suffix=sufix, show=False, save=True)
                     plot_loss_rate(losses, rates, i, suffix=sufix, show=False, save=True)
+
 
 
 

@@ -120,7 +120,7 @@ def test_xp(dir, show=False):
 
 if __name__ == '__main__':
 
-    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=1)
+    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=11)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     opt.Main(dir, [wv, wca], 'step0')
     for i in range(4):
         new_params = utils.get_dic_from_var(dir, 'step%s' % i)
-        opt.change_params(new_params)
+        # opt.change_params(new_params)
         wv = 1-wv
         wca = 1-wca
         opt.Main(dir, [wv, wca], 'step%s'%(i+1))

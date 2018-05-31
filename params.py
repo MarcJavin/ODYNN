@@ -155,7 +155,7 @@ params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 DT = 0.1
 
 # i_inj = 0.01*(t)*((t>1000)&(t<4000))
-t_train = np.array(sp.arange(0.0, 1200., DT))
+t_train = np.array(sp.arange(0.0, 700., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 
