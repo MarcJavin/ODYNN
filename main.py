@@ -75,7 +75,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
-    sim.Main(dump=True, sufix='step2')
+    sim.Main(dump=True, sufix='step2', show=False)
     opt.Main(dir, w=[w_v2, w_ca2], sufix='step2')
 
     test_xp(dir)
@@ -120,17 +120,17 @@ def test_xp(dir, show=False):
 
 if __name__ == '__main__':
 
-    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=50)
+    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=1)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
-    sim.Main(show=True, dump=True)
+    sim.Main(show=False, dump=True)
     dir = 'Integcomp_alternate'
     wv = 0
     wca = 1
     opt.Main(dir, [wv, wca], 'step0')
-    for i in range(5):
+    for i in range(4):
         new_params = utils.get_dic_from_var(dir, 'step%s' % i)
         opt.change_params(new_params)
         wv = 1-wv

@@ -8,7 +8,6 @@ import pylab as plt
 import numpy as np
 import pandas as pd
 import os
-import pickle
 import re
 
 SMALL_SIZE = 8
@@ -21,7 +20,6 @@ plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
 DIR = RES_DIR
-DUMP_FILE = 'data.txt'
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
 REGEX_VARS = '(.*) : (.*)'
@@ -45,11 +43,6 @@ def set_dir(subdir):
     if not os.path.exists(DIR+IMG_DIR):
         os.makedirs(DIR+IMG_DIR)
     return DIR
-
-def get_data_dump(file=DUMP_FILE):
-    with open(file, 'rb') as f:
-        T, X, V, Ca = pickle.load(f)
-    return T, X, V, Ca
 
 
 """Get variables values into a dictionnary"""

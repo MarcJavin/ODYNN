@@ -3,6 +3,7 @@ from Hodghux import HodgkinHuxley
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
+import data
 import params
 import numpy as np
 import pickle
@@ -92,7 +93,7 @@ class HH_simul(HodgkinHuxley):
             plots_results(self, self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
 
         if (dump):
-            with open(utils.DUMP_FILE, 'wb') as f:
+            with open(data.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
 
 
