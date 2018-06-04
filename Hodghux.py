@@ -8,15 +8,16 @@ class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    DECAY_CA = params.DECAY_CA
-    RHO_CA = params.RHO_CA
     REST_CA = params.REST_CA
 
-    def __init__(self, init_p=params.DEFAULT, tensors=False):
+    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None):
         self.tensors = tensors
         self.param = init_p
         self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
                    self.ica_from_v: params.INIT_STATE_ica}
+        if (loop_func is not None):
+            self.loop_func = loop_func
+        self.init_state = self.get_init_state()
 
 
 
@@ -74,10 +75,11 @@ class HodgkinHuxley():
         e = X[4]
         f = X[5]
         cac = X[6]
+
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.param[
             'C_m']) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.RHO_CA - ((cac - self.REST_CA) / self.DECAY_CA)) * dt
+        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - ((cac - self.REST_CA) / self.param['decay_ca'])) * dt
         tau = self.param['p__tau']
         p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(V, 'p') / tau))
         tau = self.param['q__tau']

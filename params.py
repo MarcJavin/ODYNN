@@ -6,8 +6,7 @@ import random
 
 #'[k|c]a?_[^_]*__(.*)': ['"](.*) .*["']
 
-DECAY_CA = 110.
-RHO_CA = 0.23
+
 REST_CA = 0.
 INITS = {
         'i' : 0,
@@ -24,7 +23,18 @@ INIT_STATE = [INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']]
 INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
+
+SYNAPSE = {
+        'G' : 0,
+        'mdp' : 0,
+        'scale' : 0,
+        'E' : 0
+}
+
+
 CONSTRAINTS = {
+        'decay_ca' : [1e-3,np.infty],
+        'rho_ca' : [1e-3,np.infty],
         'C_m' : [1e-3,np.infty],
         'e__scale' : [1e-3,np.infty],
         'e__tau' : [1e-3,np.infty],
@@ -45,6 +55,9 @@ CONSTRAINTS = {
 }
 
 DEFAULT = {
+        'decay_ca' : 110.,
+        'rho_ca' : 0.23,
+
         'p__tau': 100.,  # ms
         'p__scale': 7.42636,  # mV
         'p__mdp': -8.05232,  # mV
@@ -93,13 +106,16 @@ DEFAULT = {
 }
 
 MAX_TAU = 200.
-MIN_SCALE = 0.5
+MIN_SCALE = 1.
 MAX_SCALE = 50.
 MIN_MDP = -40.
 MAX_MDP = 30.
 MAX_G = 10.
 
 PARAMS_RAND = {
+        'decay_ca': 110.,
+        'rho_ca': 0.23e-2,
+
         'p__tau': random.uniform(0.1,MAX_TAU),
         'p__scale':random.uniform(MIN_SCALE,MAX_SCALE),
         'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
@@ -118,7 +134,7 @@ PARAMS_RAND = {
 
         'e__tau': random.uniform(0.1,MAX_TAU),
         'e__scale': random.uniform(MIN_SCALE,MAX_SCALE),
-        'e__mdp': random.uniform(MIN_MDP, MAX_MDP),
+        'e__mdp': random.uniform(-30., 0.),
 
         'h__alpha': random.uniform(0.1,0.9),
         'h__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),

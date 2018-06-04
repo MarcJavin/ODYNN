@@ -98,7 +98,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 
-def test_xp(dir, show=False):
+def test_xp(dir, sufix='', show=False):
 
     dt = params.DT
     t = np.array(sp.arange(0.0, 4000, dt))
@@ -108,7 +108,7 @@ def test_xp(dir, show=False):
     i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
 
     utils.set_dir(dir)
-    param = utils.get_dic_from_var(dir)
+    param = utils.get_dic_from_var(dir, sufix=sufix)
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
     sim.Main(show=show, sufix='xp1')
     sim.i_inj = i2
@@ -118,26 +118,28 @@ def test_xp(dir, show=False):
     sim.Main(show=show, sufix='xp3')
 
 
-if __name__ == '__main__':
-
-    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=11)
+def alternate(name=''):
+    opt = HH_opt(init_p=params.PARAMS_RAND, epochs=20)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
     sim.Main(show=False, dump=True)
-    dir = 'Integcomp_alternate'
-    wv = 0
-    wca = 1
+    dir = 'Integcomp_alternate%s'%name
+    wv = 0.8
+    wca = 0.2
     opt.Main(dir, [wv, wca], 'step0')
-    for i in range(4):
-        new_params = utils.get_dic_from_var(dir, 'step%s' % i)
-        # opt.change_params(new_params)
-        wv = 1-wv
-        wca = 1-wca
-        opt.Main(dir, [wv, wca], 'step%s'%(i+1))
+    for i in range(10):
+        wv = 1 - wv
+        wca = 1 - wca
+        opt.Main(dir, [wv, wca], reload=True, sufix='step%s'%(i+1))
+    test_xp(dir)
 
 
+if __name__ == '__main__':
+
+    name = sys.argv[1]
+    alternate(name)
     exit(0)
 
 

@@ -13,43 +13,25 @@ class HH_simul(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj):
-        HodgkinHuxley.__init__(self, init_p, tensors=False)
+    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
+        HodgkinHuxley.__init__(self, init_p, tensors=False, loop_func=loop_func)
         self.t = t
         self.i_inj = i_inj
         self.dt = t[1] - t[0]
+        self.state = self.init_state
 
-    # def fitness(self, params):
-    #     idx = 0
-    #     for k, v in self.param.items():
-    #         self.param[v] = params[idx]
-    #         idx += 1
-    #     print(self.param)
-    #     S = [[-50, 0., 0.95, 0, 0, 1, 0]]
-    #     div = DT/self.dt
-    #     for i in X:
-    #         S.append(self.integ_comp(S[-1], i, self.dt))
-    #         s = S[-1]
-    #         for d in range(div-1):
-    #             s = self.integ_comp(s, i, self.dt)
-    #     S = np.array(S[1:])
-    #     V = S[:,0]
-    #     mse = ((Y - V)**2).mean()
-    #     return mse
-    #
-    # def get_bounds(self):
-    #     m = -100
-    #     M = 1000
-    #     low = np.tile([0, m, m], 7), [0, 0, 0, 0, 0, m, m, m]
-    #     up = np.full((29), M)
-    #     return (low, up)
+    def get_volt(self):
+        return self.state[0]
+
+    def step(self, i):
+        self.state = self.loop_func(self.state, i, self.dt, self)
 
     def calculate(self):
-        X = [self.get_init_state()]
-
+        X = []
         for i in self.i_inj:
-            X.append(self.loop_func(X[-1], i, self.dt, self))
-        return np.array(X[1:])
+            self.step(i)
+            X.append(self.state)
+        return np.array(X)
 
     """Compare different parameter sets on the same experiment"""
     def comp(self, ps):
@@ -99,12 +81,8 @@ class HH_simul(HodgkinHuxley):
 
 
 if __name__ == '__main__':
-    p3 = utils.get_dic_from_var('YAY3---Icafromv_v=1_ca=0__2steps11', 'step2')
-    p2 = utils.get_dic_from_var('YAY2---Icafromv_v=1_ca=0__2steps11')
-    p = utils.get_dic_from_var('YAY---Icafromv_v=1_ca=0__2steps11')
     sim = HH_simul(t=params.t_train, i_inj=params.i_inj_train)
-    sim.comp([p,p2,p3,params.DEFAULT])
-    sim.comp_targ(p,params.DEFAULT)
+    sim.comp([params.PARAMS_RAND,params.DEFAULT])
     #
     # exit(0)
 
