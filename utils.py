@@ -42,6 +42,7 @@ def set_dir(subdir):
         os.makedirs(DIR)
     if not os.path.exists(DIR+IMG_DIR):
         os.makedirs(DIR+IMG_DIR)
+        os.makedirs(DIR+'tmp')
     return DIR
 
 

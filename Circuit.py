@@ -37,9 +37,10 @@ class Circuit():
 
 
 
-    def synapse(self, vprev, vpost):
-        g = self.param['G'] / (1 + sp.exp((self.param['mdp'] - vprev)/self.param['scale']))
-        i = g*(self.param['E'] - vpost)
+
+    def synapse(self, syn, vprev, vpost):
+        g = self.param['%s__G'%syn] / (1 + sp.exp((self.param['%s__mdp'%syn] - vprev)/self.param['%s__scale'%syn]))
+        i = g*(self.param['%s__E'%syn] - vpost)
         return i
 
 
