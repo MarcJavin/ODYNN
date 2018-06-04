@@ -36,7 +36,8 @@ class HH_opt(HodgkinHuxley):
         return h
 
     def step(self, hprev, x):
-        return self.loop_func(hprev, x, self.DT, self)
+        self.state = self.loop_func(hprev, x, self.DT, self)
+        return self.state
 
 
     def Main(self, subdir, w=[1,0], sufix='', file=None, reload=False):

@@ -31,15 +31,23 @@ class Circuit():
 
 
     def step(self, curs):
-        next_curs = np.zeros(len(self.neurons))
-        for n in self.neurons:
-            n.step(curs[i])
+        next_curs = np.zeros[len(curs)]
+        #update neurons
+        for i, n in enumerate(self.neurons):
+            n.step(n.state, curs[i], self.dt, n)
+        #update synapses
+        for i, n in enumerate(self.neurons):
+            vprev = n.state[0]
+            syn, post = self.connections[i]
+            vpost = self.neurons[post].state[0]
+            next_curs[post] += self.syn_curr(self.connections[n], vprev, vpost)
+        return next_curs
 
 
 
 
-    def synapse(self, syn, vprev, vpost):
-        g = self.param['%s__G'%syn] / (1 + sp.exp((self.param['%s__mdp'%syn] - vprev)/self.param['%s__scale'%syn]))
+    def syn_curr(self, syn, vprev, vpost):
+        g = self.param['%s__G'%syn] / (1 + sp.exp((self.param['%s_q_mdp'%syn] - vprev)/self.param['%s__scale'%syn]))
         i = g*(self.param['%s__E'%syn] - vpost)
         return i
 

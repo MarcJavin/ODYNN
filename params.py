@@ -25,10 +25,10 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 
 SYNAPSE = {
-        'G' : 0,
-        'mdp' : 0,
-        'scale' : 0,
-        'E' : 0
+        'G' : 1.,
+        'mdp' : 0.,
+        'scale' : 5.,
+        'E' : 0.
 }
 
 
