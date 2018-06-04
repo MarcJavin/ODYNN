@@ -11,9 +11,8 @@ import scipy as sp
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca', 'rho_ca', 'decay_ca'}
 K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau', 'n__mdp', 'n__scale', 'g_Kf', 'g_Ks', 'E_K'}
 
-ALL = set(params.DEFAULT.keys())
-CA_CONST = ALL - CA_VAR
-K_CONST = ALL - K_VAR
+CA_CONST = params.ALL - CA_VAR
+K_CONST = params.ALL - K_VAR
 
 
 """Single optimisation"""

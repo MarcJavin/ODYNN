@@ -10,7 +10,7 @@ class HodgkinHuxley():
 
     REST_CA = params.REST_CA
 
-    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None):
+    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None, dt=0.1):
         self.tensors = tensors
         self.param = init_p
         self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
@@ -18,6 +18,7 @@ class HodgkinHuxley():
         if (loop_func is not None):
             self.loop_func = loop_func
         self.init_state = self.get_init_state()
+        self.dt = dt
 
 
 
@@ -64,7 +65,7 @@ class HodgkinHuxley():
         return self.param['g_L'] * (V - self.param['E_L'])
 
     @staticmethod 
-    def integ_comp(X, i_inj, dt, self):
+    def integ_comp(X, i_inj, self):
         """
         Integrate
         """
@@ -78,18 +79,18 @@ class HodgkinHuxley():
 
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.param[
-            'C_m']) * dt
-        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - ((cac - self.REST_CA) / self.param['decay_ca'])) * dt
+            'C_m']) * self.dt
+        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - ((cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
         tau = self.param['p__tau']
-        p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(V, 'p') / tau))
+        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
         tau = self.param['q__tau']
-        q = ((tau * dt) / (tau + dt)) * ((q / dt) + (self.inf(V, 'q') / tau))
+        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
         tau = self.param['e__tau']
-        e = ((tau * dt) / (tau + dt)) * ((e / dt) + (self.inf(V, 'e') / tau))
+        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(V, 'e') / tau))
         tau = self.param['f__tau']
-        f = ((tau * dt) / (tau + dt)) * ((f / dt) + (self.inf(V, 'f') / tau))
+        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(V, 'f') / tau))
         tau = self.param['n__tau']
-        n = ((tau * dt) / (tau + dt)) * ((n / dt) + (self.inf(V, 'n') / tau))
+        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
 
         if(self.tensors):
             cac = tf.maximum(cac, 0.)
@@ -99,7 +100,7 @@ class HodgkinHuxley():
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
-    def no_tau_ca(X, i_inj, dt, self):
+    def no_tau_ca(X, i_inj, self):
         """
         Integrate
         """
@@ -112,15 +113,15 @@ class HodgkinHuxley():
         cac = X[6]
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self.param['C_m']) * dt
-        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
-                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+            V)) / self.param['C_m']) * self.dt
+        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
+                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
         tau = self.param['p__tau']
-        p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(V, 'p') / tau))
+        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
         tau = self.param['q__tau']
-        q = ((tau * dt) / (tau + dt)) * ((q / dt) + (self.inf(V, 'q') / tau))
+        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
         tau = self.param['n__tau']
-        n = ((tau * dt) / (tau + dt)) * ((n / dt) + (self.inf(V, 'n') / tau))
+        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
         e = self.inf(V, 'e')
         f = self.inf(V, 'f')
         if (self.tensors):
@@ -131,7 +132,7 @@ class HodgkinHuxley():
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
-    def no_tau(X, i_inj, dt, self):
+    def no_tau(X, i_inj, self):
         """
         Integrate
         """
@@ -144,10 +145,10 @@ class HodgkinHuxley():
         cac = X[6]
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self.param['C_m']) * dt
+            V)) / self.param['C_m']) * self.dt
 
-        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
-                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
+                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
         p = self.inf(V, 'p')
         q = self.inf(V, 'q')
         e = self.inf(V, 'e')
@@ -161,19 +162,19 @@ class HodgkinHuxley():
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
-    def ica_from_v(X, v_fix, dt, self):
+    def ica_from_v(X, v_fix, self):
         e = X[1]
         f = X[2]
         cac = X[-1]
 
         h = self.h(cac)
         tau = self.param['e__tau']
-        e = ((tau * dt) / (tau + dt)) * ((e / dt) + (self.inf(v_fix, 'e') / tau))
+        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(v_fix, 'e') / tau))
         tau = self.param['f__tau']
-        f = ((tau * dt) / (tau + dt)) * ((f / dt) + (self.inf(v_fix, 'f') / tau))
+        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(v_fix, 'f') / tau))
         ica = self.I_Ca(v_fix, e, f, h)
-        cac = (self.DECAY_CA / (dt + self.DECAY_CA)) * (
-                cac - ica * self.RHO_CA * dt + self.REST_CA * self.DECAY_CA / dt)
+        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
+                cac - ica * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
 
         if (self.tensors):
             cac = tf.maximum(cac, 0.)
@@ -183,17 +184,17 @@ class HodgkinHuxley():
             return [ica, e, f, h, cac]
 
     @staticmethod
-    def ik_from_v(X, v_fix, dt, self):
+    def ik_from_v(X, v_fix, self):
         p = X[1]
         q = X[2]
         n = X[3]
 
         tau = self.param['p__tau']
-        p = ((tau * dt) / (tau + dt)) * ((p / dt) + (self.inf(v_fix, 'p') / tau))
+        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(v_fix, 'p') / tau))
         tau = self.param['q__tau']
-        q = ((tau * dt) / (tau + dt)) * ((q / dt) + (self.inf(v_fix, 'q') / tau))
+        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(v_fix, 'q') / tau))
         tau = self.param['n__tau']
-        n = ((tau * dt) / (tau + dt)) * ((n / dt) + (self.inf(v_fix, 'n') / tau))
+        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(v_fix, 'n') / tau))
         ik = self.I_Kf(v_fix, p, q) + self.I_Ks(v_fix, n)
 
         if (self.tensors):

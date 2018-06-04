@@ -32,6 +32,7 @@ SYNAPSE = {
 }
 
 
+
 CONSTRAINTS = {
         'decay_ca' : [1e-3,np.infty],
         'rho_ca' : [1e-3,np.infty],
@@ -104,6 +105,7 @@ DEFAULT = {
         'E_L': -60.0
         # Leak Nernst reversal potentials, in mV
 }
+ALL = set(DEFAULT.keys())
 
 MAX_TAU = 200.
 MIN_SCALE = 1.

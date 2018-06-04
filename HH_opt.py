@@ -18,25 +18,18 @@ class HH_opt(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9], loop_func=None):
-        HodgkinHuxley.__init__(self, init_p, tensors=True, loop_func=loop_func)
+    def __init__(self, init_p=params.PARAMS_RAND, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9], loop_func=None, dt=0.1):
+        HodgkinHuxley.__init__(self, init_p, tensors=True, loop_func=loop_func, dt=dt)
         self.fixed = fixed
         self.epochs = epochs
         self.start_rate, self.decay_step, self.decay_rate = l_rate
         self.constraints_dic = constraints
         self.init_p = init_p
+        self.state = self.init_state
 
-    def condition(self, hprev, x, dt, index, mod):
-        return tf.less(index * dt, self.DT)
-
-
-    def step_long(self, hprev, x):
-        index = tf.constant(0.)
-        h = tf.while_loop(self.condition, self.loop_func, (hprev, x, self.dt, index, self))
-        return h
 
     def step(self, hprev, x):
-        self.state = self.loop_func(hprev, x, self.DT, self)
+        self.state = self.loop_func(hprev, x, self)
         return self.state
 
 
@@ -71,7 +64,7 @@ class HH_opt(HodgkinHuxley):
             self.T, self.X, self.V, self.Ca = get_data_dump(file)
         if(self.loop_func == self.ik_from_v):
             self.Ca = self.V
-        self.DT = params.DT
+        assert(self.dt == self.T[1] - self.T[0])
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
