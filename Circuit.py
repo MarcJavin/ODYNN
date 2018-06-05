@@ -1,5 +1,5 @@
 import numpy as np
-from Hodghux import HodgkinHuxley
+from Hodghux import Neuron_fix
 from HH_opt import HH_opt
 import scipy as sp
 import params
@@ -52,11 +52,11 @@ class Circuit():
         if(simuls is None):
             self.simuls = []
             for n in self.neurons:
-                self.simuls.append(HodgkinHuxley(init_p=n.init_p, dt=self.dt))
+                self.simuls.append(Neuron_fix(init_p=n.init_p, dt=self.dt))
         else:
             self.simuls = simuls
         states = dict(
-            [(i, np.zeros((len(params.INIT_STATE), len(self.t)))) for i, n in enumerate(self.neurons)])
+            [(i, np.zeros((len(self.neurons[0].init_state), len(self.t)))) for i, n in enumerate(self.neurons)])
         curs = np.zeros(self.i_injs.shape)
 
         for t in range(self.i_injs.shape[1]):
@@ -95,6 +95,6 @@ class Circuit():
 
 
     def opt_neurons(self):
-        file = self.run_sim([HodgkinHuxley(), HodgkinHuxley()], dump=True)
+        file = self.run_sim([Neuron_fix(), Neuron_fix()], dump=True)
         for i, n in enumerate(self.neurons):
-            self.train_neuron('Circuit_0', n, i, file)
+            self.train_neuron('Circuit_0', HH_opt(n), i, file)

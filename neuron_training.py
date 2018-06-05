@@ -122,11 +122,11 @@ def alternate(name=''):
     dir = 'Integcomp_alternate%s'%name
     wv = 0.2
     wca = 0.8
-    opt.optimize(dir, [wv, wca], epochs=20, suffix='step0')
+    opt.optimize(dir, [wv, wca], epochs=20, step=0)
     for i in range(10):
         wv = 1 - wv
         wca = 1 - wca
-        opt.optimize(dir, [wv, wca], reload=True, epochs=20, suffix='step%s'%(i+1))
+        opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i+1)
     test_xp(dir)
 
 

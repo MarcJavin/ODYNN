@@ -1,6 +1,6 @@
 
 from Circuit import Circuit
-from HH_opt import HH_opt
+from Hodghux import Neuron_tf
 import numpy as np
 import scipy as sp
 import params
@@ -13,8 +13,8 @@ def inhibit():
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_out = 10.*((t>350)&(t<700))
     i_injs = np.array([i0, i1])
-    neurons = [HH_opt(init_p=params.DEFAULT, fixed=params.ALL),
-               HH_opt(init_p=params.DEFAULT, fixed=params.ALL)]
+    neurons = [Neuron_tf(init_p=params.DEFAULT, fixed=params.ALL),
+               Neuron_tf(init_p=params.DEFAULT, fixed=params.ALL)]
     c = Circuit(neurons, connections, i_injs, t, i_out)
     c.run_sim()
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1])
-    neurons = [HH_opt(),
-               HH_opt()]
+    neurons = [Neuron_tf(),
+               Neuron_tf()]
     c = Circuit(neurons, connections, i_injs, t)
     c.opt_neurons()
