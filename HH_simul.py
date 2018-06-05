@@ -13,18 +13,18 @@ class HH_simul(HodgkinHuxley):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
+    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None, dt=0.1):
         HodgkinHuxley.__init__(self, init_p, tensors=False, loop_func=loop_func)
+        assert(self.dt == t[1] - t[0])
         self.t = t
         self.i_inj = i_inj
-        self.dt = t[1] - t[0]
         self.state = self.init_state
 
     def get_volt(self):
         return self.state[0]
 
     def step(self, i):
-        self.state = self.loop_func(self.state, i, self.dt, self)
+        self.state = self.loop_func(self.state, i, self)
 
     def calculate(self):
         X = []

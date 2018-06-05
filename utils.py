@@ -193,7 +193,11 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, suffix="", show=True, save=False):
     plt.ylabel('[Ca2+]')
 
     plt.subplot(3, 1, 3)
-    plt.plot(ts, i_inj, 'k')
+    if(len(i_inj.shape)<2):
+        plt.plot(ts, i_inj, 'k')
+    else:
+        for n in range(i_inj.shape[0]):
+            plt.plot(ts, i_inj[n, :])
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
