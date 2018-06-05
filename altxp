@@ -1,0 +1,6 @@
+nohup python3 main.py 0 &
+nohup python3 main.py 1 &
+nohup python3 main.py 2 &
+nohup python3 main.py 3 &
+nohup python3 main.py 4 &
+nohup python3 main.py 5 & 
