@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
-from Hodghux import HodgkinHuxley
+from Hodghux import Neuron_tf
 import tensorflow as tf
 import numpy as np
 from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate,set_dir, plot_vars
@@ -18,27 +18,25 @@ class HH_opt():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, l_rate=[0.9,9,0.9], loop_func=None, dt=0.1):
-        self.neuron = HodgkinHuxley(init_p, tensors=True, loop_func=loop_func, dt=dt)
-        self.fixed = fixed
-        self.start_rate, self.decay_step, self.decay_rate = l_rate
-        self.constraints_dic = constraints
-        self.init_p = init_p
+    def __init__(self, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
+        self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=dt, fixed=fixed, constraints=constraints)
 
 
-    def optimize(self, subdir, w=[1,0], epochs=200, suffix='', step='', file=None, reload=False):
+    def optimize(self, subdir, w=[1,0], epochs=200, l_rate=[0.9,9,0.9], suffix='', step='', file=None, reload=False):
         print(suffix, step)
         DIR = set_dir(subdir+'/')
-        self.neuron.reset(self.init_p, self.fixed, self.constraints_dic)
+        tf.reset_default_graph()
+        self.neuron.reset()
+        start_rate, decay_step, decay_rate = l_rate
 
         with open('%s%s_%s.txt' % (DIR, OUT_SETTINGS, suffix), 'w') as f:
-            f.write('Initial params : %s' % self.init_p + '\n'+
-                    'Fixed variables : %s' % [c for c in self.fixed] + '\n'+
+            f.write('Initial params : %s' % self.neuron.init_p + '\n'+
+                    'Fixed variables : %s' % [c for c in self.neuron.fixed] + '\n'+
                     'Initial state : %s' % self.neuron.init_state + '\n' +
-                    'Constraints : %s' % self.constraints_dic + '\n' +
+                    'Constraints : %s' % self.neuron.constraints_dic + '\n' +
                     'Model solver : %s' % self.neuron.loop_func + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
-                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
+                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (start_rate, decay_step, decay_rate) + '\n')
 
         if file is None:
             self.T, self.X, self.V, self.Ca = get_data_dump()
@@ -52,7 +50,7 @@ class HH_opt():
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
         init_state = tf.placeholder(shape=[len(self.neuron.init_state)], dtype=tf.float32)
 
-        res = tf.scan(self.neuron.step_t,
+        res = tf.scan(self.neuron.step,
                       xs_,
                      initializer=init_state)
 
@@ -65,10 +63,10 @@ class HH_opt():
         global_step = tf.Variable(0, trainable=False)
         #progressive learning rate
         learning_rate = tf.train.exponential_decay(
-            self.start_rate,  # Base learning rate.
+            start_rate,  # Base learning rate.
             global_step,  # Current index to the dataset.
-            self.decay_step,  # Decay step.
-            self.decay_rate,  # Decay rate.
+            decay_step,  # Decay step.
+            decay_rate,  # Decay rate.
             staircase=True)
         tf.summary.scalar('learning rate', learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -96,7 +94,7 @@ class HH_opt():
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
-                vars = dict([(var, [val]) for var, val in self.init_p.items()])
+                vars = dict([(var, [val]) for var, val in self.neuron.init_p.items()])
                 losses = np.zeros(epochs)
                 rates = np.zeros(epochs)
                 len_prev = 0
@@ -128,9 +126,6 @@ class HH_opt():
                     plot_vars(vars, suffix=suffix, show=False, save=True)
                     plot_loss_rate(losses, rates, suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
-
-
-
 
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ class HodgkinHuxley():
 
     REST_CA = params.REST_CA
 
-    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None, dt=0.1):
+    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None, dt=0.1, fixed=None, constraints=None):
         self.tensors = tensors
         self.param = init_p
         self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
@@ -18,35 +18,8 @@ class HodgkinHuxley():
         if (loop_func is not None):
             self.loop_func = loop_func
         self.init_state = self.get_init_state()
-        self.state = self.init_state
         self.dt = dt
 
-    def get_volt(self):
-        return self.state[0]
-
-    def step(self, i):
-        self.state = self.loop_func(self.state, i, self)
-        return self.state
-
-    def step_t(self, hprev, x):
-        return self.loop_func(hprev, x, self)
-
-    def reset(self, p=None, fixed=None, constraints_dic=None):
-        if(self.tensors):
-            self.param = {}
-            self.constraints = []
-            tf.reset_default_graph()
-            for var, val in p.items():
-                if (var in fixed):
-                    self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
-                else:
-                    self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
-                    if var in constraints_dic:
-                        con = constraints_dic[var]
-                        self.constraints.append(
-                            tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
-        else:
-            self.state = self.init_state
 
     def inf(self, V, rate):
         mdp = self.param['%s__mdp' % rate]
@@ -227,3 +200,43 @@ class HodgkinHuxley():
     def get_init_state(self):
         return self.inits_p.get(self.loop_func, params.INIT_STATE)
 
+class Neuron_tf(HodgkinHuxley):
+
+    def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1, fixed=None, constraints=None):
+        HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, loop_func=loop_func, dt=dt)
+        self.init_p = init_p
+        self.fixed = fixed
+        self.constraints_dic = constraints
+        self.reset()
+
+    def step(self, hprev, x):
+        return self.loop_func(hprev, x, self)
+
+    def reset(self):
+        if (self.tensors):
+            self.param = {}
+            self.constraints = []
+            for var, val in self.init_p.items():
+                if (var in self.fixed):
+                    self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
+                else:
+                    self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                    if var in self.constraints_dic:
+                        con = self.constraints_dic[var]
+                        self.constraints.append(
+                            tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
+
+class Neuron_fix(HodgkinHuxley):
+
+    def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1):
+        HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, loop_func=loop_func, dt=dt)
+
+    def get_volt(self):
+        return self.state[0]
+
+    def step(self, i):
+        self.state = self.loop_func(self.state, i, self)
+        return self.state
+
+    def reset(self):
+        self.state = self.init_state

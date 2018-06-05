@@ -56,7 +56,7 @@ class Circuit():
         else:
             self.simuls = simuls
         states = dict(
-            [(i, np.zeros((len(self.neurons[0].neuron.init_state), len(self.t)))) for i, n in enumerate(self.neurons)])
+            [(i, np.zeros((len(params.INIT_STATE), len(self.t)))) for i, n in enumerate(self.neurons)])
         curs = np.zeros(self.i_injs.shape)
 
         for t in range(self.i_injs.shape[1]):

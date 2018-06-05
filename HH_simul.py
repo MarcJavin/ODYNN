@@ -1,5 +1,5 @@
 import scipy as sp
-from Hodghux import HodgkinHuxley
+from Hodghux import Neuron_fix
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
@@ -13,7 +13,7 @@ class HH_simul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
     def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None, dt=0.1):
-        self.neuron = HodgkinHuxley(init_p, tensors=False, loop_func=loop_func, dt=dt)
+        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=dt)
         self.t = t
         self.i_inj = i_inj
 
