@@ -142,7 +142,7 @@ PARAMS_RAND = {
         'h__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
         'h__mdp': random.uniform(1,100),
 
-        'C_m': random.uniform(0.1, 50.),
+        'C_m': random.uniform(0.1, 40.),
         # membrane capacitance, in uF/cm^2
 
         'g_Ca': random.uniform(0.1,MAX_G),
@@ -152,7 +152,7 @@ PARAMS_RAND = {
         'g_Kf': random.uniform(0.1,MAX_G),
         # Postassium (K) maximum conductances, in mS/cm^2
 
-        'g_L': random.uniform(0.1,MAX_G),
+        'g_L': random.uniform(0.001, 0.5),
         # Leak maximum conductances, in mS/cm^2
 
         'E_Ca': random.uniform(0., 40),
@@ -172,8 +172,7 @@ params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
 DT = 0.1
 
-# i_inj = 0.01*(t)*((t>1000)&(t<4000))
-t_train = np.array(sp.arange(0.0, 700., DT))
+t_train = np.array(sp.arange(0.0, 1000., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 

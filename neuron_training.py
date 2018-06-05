@@ -122,8 +122,8 @@ def alternate(name=''):
     sim.loop_func = loop_func
     sim.Main(show=False, dump=True)
     dir = 'Integcomp_alternate%s'%name
-    wv = 0.8
-    wca = 0.2
+    wv = 0.2
+    wca = 0.8
     opt.Main(dir, [wv, wca], 'step0')
     for i in range(10):
         wv = 1 - wv
