@@ -7,9 +7,9 @@ import params
 
 connections = [(0,1), (1,0)]
 
-t_train = np.array(sp.arange(0.0, 700., params.DT))
-i0 = 10.*((t_train>000)&(t_train<350))
-i1 = np.zeros(t_train.shape)
+t_train = np.array(sp.arange(0.0, 1200., params.DT))
+i0 = 10.*((t_train>100)&(t_train<400))
+i1 = 10.*((t_train>600)&(t_train<900))
 i_out = 10.*((t_train>350)&(t_train<700))
 
 i_injs = np.array([i0,

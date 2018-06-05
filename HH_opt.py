@@ -132,7 +132,7 @@ class HH_opt(HodgkinHuxley):
                 with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, sufix), 'w') as f:
                     for name, v in self.param.items():
                         v_ = sess.run(v)
-                        vars[name][len_prev + i ] = v_
+                        vars[name][len_prev + i + 1*(len_prev==0) ] = v_
                         f.write('%s : %s\n' % (name, v_))
 
                 rates[len_prev+i] = sess.run(learning_rate)
@@ -143,8 +143,8 @@ class HH_opt(HodgkinHuxley):
                 if(i%10==0 or i==self.epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    plot_vars(vars, len_prev+i, show=False, save=True)
-                    plot_loss_rate(losses, rates, len_prev+i, show=False, save=True)
+                    plot_vars(vars, show=False, save=True)
+                    plot_loss_rate(losses, rates, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 
 

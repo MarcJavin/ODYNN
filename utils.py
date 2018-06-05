@@ -5,6 +5,7 @@ from matplotlib.ticker import FormatStrFormatter
 if (socket.gethostname()=='1080'):
     matplotlib.use("Agg")
 import pylab as plt
+from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 import os
@@ -67,15 +68,15 @@ def get_data(file='AVAL_test.csv'):
     return T, X, Y
 
 """plot variation of all variables organized by categories"""
-def plot_vars(var_dic, lim, suffix="", show=True, save=False):
+def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
         gate = GATES[nb]
-        plot_vars_gate(gate, var_dic['%s__mdp' % gate][:lim + 1], var_dic['%s__scale' % gate][:lim + 1],
-                       var_dic['%s__tau' % gate][:lim + 1], fig, grid[nb], (nb%3==0))
-    plot_vars_gate('h', var_dic['h__mdp'][:lim + 1], var_dic['h__scale'][:lim + 1],
-                   var_dic['h__alpha'][:lim + 1], fig, grid[5], False)
+        plot_vars_gate(gate, var_dic['%s__mdp' % gate], var_dic['%s__scale' % gate],
+                       var_dic['%s__tau' % gate], fig, grid[nb], (nb%3==0))
+    plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
+                   var_dic['h__alpha'], fig, grid[5], False)
     plt.tight_layout()
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
@@ -86,42 +87,42 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     grid = plt.GridSpec(1, 2)
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(var_dic['g_Ks'][:lim + 1], RATE_COLORS['n'])
+    ax.plot(var_dic['g_Ks'], RATE_COLORS['n'])
     ax.set_ylabel('KS cond.')
     ax.set_title('Conductances')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['g_Kf'][:lim + 1], RATE_COLORS['n'])
+    ax.plot(var_dic['g_Kf'], RATE_COLORS['n'])
     ax.set_ylabel('KF cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['g_Ca'][:lim + 1], RATE_COLORS['e'])
+    ax.plot(var_dic['g_Ca'], RATE_COLORS['e'])
     ax.set_ylabel('Ca cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['g_L'][:lim + 1], 'k')
+    ax.plot(var_dic['g_L'], 'k')
     ax.set_ylabel('Leak cond.')
     fig.add_subplot(ax)
 
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[1], hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(var_dic['C_m'][:lim + 1])
+    ax.plot(var_dic['C_m'])
     ax.set_ylabel('Capacitance')
     ax.yaxis.tick_right()
     ax.set_title('Membrane')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['E_K'][:lim + 1], RATE_COLORS['n'])
+    ax.plot(var_dic['E_K'], RATE_COLORS['n'])
     ax.set_ylabel('K E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['E_Ca'][:lim + 1], RATE_COLORS['f'])
+    ax.plot(var_dic['E_Ca'], RATE_COLORS['f'])
     ax.set_ylabel('Ca E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['E_L'][:lim + 1], 'k')
+    ax.plot(var_dic['E_L'], 'k')
     ax.set_ylabel('Leak E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
@@ -129,6 +130,18 @@ def plot_vars(var_dic, lim, suffix="", show=True, save=False):
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
     if(show):
+        plt.show()
+
+    plt.figure()
+    ax = plt.subplot(211)
+    ax.plot(var_dic['rho_ca'], 'r')
+    plt.ylabel('Rho_ca')
+    ax = plt.subplot(212)
+    ax.plot(var_dic['decay_ca'], 'b')
+    plt.ylabel('Decay_ca')
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
+    if (show):
         plt.show()
 
     plt.close('all')
@@ -160,15 +173,15 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
 
 
 
-def plot_loss_rate(losses, rates, lim, suffix="", show=True, save=False):
+def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(2,1,1)
-    plt.plot(losses[:lim+1], 'r')
+    plt.plot(losses, 'r')
     plt.ylabel('Loss')
 
     plt.subplot(2,1,2)
-    plt.plot(rates[:lim+1])
+    plt.plot(rates)
     plt.ylabel('Learning rate')
 
     if(save):

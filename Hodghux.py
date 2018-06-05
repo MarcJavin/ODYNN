@@ -93,10 +93,8 @@ class HodgkinHuxley():
         n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
 
         if(self.tensors):
-            cac = tf.maximum(cac, 0.)
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
-            cac = max(cac, 0.)
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
