@@ -26,9 +26,16 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 SYNAPSE = {
         'G' : 1.,
-        'mdp' : 0.,
-        'scale' : 5.,
-        'E' : 0.
+        'mdp' : -35.,
+        'scale' : 2.,
+        'E' : 20.
+}
+
+SYNAPSE_inhib = {
+        'G' : 1.,
+        'mdp' : -35.,
+        'scale' : -2.,
+        'E' : 20.
 }
 
 
@@ -107,63 +114,52 @@ DEFAULT = {
 }
 ALL = set(DEFAULT.keys())
 
-MAX_TAU = 200.
-MIN_SCALE = 1.
-MAX_SCALE = 50.
-MIN_MDP = -40.
-MAX_MDP = 30.
-MAX_G = 10.
 
-PARAMS_RAND = {
-        'decay_ca': 110.,
-        'rho_ca': 0.23e-2,
 
-        'p__tau': random.uniform(0.1,MAX_TAU),
-        'p__scale':random.uniform(MIN_SCALE,MAX_SCALE),
-        'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
+def give_rand():
+        MAX_TAU = 200.
+        MIN_SCALE = 1.
+        MAX_SCALE = 50.
+        MIN_MDP = -40.
+        MAX_MDP = 30.
+        MAX_G = 10.
 
-        'q__tau': random.uniform(0.1,MAX_TAU),
-        'q__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
-        'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
+        return {
+                'decay_ca': 110.,
+                'rho_ca': 0.23e-2,
+                'p__tau': random.uniform(0.1,MAX_TAU),
+                'p__scale':random.uniform(MIN_SCALE,MAX_SCALE),
+                'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'n__tau': random.uniform(0.1,MAX_TAU),
-        'n__scale': random.uniform(MIN_SCALE,MAX_SCALE),
-        'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
+                'q__tau': random.uniform(0.1,MAX_TAU),
+                'q__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+                'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'f__tau': random.uniform(0.1,MAX_TAU),
-        'f__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
-        'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
+                'n__tau': random.uniform(0.1,MAX_TAU),
+                'n__scale': random.uniform(MIN_SCALE,MAX_SCALE),
+                'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'e__tau': random.uniform(0.1,MAX_TAU),
-        'e__scale': random.uniform(MIN_SCALE,MAX_SCALE),
-        'e__mdp': random.uniform(-30., 0.),
+                'f__tau': random.uniform(0.1,MAX_TAU),
+                'f__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+                'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'h__alpha': random.uniform(0.1,0.9),
-        'h__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
-        'h__mdp': random.uniform(1,100),
+                'e__tau': random.uniform(0.1,MAX_TAU),
+                'e__scale': random.uniform(MIN_SCALE,MAX_SCALE),
+                'e__mdp': random.uniform(-30., 0.),
 
-        'C_m': random.uniform(0.1, 40.),
-        # membrane capacitance, in uF/cm^2
+                'h__alpha': random.uniform(0.1,0.9),
+                'h__scale': random.uniform(-MAX_SCALE,-MIN_SCALE),
+                'h__mdp': random.uniform(1,100),
 
-        'g_Ca': random.uniform(0.1,MAX_G),
-        # Calcium (Na) maximum conductances, in mS/cm^2
-
-        'g_Ks': random.uniform(0.1,MAX_G),
-        'g_Kf': random.uniform(0.1,MAX_G),
-        # Postassium (K) maximum conductances, in mS/cm^2
-
-        'g_L': random.uniform(0.001, 0.5),
-        # Leak maximum conductances, in mS/cm^2
-
-        'E_Ca': random.uniform(0., 40),
-        # Sodium (Na) Nernst reversal potentials, in mV
-
-        'E_K': random.uniform(-80, -40.),
-        # Postassium (K) Nernst reversal potentials, in mV
-
-        'E_L': random.uniform(-80, -40.),
-        # Leak Nernst reversal potentials, in mV
-}
+                'C_m': random.uniform(0.1, 40.),
+                'g_Ca': random.uniform(0.1,MAX_G),
+                'g_Ks': random.uniform(0.1,MAX_G),
+                'g_Kf': random.uniform(0.1,MAX_G),
+                'g_L': random.uniform(0.001, 0.5),
+                'E_Ca': random.uniform(0., 40),
+                'E_K': random.uniform(-80, -40.),
+                'E_L': random.uniform(-80, -40.),
+        }
 
 params = DEFAULT
 params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
@@ -172,7 +168,7 @@ params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
 DT = 0.1
 
-t_train = np.array(sp.arange(0.0, 1200., DT))
+t_train = np.array(sp.arange(0.0, 700., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 

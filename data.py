@@ -9,7 +9,7 @@ import pickle
 import math
 from matplotlib.ticker import FormatStrFormatter
 
-DUMP_FILE = 'data.txt'
+DUMP_FILE = 'data/dump'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 

@@ -5,24 +5,31 @@ import numpy as np
 import scipy as sp
 import params
 
-connections = [(0,1), (1,0)]
-
-t_train = np.array(sp.arange(0.0, 1200., params.DT))
-i0 = 10.*((t_train>100)&(t_train<400))
-i1 = 10.*((t_train>600)&(t_train<900))
-i_out = 10.*((t_train>350)&(t_train<700))
-
-i_injs = np.array([i0,
-          i1])
-
-neurons = [HH_opt(init_p=params.DEFAULT, fixed=params.ALL),
-           HH_opt(init_p=params.DEFAULT, fixed=params.ALL)]
-
+def inhibit():
+    inhib = params.SYNAPSE_inhib
+    connections = {(0,1) : inhib, (1,0) : inhib}
+    t = np.array(sp.arange(0.0, 2000., params.DT))
+    i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
+    i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
+    i_out = 10.*((t>350)&(t<700))
+    i_injs = np.array([i0, i1])
+    neurons = [HH_opt(init_p=params.DEFAULT, fixed=params.ALL),
+               HH_opt(init_p=params.DEFAULT, fixed=params.ALL)]
+    c = Circuit(neurons, connections, i_injs, t, i_out)
+    c.run_sim()
 
 
 
 
 
 if __name__ == '__main__':
-    c = Circuit(neurons, connections, i_injs, t_train, i_out, init_p=params.SYNAPSE)
-    c.run_sim()
+    connections = {(0, 1) : params.SYNAPSE_inhib,
+                    (1, 0) : params.SYNAPSE}
+    t = np.array(sp.arange(0.0, 1000., params.DT))
+    i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
+    i1 = 30. * ((t > 700) & (t < 800))
+    i_injs = np.array([i0, i1])
+    neurons = [HH_opt(),
+               HH_opt()]
+    c = Circuit(neurons, connections, i_injs, t)
+    c.opt_neurons()

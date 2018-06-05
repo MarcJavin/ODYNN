@@ -14,47 +14,29 @@ SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
 
 
-class HH_opt(HodgkinHuxley):
+class HH_opt():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
 
-    def __init__(self, init_p=params.PARAMS_RAND, fixed=[], constraints=params.CONSTRAINTS, epochs=200, l_rate=[0.9,9,0.9], loop_func=None, dt=0.1):
-        HodgkinHuxley.__init__(self, init_p, tensors=True, loop_func=loop_func, dt=dt)
+    def __init__(self, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, l_rate=[0.9,9,0.9], loop_func=None, dt=0.1):
+        self.neuron = HodgkinHuxley(init_p, tensors=True, loop_func=loop_func, dt=dt)
         self.fixed = fixed
-        self.epochs = epochs
         self.start_rate, self.decay_step, self.decay_rate = l_rate
         self.constraints_dic = constraints
         self.init_p = init_p
-        self.state = self.init_state
 
 
-    def step(self, hprev, x):
-        self.state = self.loop_func(hprev, x, self)
-        return self.state
-
-
-    def Main(self, subdir, w=[1,0], sufix='', file=None, reload=False):
-        print(sufix)
+    def optimize(self, subdir, w=[1,0], epochs=200, suffix='', step='', file=None, reload=False):
+        print(suffix, step)
         DIR = set_dir(subdir+'/')
-        self.param = {}
-        self.constraints = []
-        tf.reset_default_graph()
-        for var, val in self.init_p.items():
-            if (var in self.fixed):
-                self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
-            else:
-                self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
-                if var in self.constraints_dic:
-                    con = self.constraints_dic[var]
-                    self.constraints.append(
-                        tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
+        self.neuron.reset(self.init_p, self.fixed, self.constraints_dic)
 
-        with open('%s%s_%s.txt' % (DIR, OUT_SETTINGS, sufix), 'w') as f:
+        with open('%s%s_%s.txt' % (DIR, OUT_SETTINGS, suffix), 'w') as f:
             f.write('Initial params : %s' % self.init_p + '\n'+
                     'Fixed variables : %s' % [c for c in self.fixed] + '\n'+
-                    'Initial state : %s' % self.init_state + '\n' +
+                    'Initial state : %s' % self.neuron.init_state + '\n' +
                     'Constraints : %s' % self.constraints_dic + '\n' +
-                    'Model solver : %s' % self.loop_func + '\n' +
+                    'Model solver : %s' % self.neuron.loop_func + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
 
@@ -62,15 +44,15 @@ class HH_opt(HodgkinHuxley):
             self.T, self.X, self.V, self.Ca = get_data_dump()
         else:
             self.T, self.X, self.V, self.Ca = get_data_dump(file)
-        if(self.loop_func == self.ik_from_v):
+        if(self.neuron.loop_func == self.neuron.ik_from_v):
             self.Ca = self.V
-        assert(self.dt == self.T[1] - self.T[0])
+        assert(self.neuron.dt == self.T[1] - self.T[0])
         # inputs
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[len(self.init_state)], dtype=tf.float32)
+        init_state = tf.placeholder(shape=[len(self.neuron.init_state)], dtype=tf.float32)
 
-        res = tf.scan(self.step,
+        res = tf.scan(self.neuron.step_t,
                       xs_,
                      initializer=init_state)
 
@@ -109,28 +91,28 @@ class HH_opt(HodgkinHuxley):
                 saver.restore(sess, '%s%s'%(DIR, SAVE_PATH))
                 with open(DIR+FILE_LV, 'rb') as f:
                     l,r,vars = pickle.load(f)
-                losses = np.concatenate((l, np.zeros(self.epochs)))
-                rates = np.concatenate((r, np.zeros(self.epochs)))
+                losses = np.concatenate((l, np.zeros(epochs)))
+                rates = np.concatenate((r, np.zeros(epochs)))
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
                 vars = dict([(var, [val]) for var, val in self.init_p.items()])
-                losses = np.zeros(self.epochs)
-                rates = np.zeros(self.epochs)
+                losses = np.zeros(epochs)
+                rates = np.zeros(epochs)
                 len_prev = 0
 
-            vars = dict([(var, np.concatenate((val, np.zeros(self.epochs)))) for var, val in vars.items()])
+            vars = dict([(var, np.concatenate((val, np.zeros(epochs)))) for var, val in vars.items()])
 
-            for i in tqdm(range(self.epochs)):
+            for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
                     ys_: np.vstack((self.V, self.Ca)),
-                    init_state: self.init_state
+                    init_state: self.neuron.init_state
                 })
-                _ = sess.run(self.constraints)
+                _ = sess.run(self.neuron.constraints)
 
-                with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, sufix), 'w') as f:
-                    for name, v in self.param.items():
+                with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, suffix), 'w') as f:
+                    for name, v in self.neuron.param.items():
                         v_ = sess.run(v)
                         vars[name][len_prev + i + 1*(len_prev==0) ] = v_
                         f.write('%s : %s\n' % (name, v_))
@@ -139,12 +121,12 @@ class HH_opt(HodgkinHuxley):
                 losses[len_prev+i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
 
-                plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_%s'%(sufix, i + 1), show=False, save=True)
-                if(i%10==0 or i==self.epochs-1):
+                plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_step%s_%s'%(suffix, step, i + 1), show=False, save=True)
+                if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    plot_vars(vars, show=False, save=True)
-                    plot_loss_rate(losses, rates, show=False, save=True)
+                    plot_vars(vars, suffix=suffix, show=False, save=True)
+                    plot_loss_rate(losses, rates, suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 
 

@@ -48,8 +48,8 @@ def set_dir(subdir):
 
 
 """Get variables values into a dictionnary"""
-def get_dic_from_var(dir, sufix=""):
-    file = '%s%s/%s_%s.txt' % (RES_DIR, dir, OUT_PARAMS, sufix)
+def get_dic_from_var(dir, suffix=""):
+    file = '%s%s/%s_%s.txt' % (RES_DIR, dir, OUT_PARAMS, suffix)
     dic = {}
     with open(file, 'r') as f:
         for line in f:
@@ -191,21 +191,35 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.close()
 
 
-def plots_output_mult(ts, i_inj, Vs, Cacs, suffix="", show=True, save=False):
+def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
     plt.figure()
 
-    plt.subplot(3, 1, 1)
-    for idx in range(len(Vs)):
-        print(len(ts), len(Vs[idx]))
-        plt.plot(ts, Vs[idx], COLS_MULT[idx])
+    if(labels is None):
+        labels = range(len(Vs))
+    if (i_syn is not None):
+        n_plots = 4
+        plt.subplot(n_plots, 1, 3)
+        for n in range(i_syn.shape[0]):
+            plt.plot(ts, i_syn[n, :])
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{syn}$ ($\\mu{A}/cm^2$)')
+        plt.legend(labels)
+    else:
+        n_plots = 3
+
+    plt.subplot(n_plots, 1, 1)
+    for vs in Vs:
+        plt.plot(ts, vs)
     plt.ylabel('Voltage (mV)')
+    plt.legend(labels)
 
-    plt.subplot(3, 1, 2)
-    for idx in range(len(Cacs)):
-        plt.plot(ts, Cacs[idx], COLS_MULT[idx])
-    plt.ylabel('[Ca2+]')
+    plt.subplot(n_plots, 1, 2)
+    for cacs in Cacs:
+        plt.plot(ts, cacs)
+    plt.ylabel('[$Ca^{2+}$]')
+    plt.legend(labels)
 
-    plt.subplot(3, 1, 3)
+    plt.subplot(n_plots, 1, n_plots)
     if(len(i_inj.shape)<2):
         plt.plot(ts, i_inj, 'k')
     else:
@@ -213,6 +227,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, suffix="", show=True, save=False):
             plt.plot(ts, i_inj[n, :])
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+    plt.legend(labels)
 
     if (save):
         plt.savefig('%s%soutput_%s.png' % (DIR, IMG_DIR, suffix))
@@ -227,7 +242,7 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.subplot(3, 1, 2)
     plt.plot(ts, y_cac, 'g', label='target model')
     plt.plot(ts, cac, 'r', label='current model')
-    plt.ylabel('[Ca2+]')
+    plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
@@ -264,7 +279,7 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
 
     plt.subplot(4, 1, 2)
     plt.plot(ts, cac, 'r')
-    plt.ylabel('Ca2+ concentration')
+    plt.ylabel('$Ca^{2+}$ concentration')
 
     plt.subplot(4, 1, 3)
     plt.plot(ts, e, RATE_COLORS['e'], label='e')
@@ -341,7 +356,7 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
 
     plt.subplot(5, 1, 2)
     plt.plot(ts, cac, 'r')
-    plt.ylabel('Ca2+ concentration')
+    plt.ylabel('$Ca^{2+}$ concentration')
 
     plt.subplot(5, 1, 3)
     plt.plot(ts, ica, 'c', label='$I_{Ca}$')

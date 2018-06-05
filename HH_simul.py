@@ -9,28 +9,20 @@ import numpy as np
 import pickle
 
 
-class HH_simul(HodgkinHuxley):
+class HH_simul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-
     def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None, dt=0.1):
-        HodgkinHuxley.__init__(self, init_p, tensors=False, loop_func=loop_func)
-        assert(self.dt == t[1] - t[0])
+        self.neuron = HodgkinHuxley(init_p, tensors=False, loop_func=loop_func, dt=dt)
         self.t = t
         self.i_inj = i_inj
-        self.state = self.init_state
 
-    def get_volt(self):
-        return self.state[0]
-
-    def step(self, i):
-        self.state = self.loop_func(self.state, i, self)
-
+    """Simulate the neuron"""
     def calculate(self):
         X = []
+        self.neuron.reset()
         for i in self.i_inj:
-            self.step(i)
-            X.append(self.state)
+            X.append(self.neuron.step(i))
         return np.array(X)
 
     """Compare different parameter sets on the same experiment"""
@@ -38,7 +30,7 @@ class HH_simul(HodgkinHuxley):
         Vs = []
         Cacs = []
         for p in ps:
-            self.param = p
+            self.neuron.param = p
             X = self.calculate()
             Vs.append(X[:,0])
             Cacs.append(X[:,-1])
@@ -55,7 +47,8 @@ class HH_simul(HodgkinHuxley):
         utils.plots_output_double(self.t, self.i_inj, S[:,0], S_targ[:,0], S[:,-1], S_targ[:,-1], save=False, show=True)
 
 
-    def Main(self, dump=False, sufix='', show=False, save=True):
+    """Runs and plot the neuron"""
+    def simul(self, dump=False, suffix='', show=False, save=True):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
@@ -67,22 +60,23 @@ class HH_simul(HodgkinHuxley):
 
         print(time.time() - start)
 
-        if (self.loop_func == self.ica_from_v):
-            plots_ica_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
-        elif (self.loop_func == self.ik_from_v):
-            plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
+        if (self.neuron.loop_func == self.neuron.ica_from_v):
+            plots_ica_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
+        elif (self.neuron.loop_func == self.neuron.ik_from_v):
+            plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
         else:
-            plots_results(self, self.t, self.i_inj, np.array(X), suffix='target_%s' % sufix, show=show, save=save)
+            plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
 
         if (dump):
             with open(data.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
+            return data.DUMP_FILE
 
 
 
 if __name__ == '__main__':
     sim = HH_simul(t=params.t_train, i_inj=params.i_inj_train)
-    sim.comp([params.PARAMS_RAND,params.DEFAULT])
+    sim.comp([params.give_rand(),params.DEFAULT])
     #
     # exit(0)
 

@@ -18,9 +18,35 @@ class HodgkinHuxley():
         if (loop_func is not None):
             self.loop_func = loop_func
         self.init_state = self.get_init_state()
+        self.state = self.init_state
         self.dt = dt
 
+    def get_volt(self):
+        return self.state[0]
 
+    def step(self, i):
+        self.state = self.loop_func(self.state, i, self)
+        return self.state
+
+    def step_t(self, hprev, x):
+        return self.loop_func(hprev, x, self)
+
+    def reset(self, p=None, fixed=None, constraints_dic=None):
+        if(self.tensors):
+            self.param = {}
+            self.constraints = []
+            tf.reset_default_graph()
+            for var, val in p.items():
+                if (var in fixed):
+                    self.param[var] = tf.constant(val, name=var, dtype=tf.float32)
+                else:
+                    self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                    if var in constraints_dic:
+                        con = constraints_dic[var]
+                        self.constraints.append(
+                            tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
+        else:
+            self.state = self.init_state
 
     def inf(self, V, rate):
         mdp = self.param['%s__mdp' % rate]
