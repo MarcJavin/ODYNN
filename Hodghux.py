@@ -123,10 +123,8 @@ class HodgkinHuxley():
         e = self.inf(V, 'e')
         f = self.inf(V, 'f')
         if (self.tensors):
-            cac = tf.maximum(cac, 0.)
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
-            cac = max(cac, 0.)
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
@@ -153,10 +151,8 @@ class HodgkinHuxley():
         f = self.inf(V, 'f')
         n = self.inf(V, 'n')
         if (self.tensors):
-            cac = tf.maximum(cac, 0.)
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
-            cac = max(cac, 0.)
             return [V, p, q, n, e, f, cac]
 
     @staticmethod 
@@ -175,10 +171,8 @@ class HodgkinHuxley():
                 cac - ica * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
 
         if (self.tensors):
-            cac = tf.maximum(cac, 0.)
             return tf.stack([ica, e, f, h, cac], 0)
         else:
-            cac = max(cac, 0.)
             return [ica, e, f, h, cac]
 
     @staticmethod
