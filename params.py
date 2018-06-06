@@ -43,7 +43,7 @@ SYNAPSE_inhib = {
 CONSTRAINTS = {
         'decay_ca' : [1e-3,np.infty],
         'rho_ca' : [1e-3,np.infty],
-        'C_m' : [1e-3,np.infty],
+        'C_m' : [4e-1,np.infty],
         'e__scale' : [1e-3,np.infty],
         'e__tau' : [1e-3,np.infty],
         'f__scale' : [-np.infty, 1e-3],

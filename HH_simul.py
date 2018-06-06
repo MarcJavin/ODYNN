@@ -12,8 +12,8 @@ import pickle
 class HH_simul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None, dt=0.1):
-        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=dt)
+    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
+        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=t[1]-t[0])
         self.t = t
         self.i_inj = i_inj
 

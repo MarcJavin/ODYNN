@@ -34,26 +34,35 @@ class HodgkinHuxley():
         q = self.inf(cac, 'h')
         return 1 + (q - 1) * self.param['h__alpha']
 
+    def g_Ca(self, e, f, h):
+        return self.param['g_Ca'] * e ** 2 * f * h
+
     def I_Ca(self, V, e, f, h):
         """
         Membrane current (in uA/cm^2)
         Calcium (Ca = element name)
         """
-        return self.param['g_Ca'] * e ** 2 * f * h * (V - self.param['E_Ca'])
+        return self.g_Ca(e, f, h) * (V - self.param['E_Ca'])
+
+    def g_Kf(self, p, q):
+        return self.param['g_Kf'] * p ** 4 * q
 
     def I_Kf(self, V, p, q):
         """
         Membrane current (in uA/cm^2)
         Potassium (K = element name)
         """
-        return self.param['g_Kf'] * p ** 4 * q * (V - self.param['E_K'])
+        return self.g_Kf(p, q) * (V - self.param['E_K'])
+
+    def g_Ks(self, n):
+        return self.param['g_Ks'] * n
 
     def I_Ks(self, V, n):
         """
         Membrane current (in uA/cm^2)
         Potassium (K = element name)
         """
-        return self.param['g_Ks'] * n * (V - self.param['E_K'])
+        return self.g_Ks(n) * (V - self.param['E_K'])
 
     #  Leak
     def I_L(self, V):
@@ -77,6 +86,8 @@ class HodgkinHuxley():
         cac = X[6]
 
         h = self.h(cac)
+        # V = V * (i_inj + self.g_Ca(e,f,h)*self.param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self.param['E_K'] + self.param['g_L']*self.param['E_L']) / \
+        #     ((self.param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self.param['g_L'])
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.param[
             'C_m']) * self.dt
         cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - ((cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
@@ -111,8 +122,8 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.param['C_m']) * self.dt
-        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
-                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
+        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - (
+                    (cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
         tau = self.param['p__tau']
         p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
         tau = self.param['q__tau']
@@ -142,8 +153,8 @@ class HodgkinHuxley():
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.param['C_m']) * self.dt
 
-        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
-                cac - self.I_Ca(V, e, f, h) * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
+        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - (
+                    (cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
         p = self.inf(V, 'p')
         q = self.inf(V, 'q')
         e = self.inf(V, 'e')
@@ -166,8 +177,8 @@ class HodgkinHuxley():
         tau = self.param['f__tau']
         f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(v_fix, 'f') / tau))
         ica = self.I_Ca(v_fix, e, f, h)
-        cac = (self.DECAY_CA / (self.dt + self.DECAY_CA)) * (
-                cac - ica * self.RHO_CA * self.dt + self.REST_CA * self.DECAY_CA / self.dt)
+        cac += (-self.I_Ca(v_fix, e, f, h) * self.param['rho_ca'] - (
+                    (cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
 
         if (self.tensors):
             return tf.stack([ica, e, f, h, cac], 0)

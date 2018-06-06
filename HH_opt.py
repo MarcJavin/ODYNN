@@ -4,14 +4,13 @@ from Hodghux import Neuron_tf
 import tensorflow as tf
 import numpy as np
 from utils import  plots_output_double, OUT_SETTINGS, OUT_PARAMS, plot_loss_rate,set_dir, plot_vars
-from data import get_data_dump
+from data import get_data_dump, FILE_LV
 import pickle
 import params
 from tqdm import tqdm
 import time
 
 SAVE_PATH = 'tmp/model.ckpt'
-FILE_LV = 'tmp/dump_lossratevars'
 
 
 class HH_opt():
@@ -126,8 +125,8 @@ class HH_opt():
                 if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    plot_vars(vars, suffix=suffix, show=False, save=True)
-                    plot_loss_rate(losses, rates, suffix=suffix, show=False, save=True)
+                    plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
+                    plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 
 

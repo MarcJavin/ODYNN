@@ -10,6 +10,7 @@ import math
 from matplotlib.ticker import FormatStrFormatter
 
 DUMP_FILE = 'data/dump'
+FILE_LV = 'tmp/dump_lossratevars'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 
@@ -48,7 +49,7 @@ def check_alpha(tinit, i, trace):
     plt.show()
 
 if __name__ == '__main__':
-    dt = pd.read_csv('AVAL1.csv')
+    dt = pd.read_csv('data/AVAL1.csv')
     dt = dt.head(400)
     trace = np.array(dt['trace'])
     i = np.array(dt['inputCurrent'])*10
