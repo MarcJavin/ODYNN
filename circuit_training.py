@@ -40,13 +40,12 @@ if __name__ == '__main__':
     p = params.DEFAULT
     pars = [p,p]
 
-    connections = {(0, 1) : params.SYNAPSE}
+    connections = {(0, 1) : params.get_syn_rand()}
     t = np.array(sp.arange(0.0, 800., params.DT))
     i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
     i1 = np.zeros(t.shape)
     i_injs = np.array([i0, i1])
     c = Circuit_not.Circuit(pars, connections, i_injs, t)
     c.run_sim(dump=True, show=False)
-
     c = Circuit.Circuit(pars, connections, i_injs)
     c.opt_circuits('YOLO', data.DUMP_FILE+str(1))

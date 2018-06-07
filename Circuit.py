@@ -2,7 +2,7 @@ import numpy as np
 from Hodghux import Neuron_tf, Neuron_set_tf, HodgkinHuxley
 from HH_opt import HH_opt
 import params
-from utils import plots_output_mult, set_dir, plot_loss_rate
+from utils import plots_output_mult, set_dir, plot_loss_rate, plots_output_double
 from data import FILE_LV, DUMP_FILE, get_data_dump
 import pickle
 import tensorflow as tf
@@ -20,42 +20,45 @@ class Circuit():
         self.connections = conns
         self.i_injs = i_injs
         self.i_out = i_out
+        syns = zip(*[k for k in conns.iterkeys()])
+        self.pres = np.array(syns[0], dtype=np.int32)
+        self.posts = np.array(syns[1], dtype=np.int32)
+        self.syns = ['%s-%s' % (a,b) for a,b in zip(self.pres, self.posts)]
         self.reset()
 
     """build graph variables"""
     def reset(self):
         self.param = {}
-        for (pre,post), p in self.connections.items():
-            for k, v in p.items():
-                name = '%s-%s__%s' % (pre, post, k)
-                self.param[name] = tf.get_variable(name, initializer=v, dtype=tf.float32)
+        for k in self.connections.values()[0].iterkeys():
+            self.param[k] = tf.get_variable(k, initializer=[p[k] for n, p in self.connections.items()], dtype=tf.float32)
 
     """synaptic current"""
-    def syn_curr(self, syn, vprev, vpost):
-        G = self.param['%s__G'%syn]
-        mdp = self.param['%s__mdp'%syn]
-        scale = self.param['%s__scale'%syn]
+    def syn_curr(self, vprev, vpost):
+        G = self.param['G']
+        mdp = self.param['mdp']
+        scale = self.param['scale']
         g = G * tf.sigmoid((vprev - mdp) / scale)
-        i = g * (self.param['%s__E'%syn] - vpost)
+        i = g * (self.param['E'] - vpost)
         return i
 
     """run one time step"""
     def step(self, hprev, x):
         # update synapses
         # curs = tf.Variable(initial_value=np.zeros(self.neurons.num), trainable=False, dtype=tf.float32)
-        vprevs = []
-        vposts = []
-        syns = []
-        for pre, post in self.connections.iterkeys():
-            vprev = hprev[0, pre]
-            vpost = hprev[0, post]
-            syns.append('%s-%s' % (pre, post))
-            i_syn = self.syn_curr('%s-%s' % (pre, post), vprev, vpost)
-            print(i_syn)
+        idx_pres = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.pres)).transpose()
+        idx_post = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.posts)).transpose()
+        vpres = tf.gather_nd(hprev, idx_pres)
+        vposts = tf.gather_nd(hprev, idx_post)
+        curs_syn = self.syn_curr(vpres, vposts)
+        curs_post = []
+        for i in range(self.neurons.num):
+            if i not in self.posts:
+                curs_post.append(0.)
+                continue
+            curs_post.append(tf.reduce_sum(tf.gather(curs_syn, np.argwhere(self.posts==i))))
 
         # update neurons
-        h = self.neurons.step(hprev, x)
-        h = tf.Print(h, [h])
+        h = self.neurons.step(hprev, x + tf.stack(curs_post))
         return h
 
     """train 1 neuron"""
@@ -96,11 +99,9 @@ class Circuit():
                       initializer=init_state)
 
 
-        out = res[:, 1, 0]
+        out = res[:, 0, 1]
         losses = tf.square(tf.subtract(out, ys_[0]))
         loss = tf.reduce_mean(losses)
-
-        print(tf.trainable_variables())
 
         global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
@@ -112,30 +113,31 @@ class Circuit():
             staircase=True)
         tf.summary.scalar('learning rate', learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=learning_rate)
-        # gvs = opt.compute_gradients(loss)
-        # tf.summary.histogram('gradients', gvs)
-        # # check if nan and clip the values
+        gvs = opt.compute_gradients(loss)
+        tf.summary.histogram('gradients', gvs)
+        # check if nan and clip the values
+        grads, vars = zip(*gvs)
         # grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda: 0., lambda: grad), var) for grad, var in gvs])
-        # grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
-        # train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
+        grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
+        train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
         with tf.Session() as sess:
-
+            sess.run(tf.global_variables_initializer())
             losses = np.zeros(epochs)
             rates = np.zeros(epochs)
-            print(self.X.shape, np.vstack((self.V, self.Ca)).shape)
 
             for i in tqdm(range(epochs)):
-                results, _, train_loss = sess.run([res, loss], feed_dict={
+                results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
                     ys_: np.vstack((self.V, self.Ca)),
                     init_state: self.neurons.init_state
                 })
                 _ = sess.run(self.neurons.constraints)
 
+
                 rates[i] = sess.run(learning_rate)
                 losses[i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
 
-
+                plots_output_double(self.T, self.X, results[:,0,1], self.V, results[:,-1,1], self.Ca, suffix=i, show=False, save=True)
                 plot_loss_rate(losses, rates, show=False, save=True)
