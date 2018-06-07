@@ -256,6 +256,7 @@ class Neuron_set_tf(Neuron_tf):
 
         self.num = len(inits_p)
         self.init_state = np.tile(self.init_state, (len(inits_p),1)).transpose()
+        print(self.init_state.shape)
 
 
 class Neuron_fix(HodgkinHuxley):

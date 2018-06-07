@@ -51,7 +51,7 @@ class Circuit():
 
     """runs the entire simulation"""
 
-    def run_sim(self, show=True, dump=False):
+    def run_sim(self, show=True, dump=False, general=True):
         #[state, neuron, time]
         states = np.zeros((np.hstack((self.neurons.init_state.shape, len(self.t)))))
         print(states.shape)
@@ -70,7 +70,12 @@ class Circuit():
 
         if (dump):
             for i in range(self.neurons.num):
-                todump = [self.t, self.i_injs[i, :] + curs[i, :], states[0,i, :], states[-1,i, :]]
+                if(general):
+                    cur = self.i_injs
+                else:
+                    cur = self.i_injs[i, :] + curs[i, :]
+
+                todump = [self.t, cur, states[0,i, :], states[-1,i, :]]
                 with open(DUMP_FILE + str(i), 'wb') as f:
                     pickle.dump(todump, f)
             return DUMP_FILE
