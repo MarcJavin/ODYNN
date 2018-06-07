@@ -13,12 +13,18 @@ class HodgkinHuxley():
 
     def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None, dt=0.1, fixed=None, constraints=None):
         self.tensors = tensors
-        self.param = init_p
         self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
                    self.ica_from_v: params.INIT_STATE_ica}
         if (loop_func is not None):
             self.loop_func = loop_func
         self.init_state = self.get_init_state()
+        if (isinstance(init_p, list)):
+            self.num = len(init_p)
+            init_p = dict([(var, np.array([p[var] for p in init_p])) for var in init_p[0].iterkeys()])
+            self.init_state = np.tile((self.init_state), (self.num, 1)).transpose()
+        else:
+            self.num = 1
+        self.param = init_p
         self.dt = dt
 
 
@@ -218,7 +224,7 @@ class Neuron_tf(HodgkinHuxley):
 
     def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, loop_func=loop_func, dt=dt)
-        self.init_p = init_p
+        self.init_p = self.param
         self.fixed = fixed
         self.constraints_dic = constraints
         self.id = self.give_id()
@@ -245,19 +251,6 @@ class Neuron_tf(HodgkinHuxley):
                         self.constraints.append(
                             tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
 
-class Neuron_set_tf(Neuron_tf):
-
-    """Set of neurons to perform operations on vectors"""
-
-    def __init__(self, inits_p, loop_func=None, fixed=params.ALL, constraints=params.CONSTRAINTS, dt=0.1):
-        #dictionnary with values in arrays
-        init_p = dict([(var, [p[var] for p in inits_p]) for var in inits_p[0].iterkeys()])
-        Neuron_tf.__init__(self, init_p=init_p, loop_func=loop_func, dt=dt, fixed=fixed, constraints=constraints)
-
-        self.num = len(inits_p)
-        self.init_state = np.tile(self.init_state, (len(inits_p),1)).transpose()
-        print(self.init_state.shape)
-
 
 class Neuron_fix(HodgkinHuxley):
 
@@ -273,14 +266,4 @@ class Neuron_fix(HodgkinHuxley):
         return self.state
 
     def reset(self):
-        self.state = self.init_state
-
-class Neuron_set_fix(Neuron_fix):
-    def __init__(self, inits_p, loop_func=None, dt=0.1):
-        # dictionnary with values in arrays
-        init_p = dict([(var, np.array([p[var] for p in inits_p])) for var in inits_p[0].iterkeys()])
-        Neuron_fix.__init__(self, init_p=init_p, loop_func=loop_func, dt=dt)
-        self.num = len(inits_p)
-
-        self.init_state = np.tile((self.init_state), (len(inits_p),1)).transpose()
         self.state = self.init_state

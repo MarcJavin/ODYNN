@@ -1,5 +1,5 @@
 import numpy as np
-from Hodghux import Neuron_set_fix, HodgkinHuxley
+from Hodghux import Neuron_fix, HodgkinHuxley
 import scipy as sp
 import params
 from utils import plots_output_mult, set_dir, plot_loss_rate
@@ -15,7 +15,7 @@ class Circuit():
 
     def __init__(self, inits_p, conns, i_injs, t, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1, tensors=False):
         assert(len(inits_p) == i_injs.shape[0])
-        self.neurons = Neuron_set_fix(inits_p, loop_func=loop_func, dt=dt)
+        self.neurons = Neuron_fix(inits_p, loop_func=loop_func, dt=dt)
         self.connections = conns
         self.t = t
         self.i_injs = i_injs

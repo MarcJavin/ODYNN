@@ -8,6 +8,7 @@ import random
 
 
 REST_CA = 0.
+"""init states for neurons : current, voltage, rates and [Ca2+]"""
 INITS = {
         'i' : 0,
         'V' : -50.,
@@ -38,8 +39,11 @@ SYNAPSE_inhib = {
         'E' : 20.
 }
 
+CONSTRAINTS_syn = {
+        'G' : [1e-5,np.infty]
+}
 
-
+"""constraints for neuron parameters"""
 CONSTRAINTS = {
         'decay_ca' : [1e-3,np.infty],
         'rho_ca' : [1e-3,np.infty],
@@ -122,11 +126,16 @@ MAX_MDP = 30.
 MAX_G = 10.
 
 """Random parameters for a synapse"""
-def get_syn_rand():
+def get_syn_rand(exc=True):
+        #scale is negative if inhibitory
+        if(exc):
+                scale = random.uniform(MIN_SCALE, MAX_SCALE)
+        else:
+                scale = random.uniform(-MAX_SCALE,-MIN_SCALE)
         return {
                 'G': random.uniform(0.01, MAX_G),
                 'mdp': random.uniform(MIN_MDP, MAX_MDP),
-                'scale': random.uniform(MIN_SCALE, MAX_SCALE),
+                'scale': scale,
                 'E': random.uniform(-20., 50.),
         }
 
