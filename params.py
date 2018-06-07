@@ -114,15 +114,24 @@ DEFAULT = {
 }
 ALL = set(DEFAULT.keys())
 
+MAX_TAU = 200.
+MIN_SCALE = 1.
+MAX_SCALE = 50.
+MIN_MDP = -40.
+MAX_MDP = 30.
+MAX_G = 10.
 
+"""Random parameters for a synapse"""
+def get_syn_rand():
+        return {
+                'G': random.uniform(0.01, MAX_G),
+                'mdp': random.uniform(MIN_MDP, MAX_MDP),
+                'scale': random.uniform(MIN_SCALE, MAX_SCALE),
+                'E': random.uniform(-20., 50.),
+        }
 
+"""Random parameters for a neuron"""
 def give_rand():
-        MAX_TAU = 200.
-        MIN_SCALE = 1.
-        MAX_SCALE = 50.
-        MIN_MDP = -40.
-        MAX_MDP = 30.
-        MAX_G = 10.
 
         return {
                 'decay_ca': 110.,
@@ -167,10 +176,15 @@ params = OrderedDict(sorted(params.items(), key=lambda t: t[0]))
 
 
 DT = 0.1
-
 t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
+
+def give_train(dt=DT):
+        t_train = np.array(sp.arange(0.0, 1200., dt))
+        i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
+        i_inj_train = np.array(i_inj_train, dtype=np.float32)
+        return t_train, i_inj_train
 
 t_len = 5000.
 t = np.array(sp.arange(0.0, t_len, DT))

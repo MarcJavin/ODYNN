@@ -105,7 +105,6 @@ def test_xp(dir, suffix='', show=False):
 
     utils.set_dir(dir)
     param = utils.get_dic_from_var(dir, suffix=suffix)
-    param['C_m'] = 0.1
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
     sim.simul(show=show, suffix='xp1')
     sim.i_inj = i2
@@ -131,23 +130,23 @@ def alternate(name=''):
 
 
 def only_calc(name=''):
+    dt=1
     loop_func = HodgkinHuxley.integ_comp
-    opt = HH_opt(init_p=params.give_rand(), loop_func=loop_func)
-    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train, loop_func=loop_func)
+    opt = HH_opt(init_p=params.give_rand(), loop_func=loop_func, dt=dt)
+    t,i = params.give_train(dt)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
     sim.simul(show=False, dump=True)
     dir = 'Integcomp_calc%s'%name
     wv = 0
     wca = 1
-    opt.optimize(dir, [wv, wca], epochs=240)
+    opt.optimize(dir, [wv, wca], epochs=200)
     test_xp(dir)
 
 
 if __name__ == '__main__':
 
-    test_xp('Integcomp_calctest_calc', show=True)
-
     name = sys.argv[1]
-    alternate(name)
+    only_calc(name)
     exit(0)
 
 

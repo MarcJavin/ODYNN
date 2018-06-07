@@ -1,5 +1,5 @@
 import numpy as np
-from Hodghux import Neuron_fix
+from Hodghux import Neuron_tf, Neuron_set_tf, HodgkinHuxley
 from HH_opt import HH_opt
 import scipy as sp
 import params
@@ -15,21 +15,19 @@ class Circuit():
     neurons : objects to optimize
 
     """
-    def __init__(self, neurons, conns, i_injs, t, i_out=None, init_p=params.SYNAPSE, dt=0.1):
-        assert(len(neurons) == i_injs.shape[0])
-        self.param = init_p
-        self.neurons = neurons
+    def __init__(self, inits_p, conns, i_injs, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1):
+        assert (len(inits_p) == i_injs.shape[0])
+        self.neurons = Neuron_set_tf(inits_p, loop_func=loop_func, dt=dt)
         self.connections = conns
-        self.t = t
         self.i_injs = i_injs
         self.i_out = i_out
-        self.dt = dt
+
+    def reset(self):
         self.param = {}
-        for (pre,post), p in conns.items():
+        for (pre,post), p in self.connections.items():
             for k, v in p.items():
                 name = '%s-%s__%s' % (pre, post, k)
                 self.param[name] = tf.get_variable(name, initializer=v, dtype=tf.float32)
-
 
     """synaptic current"""
     def syn_curr(self, syn, vprev, vpost):
@@ -38,53 +36,19 @@ class Circuit():
         return i
 
     """run one time step"""
-    def step(self, curs):
-        next_curs = np.zeros(len(curs))
-        #update neurons
-        for i, n in enumerate(self.simuls):
-            n.step(curs[i])
-        #update synapses
-        for pre, post in self.connections:
-            vprev = self.simuls[pre].state[0]
-            vpost = self.simuls[post].state[0]
-            next_curs[post] += self.syn_curr('%s-%s'%(pre,post), vprev, vpost)
-        return next_curs
+    def step(self, hprev, x):
+        # curs = tf.TensorArray(dtype=tf.float32, size=self.neurons.num)
+        curs = np.zeros(shape=self.neurons.num)
+        # update synapses
+        for pre, post in self.connections.iterkeys():
+            vprev = hprev[0, pre]
+            vpost = hprev[0, post]
+            curs[post] += self.syn_curr('%s-%s' % (pre, post), vprev, vpost)
 
+        # update neurons
+        return self.neurons.step(hprev, curs+x)
 
-
-
-    """runs the entire simulation"""
-    def run_sim(self, simuls=None, show=True, dump=False):
-        if(simuls is None):
-            self.simuls = []
-            for n in self.neurons:
-                self.simuls.append(Neuron_fix(init_p=n.init_p, dt=self.dt))
-        else:
-            self.simuls = simuls
-        states = dict(
-            [(i, np.zeros((len(self.neurons[0].init_state), len(self.t)))) for i, n in enumerate(self.neurons)])
-        curs = np.zeros(self.i_injs.shape)
-
-        for t in range(self.i_injs.shape[1]):
-            if(t == 0):
-                curs[:, t] = self.step(self.i_injs[:, t])
-            else:
-                curs[:,t] = self.step(self.i_injs[:,t] + curs[:,t-1])
-
-            for k,v in states.items():
-                states[k][:,t] = self.simuls[k].state
-
-        plots_output_mult(self.t, self.i_injs, [states[0][0, :], states[1][0, :]], [states[0][-1, :], states[1][-1, :]],
-                          i_syn=curs, show=show)
-
-        if(dump):
-            for i, n in enumerate(self.neurons):
-                todump = [self.t, self.i_injs[i,:]+curs[i,:], states[i][0,:], states[i][-1,:]]
-                with open(DUMP_FILE+str(i), 'wb') as f:
-                    pickle.dump(todump, f)
-            return DUMP_FILE
-
-
+    """train 1 neuron"""
     def train_neuron(self, dir, opt, num, file):
         wv = 0.2
         wca = 0.8
@@ -96,23 +60,23 @@ class Circuit():
             wca = 1 - wca
             opt.optimize(dir, [wv, wca], reload=True, epochs=20, suffix=suffix, step=i+1, file=file)
 
-    def opt_neurons(self):
-        file = self.run_sim([Neuron_fix(), Neuron_fix()], dump=True)
-        for i, n in enumerate(self.neurons):
-            self.train_neuron('Circuit_0', HH_opt(n), i, file)
+    """optimize only neurons 1 by 1"""
+    def opt_neurons(self, file):
+        for i in range(self.neurons.num):
+            self.train_neuron('Circuit_0', HH_opt(loop_func=self.neurons.loop_func, dt=self.neurons.dt), i, file)
 
 
     """optimize synapses"""
     def opt_circuits(self, subdir, file, epochs=200, l_rate=[0.9,9,0.9]):
         DIR = set_dir(subdir + '/')
         tf.reset_default_graph()
-        for n in self.neurons:
-            n.reset()
+        self.neurons.reset()
+        self.reset()
         start_rate, decay_step, decay_rate = l_rate
 
         xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
         ys_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[len(self.neurons[0].init_state)], dtype=tf.float32)
+        init_state = tf.placeholder(shape=self.neurons.init_state.shape, dtype=tf.float32)
 
         res = tf.scan(self.step,
                       xs_,
