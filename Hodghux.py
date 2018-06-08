@@ -27,7 +27,7 @@ class HodgkinHuxley():
         self.param = init_p
         self.dt = dt
 
-
+    """steady state value of a rate"""
     def inf(self, V, rate):
         mdp = self.param['%s__mdp' % rate]
         scale = self.param['%s__scale' % rate]
@@ -79,7 +79,8 @@ class HodgkinHuxley():
         """
         return self.param['g_L'] * (V - self.param['E_L'])
 
-    @staticmethod 
+    """default model"""
+    @staticmethod
     def integ_comp(X, i_inj, self):
         """
         Integrate
@@ -214,7 +215,7 @@ class HodgkinHuxley():
     loop_func = integ_comp
 
 
-
+    """give the init state associated to the loop function"""
     def get_init_state(self):
         return self.inits_p.get(self.loop_func, params.INIT_STATE)
 
@@ -237,6 +238,7 @@ class Neuron_tf(HodgkinHuxley):
     def step(self, hprev, x):
         return self.loop_func(hprev, x, self)
 
+    """build tf graph"""
     def reset(self):
         with(tf.variable_scope(self.id)):
             self.param = {}

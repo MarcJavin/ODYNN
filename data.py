@@ -50,7 +50,7 @@ def check_alpha(tinit, i, trace):
 
 if __name__ == '__main__':
     dt = pd.read_csv('data/AVAL1.csv')
-    dt = dt.head(400)
+    # dt = dt.head(400)
     trace = np.array(dt['trace'])
     i = np.array(dt['inputCurrent'])*10
     tinit = np.array(dt['timeVector'])*1000

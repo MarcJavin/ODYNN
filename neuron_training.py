@@ -14,7 +14,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(4)]
+pars = [params.give_rand() for i in range(10)]
 
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -126,6 +126,8 @@ def alternate(name=''):
         wv = 1 - wv
         wca = 1 - wca
         opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1)
+    p = utils.get_dic_from_var(dir)
+    utils.plot_vars(p, func=utils.bar)
     test_xp(dir)
 
 
@@ -140,10 +142,13 @@ def only_calc(name=''):
     wv = 0
     wca = 1
     opt.optimize(dir, [wv, wca], epochs=200)
+    p = utils.get_dic_from_var(dir)
+    utils.plot_vars(p, func=utils.bar)
     test_xp(dir)
 
 
 if __name__ == '__main__':
+
 
     name = sys.argv[1]
     alternate(name)

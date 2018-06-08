@@ -142,10 +142,6 @@ class HH_opt():
                     for name, v in self.neuron.param.items():
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (name, v_))
-                        # if(len(vars)==1):
-                        #     vars[0][name][len_prev + i + 1 * (len_prev == 0)] = v_
-                        #     continue
-                        # for n in range(len(vars)):
                         vars[name][len_prev + i + 1*(len_prev==0)] = v_
 
                 rates[len_prev+i] = sess.run(self.learning_rate)

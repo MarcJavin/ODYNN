@@ -33,7 +33,8 @@ RATE_COLORS = {'p' : '#00ccff',
                 }
 GATES = ['e', 'f', 'n', 'p', 'q']
 
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=['g', 'k', 'c', 'm', 'y'])
+COLORS = ['k', 'c', 'm', 'Orange', 'Olive', 'Gold', 'b', 'Lime', 'Salmon', 'Darkred']
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 
 def set_dir(subdir):
     global DIR
@@ -55,7 +56,9 @@ def get_dic_from_var(dir, suffix=""):
             m = re.search(REGEX_VARS, line)
             if(m.group(2)[0]=='['):
                 #several params
-                dic[m.group(1)] = list(m.group(2))
+                l = re.findall('[-]?[\d]*[\.]?[\d]+[e]?[+-]?[\d]+', m.group(2))
+                l = map(float, l)
+                dic[m.group(1)] = l
             else:
                 dic[m.group(1)] = float(m.group(2))
     return dic
@@ -70,16 +73,23 @@ def get_data(file='AVAL_test.csv'):
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
 
+def bar(ax, var):
+    ax.bar(x=range(len(var)), height=var, color=COLORS)
+
+def plot(ax, var):
+    ax.plot(var)
+
+
 """plot variation of all variables organized by categories"""
-def plot_vars(var_dic, suffix="", show=True, save=False):
+def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
         gate = GATES[nb]
         plot_vars_gate(gate, var_dic['%s__mdp' % gate], var_dic['%s__scale' % gate],
-                       var_dic['%s__tau' % gate], fig, grid[nb], (nb%3==0))
+                       var_dic['%s__tau' % gate], fig, grid[nb], (nb%3==0), func=func)
     plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
-                   var_dic['h__alpha'], fig, grid[5], False)
+                   var_dic['h__alpha'], fig, grid[5], False, func=func)
     plt.tight_layout()
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
@@ -90,42 +100,42 @@ def plot_vars(var_dic, suffix="", show=True, save=False):
     grid = plt.GridSpec(1, 2)
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(var_dic['g_Ks'])#)
+    func(ax, var_dic['g_Ks'])#)
     ax.set_ylabel('KS cond.')
     ax.set_title('Conductances')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['g_Kf'])#)
+    func(ax, var_dic['g_Kf'])#)
     ax.set_ylabel('KF cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['g_Ca'])#)
+    func(ax, var_dic['g_Ca'])#)
     ax.set_ylabel('Ca cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['g_L'])#, 'k')
+    func(ax, var_dic['g_L'])#, 'k')
     ax.set_ylabel('Leak cond.')
     fig.add_subplot(ax)
 
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[1], hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(var_dic['C_m'])
+    func(ax, var_dic['C_m'])#
     ax.set_ylabel('Capacitance')
     ax.yaxis.tick_right()
     ax.set_title('Membrane')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['E_K'])#)
+    func(ax, var_dic['E_K'])#)
     ax.set_ylabel('K E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['E_Ca'])#)
+    func(ax, var_dic['E_Ca'])#)
     ax.set_ylabel('Ca E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['E_L'])#, 'k')
+    func(ax, var_dic['E_L'])#, 'k')
     ax.set_ylabel('Leak E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
@@ -137,10 +147,10 @@ def plot_vars(var_dic, suffix="", show=True, save=False):
 
     plt.figure()
     ax = plt.subplot(211)
-    ax.plot(var_dic['rho_ca'])#, 'r')
+    func(ax, var_dic['rho_ca'])#, 'r')
     plt.ylabel('Rho_ca')
     ax = plt.subplot(212)
-    ax.plot(var_dic['decay_ca'])#, 'b')
+    func(ax, var_dic['decay_ca'])#, 'b')
     plt.ylabel('Decay_ca')
     if (save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
@@ -150,10 +160,10 @@ def plot_vars(var_dic, suffix="", show=True, save=False):
     plt.close('all')
 
 
-def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
+def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(mdp)#, 'r')
+    func(ax, mdp)#, 'r')
     ax.set_xlabel([])
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     if(labs):
@@ -161,14 +171,14 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
     ax.set_title(name)
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(scale),# 'g')
+    func(ax, scale)# 'g')
     ax.set_xlabel([])
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     if (labs):
         ax.set_ylabel('Scale')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(tau)
+    func(ax, tau)#
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     if (labs):
         ax.set_ylabel('Tau')

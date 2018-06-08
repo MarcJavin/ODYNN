@@ -1,8 +1,8 @@
 import numpy as np
-from Hodghux import Neuron_tf, Neuron_set_tf, HodgkinHuxley
+from Hodghux import Neuron_tf, HodgkinHuxley
 from HH_opt import HH_opt
 import params
-from utils import plots_output_mult, set_dir, plot_loss_rate, plots_output_double
+from utils import plots_output_mult, set_dir, plot_loss_rate, plots_output_double, OUT_SETTINGS
 from data import FILE_LV, DUMP_FILE, get_data_dump
 import pickle
 import tensorflow as tf
@@ -16,7 +16,7 @@ class Circuit():
     """
     def __init__(self, inits_p, conns, i_injs, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1):
         assert (len(inits_p) == i_injs.shape[0])
-        self.neurons = Neuron_set_tf(inits_p, loop_func=loop_func, fixed=params.ALL, dt=dt)
+        self.neurons = Neuron_tf(inits_p, loop_func=loop_func, fixed=params.ALL, dt=dt)
         self.connections = conns
         self.i_injs = i_injs
         self.i_out = i_out
@@ -79,8 +79,22 @@ class Circuit():
             self.train_neuron('Circuit_0', HH_opt(loop_func=self.neurons.loop_func, dt=self.neurons.dt), i, file)
 
 
+    def write_settings(self, dir, start_rate, decay_step, decay_rate, w):
+        with open('%s%s.txt' % (dir, OUT_SETTINGS), 'w') as f:
+            f.write('Nb of neurons : %s' % self.neurons.num + '\n' +
+                    'Connections : \n %s \n %s' % (self.pres, self.posts) + '\n'+
+                    'Initial synaptic params : %s' % self.connections + '\n' +
+                    'Initial neuron params : %s' % self.neurons.init_p + '\n'+
+                    'Fixed variables : %s' % [c for c in self.neurons.fixed] + '\n'+
+                    'Initial state : %s' % self.neurons.init_state + '\n' +
+                    'Constraints : %s' % self.neurons.constraints_dic + '\n' +
+                    'Model solver : %s' % self.neurons.loop_func + '\n' +
+                    'Weights (out, cac) : %s' % w + '\n' +
+                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (start_rate, decay_step, decay_rate) + '\n')
+
+
     """optimize synapses"""
-    def opt_circuits(self, subdir, file, epochs=200, l_rate=[0.9,9,0.9]):
+    def opt_circuits(self, subdir, file, epochs=200, w=[1,0], l_rate=[0.9,9,0.9]):
         DIR = set_dir(subdir + '/')
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
         self.X = np.transpose(self.X)
@@ -89,6 +103,7 @@ class Circuit():
         self.neurons.reset()
         self.reset()
         start_rate, decay_step, decay_rate = l_rate
+        self.write_settings(DIR, start_rate, decay_step, decay_rate, w)
 
         xs_ = tf.placeholder(shape=[None, self.neurons.num], dtype=tf.float32, name='in_current')
         ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32, name='out')
