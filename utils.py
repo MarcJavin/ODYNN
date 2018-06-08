@@ -33,7 +33,7 @@ RATE_COLORS = {'p' : '#00ccff',
                 }
 GATES = ['e', 'f', 'n', 'p', 'q']
 
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=['r', 'k', 'c', 'm', 'y'])
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=['g', 'k', 'c', 'm', 'y'])
 
 def set_dir(subdir):
     global DIR
@@ -53,7 +53,11 @@ def get_dic_from_var(dir, suffix=""):
     with open(file, 'r') as f:
         for line in f:
             m = re.search(REGEX_VARS, line)
-            dic[m.group(1)] = float(m.group(2))
+            if(m.group(2)[0]=='['):
+                #several params
+                dic[m.group(1)] = list(m.group(2))
+            else:
+                dic[m.group(1)] = float(m.group(2))
     return dic
 
 
@@ -239,14 +243,14 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.figure()
 
     plt.subplot(3, 1, 2)
-    plt.plot(ts, y_cac, 'g', label='target model')
     plt.plot(ts, cac)
+    plt.plot(ts, y_cac, 'r', label='target model')
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
-    plt.plot(ts, y_v, 'g', label='target model')
     plt.plot(ts, v)
+    plt.plot(ts, y_v, 'r', label='target model')
     plt.ylabel('Voltage (mV)')
     plt.legend()
 

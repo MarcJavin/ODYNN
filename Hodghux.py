@@ -224,10 +224,6 @@ class Neuron_tf(HodgkinHuxley):
 
     def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, loop_func=loop_func, dt=dt)
-        if(self.num == 1):
-            self.vars = [init_p]
-        else:
-            self.vars = init_p
         self.init_p = self.param
         self.fixed = fixed
         self.constraints_dic = constraints
