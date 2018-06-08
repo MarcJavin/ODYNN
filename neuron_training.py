@@ -14,10 +14,10 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
+pars = [params.give_rand() for i in range(4)]
 
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
-    v_fix = False
     name = 'Classic'
 
     opt = HH_opt(init_p=params.give_rand())
@@ -115,8 +115,6 @@ def test_xp(dir, suffix='', show=False):
 
 def alternate(name=''):
     loop_func = HodgkinHuxley.integ_comp
-    pars = [params.give_rand(), params.give_rand()]
-    pars = params.give_rand()
     opt = HH_opt(init_p=pars, loop_func=loop_func)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train, loop_func=loop_func)
     sim.simul(show=False, dump=True)
@@ -134,7 +132,6 @@ def alternate(name=''):
 def only_calc(name=''):
     dt=0.1
     loop_func = HodgkinHuxley.integ_comp
-    pars = params.give_rand()
     opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
     t,i = params.give_train(dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)

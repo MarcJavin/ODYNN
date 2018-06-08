@@ -39,13 +39,16 @@ class HH_opt():
     def build_loss(self, y, w):
         cac = self.res[:, -1]
         out = self.res[:, 0]
-        if (self.neuron.num > 1):
-            cac = tf.reduce_sum(cac, axis=1)
-            out = tf.reduce_sum(out, axis=1)
-            y = y * self.neuron.num
-        losses_v = w[0] * tf.square(tf.subtract(out, y[0]))
-        losses_ca = w[1] * tf.square(tf.subtract(cac, y[-1]))
-        self.loss = tf.reduce_mean(losses_v + losses_ca)
+        self.loss = 0
+        if(self.neuron.num == 1):
+            losses_v = w[0] * tf.square(tf.subtract(out, y[0]))
+            losses_ca = w[1] * tf.square(tf.subtract(cac, y[-1]))
+            self.loss += tf.reduce_mean(losses_v + losses_ca)
+        else:
+            for i in range(self.neuron.num):
+                losses_v = w[0] * tf.square(tf.subtract(out[:,i], y[0]))
+                losses_ca = w[1] * tf.square(tf.subtract(cac[:,i], y[-1]))
+                self.loss += tf.reduce_mean(losses_v + losses_ca)
 
     """learning rate and optimization"""
     def build_train(self, start_rate, decay_step, decay_rate):
@@ -118,14 +121,13 @@ class HH_opt():
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
-                vars = [dict([(var, [val]) for var, val in self.neuron.vars[i].items()]) for i in range(self.neuron.num)]
+                # vars = [dict([(var, [val]) for var, val in self.neuron.vars[i].items()]) for i in range(self.neuron.num)]
+                vars = dict([(var, [val]) for var, val in self.neuron.init_p.items()])
                 losses = np.zeros(epochs)
                 rates = np.zeros(epochs)
                 len_prev = 0
 
-            #list of param dictionnaries for each neuron
-
-            vars = [dict([(var, np.concatenate((val, np.zeros(epochs)))) for var, val in vars[i].items()]) for i in range(self.neuron.num)]
+            vars = dict([(var, np.vstack((val, np.zeros((epochs, self.neuron.num))))) for var, val in vars.items()])
 
             for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([self.res, self.train_op, self.loss], feed_dict={
@@ -140,11 +142,11 @@ class HH_opt():
                     for name, v in self.neuron.param.items():
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (name, v_))
-                        if(len(vars)==1):
-                            vars[0][name][len_prev + i + 1 * (len_prev == 0)] = v_
-                            continue
-                        for n in range(len(vars)):
-                            vars[n][name][len_prev + i + 1*(len_prev==0) ] = v_[n]
+                        # if(len(vars)==1):
+                        #     vars[0][name][len_prev + i + 1 * (len_prev == 0)] = v_
+                        #     continue
+                        # for n in range(len(vars)):
+                        vars[name][len_prev + i + 1*(len_prev==0)] = v_
 
                 rates[len_prev+i] = sess.run(self.learning_rate)
                 losses[len_prev+i] = train_loss
@@ -154,8 +156,7 @@ class HH_opt():
                 if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    for n in range(len(vars)):
-                        plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars[n].items()]), suffix=suffix+'neuron%s'%n, show=False, save=True)
+                    plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
                     plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 

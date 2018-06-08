@@ -1,11 +1,10 @@
 import socket
-import matplotlib
+import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 if (socket.gethostname()=='1080'):
-    matplotlib.use("Agg")
+    mpl.use("Agg")
 import pylab as plt
-from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 import os
@@ -34,7 +33,7 @@ RATE_COLORS = {'p' : '#00ccff',
                 }
 GATES = ['e', 'f', 'n', 'p', 'q']
 
-COLS_MULT = ['r', 'g', 'b', 'y', 'k']
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=['r', 'k', 'c', 'm', 'y'])
 
 def set_dir(subdir):
     global DIR
@@ -68,7 +67,7 @@ def get_data(file='AVAL_test.csv'):
     return T, X, Y
 
 """plot variation of all variables organized by categories"""
-def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
+def plot_vars(var_dic, suffix="", show=True, save=False):
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
@@ -87,20 +86,20 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
     grid = plt.GridSpec(1, 2)
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(var_dic['g_Ks'], RATE_COLORS['n'])
+    ax.plot(var_dic['g_Ks'])#)
     ax.set_ylabel('KS cond.')
     ax.set_title('Conductances')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['g_Kf'], RATE_COLORS['n'])
+    ax.plot(var_dic['g_Kf'])#)
     ax.set_ylabel('KF cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['g_Ca'], RATE_COLORS['e'])
+    ax.plot(var_dic['g_Ca'])#)
     ax.set_ylabel('Ca cond.')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['g_L'], 'k')
+    ax.plot(var_dic['g_L'])#, 'k')
     ax.set_ylabel('Leak cond.')
     fig.add_subplot(ax)
 
@@ -112,17 +111,17 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
     ax.set_title('Membrane')
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(var_dic['E_K'], RATE_COLORS['n'])
+    ax.plot(var_dic['E_K'])#)
     ax.set_ylabel('K E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[2])
-    ax.plot(var_dic['E_Ca'], RATE_COLORS['f'])
+    ax.plot(var_dic['E_Ca'])#)
     ax.set_ylabel('Ca E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[3])
-    ax.plot(var_dic['E_L'], 'k')
+    ax.plot(var_dic['E_L'])#, 'k')
     ax.set_ylabel('Leak E_rev')
     ax.yaxis.tick_right()
     fig.add_subplot(ax)
@@ -134,10 +133,10 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
 
     plt.figure()
     ax = plt.subplot(211)
-    ax.plot(var_dic['rho_ca'], 'r')
+    ax.plot(var_dic['rho_ca'])#, 'r')
     plt.ylabel('Rho_ca')
     ax = plt.subplot(212)
-    ax.plot(var_dic['decay_ca'], 'b')
+    ax.plot(var_dic['decay_ca'])#, 'b')
     plt.ylabel('Decay_ca')
     if (save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
@@ -150,7 +149,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=Axes.plot):
 def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
-    ax.plot(mdp, 'r')
+    ax.plot(mdp)#, 'r')
     ax.set_xlabel([])
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     if(labs):
@@ -158,7 +157,7 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs):
     ax.set_title(name)
     fig.add_subplot(ax)
     ax = plt.Subplot(fig, subgrid[1])
-    ax.plot(scale, 'g')
+    ax.plot(scale),# 'g')
     ax.set_xlabel([])
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
     if (labs):
@@ -241,13 +240,13 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
 
     plt.subplot(3, 1, 2)
     plt.plot(ts, y_cac, 'g', label='target model')
-    plt.plot(ts, cac, 'r', label='current model')
+    plt.plot(ts, cac)
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
     plt.plot(ts, y_v, 'g', label='target model')
-    plt.plot(ts, v, 'r', label='current model')
+    plt.plot(ts, v)
     plt.ylabel('Voltage (mV)')
     plt.legend()
 
