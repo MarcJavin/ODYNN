@@ -1,4 +1,4 @@
-from statsmodels.nonparametric.smoothers_lowess import lowess
+# from statsmodels.nonparametric.smoothers_lowess import lowess
 from scipy.interpolate import interp1d, splrep, splev
 from scipy.signal import savgol_filter
 import numpy as np
@@ -15,9 +15,10 @@ plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 def get_vars(dir):
     file = utils.RES_DIR+dir+'/'+FILE_LV
-    with open(file, 'r') as f:
+    with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, val[-1]) for var, val in dic.items()])
+        print(dic['C_m'].shape, dic['C_m'])
+        dic = dict([(var, val[-2]) for var, val in dic.items()])
     return dic
 
 def get_data_dump(file=DUMP_FILE):
@@ -68,10 +69,10 @@ if __name__ == '__main__':
 
 
     t1 = time.time()
-    l = lowess(trace, tinit, return_sorted=False, frac=0.01)
+    # l = lowess(trace, tinit, return_sorted=False, frac=0.01)
 
-    f = interp1d(tinit, l, kind='cubic')
-    z = f(t)
+    # f = interp1d(tinit, l, kind='cubic')
+    # z = f(t)
     t2 = time.time()
     print('lowess+interp : %s'%(t2-t1))
 
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     # plt.plot(trace)
     # plt.plot(l)
     # plt.subplot(212)
-    plt.plot(z, 'g', label='lowess+interp1d')
+    # plt.plot(z, 'g', label='lowess+interp1d')
     plt.plot(z2, 'b', label='splrev')
     plt.plot(zexact, 'r', label='exact')
     plt.legend()

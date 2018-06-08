@@ -122,7 +122,6 @@ class HH_opt():
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
-                # vars = [dict([(var, [val]) for var, val in self.neuron.vars[i].items()]) for i in range(self.neuron.num)]
                 vars = dict([(var, [val]) for var, val in self.neuron.init_p.items()])
                 losses = np.zeros(epochs)
                 rates = np.zeros(epochs)
@@ -138,12 +137,12 @@ class HH_opt():
                 })
                 _ = sess.run(self.neuron.constraints)
 
-
                 with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, suffix), 'w') as f:
                     for name, v in self.neuron.param.items():
                         v_ = sess.run(v)
                         f.write('%s : %s\n' % (name, v_))
-                        vars[name][len_prev + i + 1*(len_prev==0)] = v_
+
+                        vars[name][len_prev + i + 1] = v_
 
                 rates[len_prev+i] = sess.run(self.learning_rate)
                 losses[len_prev+i] = train_loss
