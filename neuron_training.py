@@ -140,7 +140,7 @@ def only_calc(name=''):
     dir = 'Integcomp_calc_%s'%name
     wv = 0
     wca = 1
-    opt.optimize(dir, [wv, wca], epochs=2)
+    opt.optimize(dir, [wv, wca], epochs=240)
     comp_pars(dir)
     test_xp(dir)
 
