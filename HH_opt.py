@@ -11,6 +11,7 @@ from tqdm import tqdm
 import time
 
 SAVE_PATH = 'tmp/model.ckpt'
+DUMP_V = 'final_params'
 
 
 class HH_opt():

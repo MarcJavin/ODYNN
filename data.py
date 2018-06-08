@@ -7,12 +7,18 @@ import pylab as plt
 import time
 import pickle
 import math
-from matplotlib.ticker import FormatStrFormatter
+import utils
 
 DUMP_FILE = 'data/dump'
 FILE_LV = 'tmp/dump_lossratevars'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
+def get_vars(dir):
+    file = utils.RES_DIR+dir+'/'+FILE_LV
+    with open(file, 'r') as f:
+        l,r,dic = pickle.load(f)
+        dic = dict([(var, val[-1]) for var, val in dic.items()])
+    return dic
 
 def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:

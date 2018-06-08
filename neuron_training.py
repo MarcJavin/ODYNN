@@ -1,7 +1,7 @@
 from HH_opt import HH_opt
 from HH_simul import HH_simul
 from Hodghux import HodgkinHuxley
-import params
+import params, data
 import utils
 import sys
 import numpy as np
@@ -104,7 +104,7 @@ def test_xp(dir, suffix='', show=False):
     i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
 
     utils.set_dir(dir)
-    param = utils.get_dic_from_var(dir, suffix=suffix)
+    param = data.get_vars(dir)
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
     sim.simul(show=show, suffix='xp1')
     sim.i_inj = i2
@@ -118,7 +118,7 @@ def alternate(name=''):
     opt = HH_opt(init_p=pars, loop_func=loop_func)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train, loop_func=loop_func)
     sim.simul(show=False, dump=True)
-    dir = 'Integcomp_alternate%s' % name
+    dir = 'Integcomp_alternate_%s' % name
     wv = 0.2
     wca = 0.8
     opt.optimize(dir, [wv, wca], epochs=20, step=0)
@@ -126,8 +126,7 @@ def alternate(name=''):
         wv = 1 - wv
         wca = 1 - wca
         opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1)
-    p = utils.get_dic_from_var(dir)
-    utils.plot_vars(p, func=utils.bar)
+    comp_pars(dir)
     test_xp(dir)
 
 
@@ -138,25 +137,29 @@ def only_calc(name=''):
     t,i = params.give_train(dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
     sim.simul(show=False, dump=True)
-    dir = 'Integcomp_calc%s'%name
+    dir = 'Integcomp_calc_%s'%name
     wv = 0
     wca = 1
-    opt.optimize(dir, [wv, wca], epochs=200)
-    p = utils.get_dic_from_var(dir)
-    utils.plot_vars(p, func=utils.bar)
+    opt.optimize(dir, [wv, wca], epochs=2)
+    comp_pars(dir)
     test_xp(dir)
+
+def comp_pars(dir):
+    p = data.get_vars(dir)
+    utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
 
 
 if __name__ == '__main__':
 
 
-    name = sys.argv[1]
-    alternate(name)
-    exit(0)
-
-
     xp = sys.argv[1]
-    if(xp == 'single'):
+    if(xp == 'alt'):
+        name = sys.argv[2]
+        alternate(name)
+    elif(xp=='cac'):
+        name = sys.argv[2]
+        only_calc(name)
+    elif(xp == 'single'):
         xp = sys.argv[2]
         w_v, w_ca = list(map(int, sys.argv[3:5]))
         single_exp(xp, w_v, w_ca)

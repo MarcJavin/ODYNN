@@ -53,7 +53,10 @@ def get_dic_from_var(dir, suffix=""):
     dic = {}
     with open(file, 'r') as f:
         for line in f:
+            print('line', line)
             m = re.search(REGEX_VARS, line)
+            print(m)
+            print(m.group(2))
             if(m.group(2)[0]=='['):
                 #several params
                 l = re.findall('[-]?[\d]*[\.]?[\d]+[e]?[+-]?[\d]+', m.group(2))
@@ -364,11 +367,17 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
 
     plt.subplot(5, 1, 1)
     plt.title('Hodgkin-Huxley Neuron')
-    plt.plot(ts, V, 'k')
+    if(len(V.shape)==1):
+        plt.plot(ts, V, 'k')
+    else:
+        plt.plot(ts, V)
     plt.ylabel('V (mV)')
 
     plt.subplot(5, 1, 2)
-    plt.plot(ts, cac, 'r')
+    if (len(V.shape) == 1):
+        plt.plot(ts, cac, 'r')
+    else:
+        plt.plot(ts, cac)
     plt.ylabel('$Ca^{2+}$ concentration')
 
     plt.subplot(5, 1, 3)

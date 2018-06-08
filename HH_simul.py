@@ -56,8 +56,6 @@ class HH_simul():
 
         X = self.calculate()
 
-        todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
-
         print(time.time() - start)
 
         if (self.neuron.loop_func == self.neuron.ica_from_v):
@@ -68,6 +66,7 @@ class HH_simul():
             plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
 
         if (dump):
+            todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
             with open(data.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return data.DUMP_FILE
