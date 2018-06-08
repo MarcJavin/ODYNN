@@ -159,8 +159,8 @@ class HH_opt():
 
                 if(batch):
                     for b in range(xshape[1]):
-                        plots_output_double(self.T, self.X[:,0,b], results[:,0,b], self.V[:,b,0], results[:,-1,b],
-                                            self.Ca[:,b, 0], suffix='%s_%s_trace%s_%s' % (suffix, step, b, i + 1), show=False,
+                        plots_output_double(self.T, self.X[:,b,0], results[:,0,b], self.V[:,b,0], results[:,-1,b],
+                                            self.Ca[:,b, 0], suffix='%s_%s_%s_trace%s' % (suffix, step, i + 1, b), show=False,
                                             save=True)
                 else:
                     plots_output_double(self.T, self.X[:,0], results[:,0], self.V[:,0], results[:,-1], self.Ca[:,0], suffix='%s_%s_%s'%(suffix, step, i + 1), show=False, save=True)

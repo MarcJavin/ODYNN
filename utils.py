@@ -234,7 +234,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
 
     plt.subplot(n_plots, 1, n_plots)
     if(len(i_inj.shape)<2):
-        plt.plot(ts, i_inj, 'k')
+        plt.plot(ts, i_inj, 'b')
     else:
         plt.plot(ts, i_inj)
     plt.xlabel('t (ms)')
@@ -264,7 +264,7 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.legend()
 
     plt.subplot(3, 1, 3)
-    plt.plot(ts, i_inj, 'k')
+    plt.plot(ts, i_inj, 'b')
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
@@ -394,7 +394,7 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.legend()
 
     plt.subplot(5, 1, 5)
-    plt.plot(ts, i_inj_values, 'k')
+    plt.plot(ts, i_inj_values, 'b')
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     # plt.ylim(-1, 40)

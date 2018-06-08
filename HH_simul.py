@@ -63,7 +63,12 @@ class HH_simul():
         elif (self.neuron.loop_func == self.neuron.ik_from_v):
             plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
         else:
-            plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
+            if (self.i_inj.ndim > 1):
+                for i in range(self.i_inj.shape[1]):
+                    plots_results(self.neuron, self.t, self.i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s' % suffix, show=show,
+                                  save=save)
+            else:
+                plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
 
         if (dump):
             todump = [self.t, self.i_inj, X[:, 0], X[:, -1]]
