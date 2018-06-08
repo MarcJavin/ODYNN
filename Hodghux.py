@@ -20,7 +20,7 @@ class HodgkinHuxley():
         self.init_state = self.get_init_state()
         if (isinstance(init_p, list)):
             self.num = len(init_p)
-            init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].iterkeys()])
+            init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
             self.init_state = np.tile((self.init_state), (self.num, 1)).transpose()
         else:
             self.num = 1

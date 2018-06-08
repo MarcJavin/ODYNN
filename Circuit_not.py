@@ -43,7 +43,7 @@ class Circuit():
         # update neurons
         self.neurons.step(curs)
         # update synapses
-        for pre, post in self.connections.iterkeys():
+        for pre, post in self.connections.keys():
             vprev = self.neurons.state[0,pre]
             vpost = self.neurons.state[0,post]
             next_curs[post] += self.syn_curr('%s-%s' % (pre, post), vprev, vpost)
