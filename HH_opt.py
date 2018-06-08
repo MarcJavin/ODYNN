@@ -92,14 +92,15 @@ class HH_opt():
         # inputs
 
         if(self.neuron.num == 1):
-            xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
-            ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
-            init_state = tf.placeholder(shape=[len(self.neuron.init_state)], dtype=tf.float32)
+            xs_ = tf.placeholder(shape=self.X.shape, dtype=tf.float32)
         else:
-            xs_ = tf.placeholder(shape=[None, self.neuron.num], dtype=tf.float32)
-            ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
+            xshape = [d for d in self.X.shape]
+            #add dimension for neurons trained in parallel
+            xshape.append(self.neuron.num)
+            xs_ = tf.placeholder(shape=xshape, dtype=tf.float32)
             self.X = np.tile(self.X, (self.neuron.num, 1)).transpose()
-            init_state = tf.placeholder(shape=self.neuron.init_state.shape, dtype=tf.float32)
+        ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
+        init_state = tf.placeholder(shape=self.neuron.init_state.shape, dtype=tf.float32)
 
         self.res = tf.scan(self.neuron.step,
                       xs_,
@@ -152,7 +153,7 @@ class HH_opt():
                 if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
+                    plot_vars(dict([(name, val[:len_prev + i + 2]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
                     plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 

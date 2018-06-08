@@ -14,7 +14,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(10)]
+pars = params.give_rand()#[params.give_rand() for i in range(10)]
 
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):

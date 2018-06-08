@@ -20,7 +20,7 @@ INITS = {
         'h' : 0.,
         'cac' : 1.e-7
 }
-INIT_STATE = [INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']]
+INIT_STATE = np.array([INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']])
 INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 

@@ -36,7 +36,7 @@ def opt_neurons():
 if __name__ == '__main__':
     p = params.DEFAULT
     pars = [p,p]
-
+    n_out = 1
     dir = '2n-2exc'
     utils.set_dir(dir)
 
@@ -51,4 +51,4 @@ if __name__ == '__main__':
                    (1,0): params.get_syn_rand()}
     c.run_sim(dump=True, show=True, save=True)
     c = Circuit.Circuit(pars, connections)
-    c.opt_circuits(dir, data.DUMP_FILE+str(1))
+    c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE+str(n_out))

@@ -92,7 +92,7 @@ class Circuit():
 
 
     """optimize synapses"""
-    def opt_circuits(self, subdir, file, epochs=200, w=[1,0], l_rate=[0.9,9,0.9]):
+    def opt_circuits(self, subdir, file, epochs=200, n_out=1, w=[1,0], l_rate=[0.9,9,0.9]):
         DIR = set_dir(subdir + '/')
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
@@ -110,7 +110,7 @@ class Circuit():
                       xs_,
                       initializer=init_state)
 
-        out = res[:, 0, 1]
+        out = res[:, 0, n_out]
         losses = tf.square(tf.subtract(out, ys_[0]))
         loss = tf.reduce_mean(losses)
 
@@ -150,6 +150,6 @@ class Circuit():
                 losses[i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
 
-                plots_output_double(self.T, self.X, results[:,0,1], self.V, results[:,-1,1], self.Ca, suffix=i, show=False, save=True)
+                plots_output_double(self.T, self.X, results[:,0,n_out], self.V, results[:,-1,n_out], self.Ca, suffix=i, show=False, save=True)
                 plots_output_mult(self.T, self.X, results[:,0,:], results[:,-1,:], suffix='circuit_%s'%i, show=False, save=True)
                 plot_loss_rate(losses, rates, show=False, save=True)
