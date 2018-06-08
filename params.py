@@ -188,12 +188,21 @@ DT = 0.1
 t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
+i_inj_train2 = 30.*((t_train>100)&(t_train<500)) + 25.*((t_train>800)&(t_train<900))
+i_inj_train3 = np.sum([(10.+(n*2/100))*((t_train>n)&(t_train<n+50)) for n in range(100, 1100, 100)], axis=0)
+i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
+
 
 def give_train(dt=DT):
         t_train = np.array(sp.arange(0.0, 1200., dt))
-        i_inj_train = 10.*((t_train>100)&(t_train<300)) + 20.*((t_train>400)&(t_train<600)) + 40.*((t_train>800)&(t_train<950))
+        i_inj_train = 10. * ((t_train > 100) & (t_train < 300)) + 20. * ((t_train > 400) & (t_train < 600)) + 40. * (
+                        (t_train > 800) & (t_train < 950))
         i_inj_train = np.array(i_inj_train, dtype=np.float32)
-        return t_train, i_inj_train
+        i_inj_train2 = 30. * ((t_train > 100) & (t_train < 500)) + 25. * ((t_train > 800) & (t_train < 900))
+        i_inj_train3 = np.sum(
+                [(10. + (n * 2 / 100)) * ((t_train > n) & (t_train < n + 50)) for n in range(100, 1100, 100)], axis=0)
+        i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
+        return t_train, i_inj_trains
 
 t_len = 5000.
 t = np.array(sp.arange(0.0, t_len, DT))

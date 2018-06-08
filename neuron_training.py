@@ -14,7 +14,8 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = params.give_rand()#[params.give_rand() for i in range(10)]
+pars = [params.give_rand() for i in range(10)]
+dt=0.1
 
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -66,13 +67,13 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
     dir = single_exp('ica', w_v1, w_ca1, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
     param = utils.get_dic_from_var(dir)
-    opt = HH_opt(init_p=param, fixed=CA_VAR, l_rate=[0.1,9,0.9])
+    opt = HH_opt(init_p=param, fixed=CA_VAR)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
     file = sim.simul(dump=True, suffix='step2', show=False)
-    opt.optimize(dir, w=[w_v2, w_ca2], suffix='step2', file=file)
+    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9],suffix='step2', file=file)
 
     test_xp(dir)
 
@@ -82,13 +83,13 @@ def steps2_exp_k(w_v2, w_ca2):
     dir = single_exp('ik', 1, 0, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
     param = utils.get_dic_from_var(dir)
-    opt = HH_opt(init_p=param, fixed=K_VAR, l_rate=[0.1,9,0.9])
+    opt = HH_opt(init_p=param, fixed=K_VAR)
     sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
     file = sim.simul(dump=True, suffix='step2')
-    opt.optimize(dir, w=[w_v2, w_ca2], suffix='step2', file=file)
+    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9], suffix='step2', file=file)
 
     test_xp(dir)
 
@@ -106,19 +107,21 @@ def test_xp(dir, suffix='', show=False):
     utils.set_dir(dir)
     param = data.get_vars(dir)
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
-    sim.simul(show=show, suffix='xp1')
+    sim.simul(show=show, suffix='test1')
     sim.i_inj = i2
-    sim.simul(show=show, suffix='xp2')
+    sim.simul(show=show, suffix='test2')
     sim.i_inj=i3
     sim.t = t3
-    sim.simul(show=show, suffix='xp3')
+    sim.simul(show=show, suffix='test3')
 
 def alternate(name=''):
+    dir = 'Integcomp_alternate_%s' % name
+    utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func)
-    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train, loop_func=loop_func)
-    sim.simul(show=False, dump=True)
-    dir = 'Integcomp_alternate_%s' % name
+    t, i = params.give_train(dt)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
+    sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
     opt.optimize(dir, [wv, wca], epochs=20, step=0)
@@ -131,13 +134,13 @@ def alternate(name=''):
 
 
 def only_calc(name=''):
-    dt=0.1
+    dir = 'Integcomp_calc_%s' % name
+    utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
     t,i = params.give_train(dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
-    sim.simul(show=False, dump=True)
-    dir = 'Integcomp_calc_%s'%name
+    sim.simul(show=False, suffix='train', dump=True)
     wv = 0
     wca = 1
     opt.optimize(dir, [wv, wca], epochs=240)

@@ -8,7 +8,6 @@ from data import get_data_dump, FILE_LV
 import pickle
 import params
 from tqdm import tqdm
-import time
 
 SAVE_PATH = 'tmp/model.ckpt'
 DUMP_V = 'final_params'
@@ -40,16 +39,12 @@ class HH_opt():
     def build_loss(self, y, w):
         cac = self.res[:, -1]
         out = self.res[:, 0]
-        self.loss = 0
-        if(self.neuron.num == 1):
-            losses_v = w[0] * tf.square(tf.subtract(out, y[0]))
-            losses_ca = w[1] * tf.square(tf.subtract(cac, y[-1]))
-            self.loss += tf.reduce_mean(losses_v + losses_ca)
-        else:
-            for i in range(self.neuron.num):
-                losses_v = w[0] * tf.square(tf.subtract(out[:,i], y[0]))
-                losses_ca = w[1] * tf.square(tf.subtract(cac[:,i], y[-1]))
-                self.loss += tf.reduce_mean(losses_v + losses_ca)
+        losses_v = w[0] * tf.square(tf.subtract(out, y[0]))
+        losses_ca = w[1] * tf.square(tf.subtract(cac, y[-1]))
+        self.loss = losses_v + losses_ca
+        if(self.neuron.num > 1):
+            self.loss = tf.reduce_mean(self.loss, axis=-1) * self.neuron.num**0.5
+        self.loss = tf.reduce_mean(self.loss)
 
     """learning rate and optimization"""
     def build_train(self, start_rate, decay_step, decay_rate):
@@ -72,7 +67,7 @@ class HH_opt():
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
 
-    def optimize(self, subdir, w=[1,0], epochs=200, l_rate=[0.9,9,0.9], suffix='', step='', file=None, reload=False):
+    def optimize(self, subdir, w=[1,0], epochs=200, l_rate=[0.9,9,0.9], suffix='', step=None, file=None, reload=False):
         print(suffix, step)
         self.suffix = suffix
         DIR = set_dir(subdir+'/')
@@ -88,23 +83,36 @@ class HH_opt():
             self.T, self.X, self.V, self.Ca = get_data_dump(file)
         if(self.neuron.loop_func == self.neuron.ik_from_v):
             self.Ca = self.V
+        batch = False
+        if(self.X.ndim > 1): batch=True
         assert(self.neuron.dt == self.T[1] - self.T[0])
         # inputs
 
-        if(self.neuron.num == 1):
-            xs_ = tf.placeholder(shape=self.X.shape, dtype=tf.float32)
-        else:
-            xshape = [d for d in self.X.shape]
+        #Xshape = [time, n_batch]
+        xshape = list(self.X.shape)
+        yshape = list(self.V.shape)
+        initshape = list(self.neuron.init_state.shape)
+        yshape.insert(0,2)
+        if(self.neuron.num > 1):
             #add dimension for neurons trained in parallel
+            self.X = np.stack([self.X for _ in range(self.neuron.num)], axis=self.X.ndim)
+            self.V = np.stack([self.V for _ in range(self.neuron.num)], axis=self.V.ndim)
+            self.Ca = np.stack([self.Ca for _ in range(self.neuron.num)], axis=self.Ca.ndim)
             xshape.append(self.neuron.num)
-            xs_ = tf.placeholder(shape=xshape, dtype=tf.float32)
-            self.X = np.tile(self.X, (self.neuron.num, 1)).transpose()
-        ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=self.neuron.init_state.shape, dtype=tf.float32)
+            yshape.append(self.neuron.num)
+        xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
+        init_state = self.neuron.init_state
+        if(batch):
+            #reshape init state
+            initshape.insert(1, xshape[1])
+            init_state = np.stack([init_state for _ in range(xshape[1])], axis=1)
+
+        init_state_ = tf.placeholder(shape=initshape, dtype=tf.float32, name='init_state')
 
         self.res = tf.scan(self.neuron.step,
                       xs_,
-                     initializer=init_state)
+                     initializer=init_state_)
         self.build_loss(ys_, w)
         self.build_train(start_rate, decay_step, decay_rate)
 
@@ -133,8 +141,8 @@ class HH_opt():
             for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([self.res, self.train_op, self.loss], feed_dict={
                     xs_: self.X,
-                    ys_: np.vstack((self.V, self.Ca)),
-                    init_state: self.neuron.init_state
+                    ys_: np.array([self.V, self.Ca]),
+                    init_state_: init_state
                 })
                 _ = sess.run(self.neuron.constraints)
 
@@ -149,7 +157,13 @@ class HH_opt():
                 losses[len_prev+i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
 
-                plots_output_double(self.T, self.X, results[:,0], self.V, results[:,-1], self.Ca, suffix='%s_step%s_%s'%(suffix, step, i + 1), show=False, save=True)
+                if(batch):
+                    for b in range(xshape[1]):
+                        plots_output_double(self.T, self.X[:,0,b], results[:,0,b], self.V[:,b,0], results[:,-1,b],
+                                            self.Ca[:,b, 0], suffix='%s_%s_trace%s_%s' % (suffix, step, b, i + 1), show=False,
+                                            save=True)
+                else:
+                    plots_output_double(self.T, self.X[:,0], results[:,0], self.V[:,0], results[:,-1], self.Ca[:,0], suffix='%s_%s_%s'%(suffix, step, i + 1), show=False, save=True)
                 if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)

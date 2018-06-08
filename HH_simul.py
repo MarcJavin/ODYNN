@@ -66,7 +66,7 @@ class HH_simul():
             plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
 
         if (dump):
-            todump = np.vstack((self.t, self.i_inj, X[:, 0], X[:, -1]))
+            todump = [self.t, self.i_inj, X[:, 0], X[:, -1]]
             with open(data.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return data.DUMP_FILE
@@ -74,8 +74,10 @@ class HH_simul():
 
 
 if __name__ == '__main__':
-    sim = HH_simul(t=params.t_train, i_inj=params.i_inj_train)
-    sim.comp([params.give_rand(),params.DEFAULT])
+    i_injs = np.stack([params.i_inj_train, params.i_inj_train2], axis=1)
+    i_injs = params.i_inj_trains
+    sim = HH_simul(t=params.t_train, i_inj=i_injs)
+    sim.simul(show=True, save=False, dump=True)
     #
     # exit(0)
 
