@@ -150,12 +150,14 @@ def only_calc(name=''):
 def comp_pars(dir):
     p = data.get_vars(dir)
     utils.set_dir(dir)
+    utils.plot_vars(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
 
 
 if __name__ == '__main__':
 
-    # comp_pars('server/Integcomp_alternate_10')
+    comp_pars('Integcomp_alternate_yolo')
+    exit(0)
 
 
     xp = sys.argv[1]

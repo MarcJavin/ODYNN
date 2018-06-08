@@ -79,9 +79,12 @@ def get_data(file='AVAL_test.csv'):
 
 def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
-
 def plot(ax, var):
     ax.plot(var)
+def boxplot(ax, var):
+    bp = ax.boxplot(var, vert=True, showmeans=True, patch_artist=True)
+    for b in bp["boxes"]:
+        b.set_facecolor('Gold')
 
 
 """plot variation of all variables organized by categories"""

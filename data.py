@@ -17,7 +17,6 @@ def get_vars(dir):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        print(dic['C_m'].shape, dic['C_m'])
         dic = dict([(var, val[-2]) for var, val in dic.items()])
     return dic
 
