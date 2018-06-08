@@ -14,11 +14,9 @@ class Circuit():
     neurons : objects to optimize
 
     """
-    def __init__(self, inits_p, conns, i_injs, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1):
-        assert (len(inits_p) == i_injs.shape[0])
+    def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1):
         self.neurons = Neuron_tf(inits_p, loop_func=loop_func, fixed=params.ALL, dt=dt)
         self.connections = conns
-        self.i_injs = i_injs
         self.i_out = i_out
         syns = zip(*[k for k in conns.iterkeys()])
         self.pres = np.array(syns[0], dtype=np.int32)
@@ -97,7 +95,6 @@ class Circuit():
     def opt_circuits(self, subdir, file, epochs=200, w=[1,0], l_rate=[0.9,9,0.9]):
         DIR = set_dir(subdir + '/')
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
-        self.X = np.transpose(self.X)
 
         tf.reset_default_graph()
         self.neurons.reset()
@@ -154,4 +151,5 @@ class Circuit():
                 print('[{}] loss : {}'.format(i, train_loss))
 
                 plots_output_double(self.T, self.X, results[:,0,1], self.V, results[:,-1,1], self.Ca, suffix=i, show=False, save=True)
+                plots_output_mult(self.T, self.X, results[:,0,:], results[:,-1,:], suffix='circuit_%s'%i, show=False, save=True)
                 plot_loss_rate(losses, rates, show=False, save=True)

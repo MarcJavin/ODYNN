@@ -14,7 +14,7 @@ class Circuit():
     """
 
     def __init__(self, inits_p, conns, i_injs, t, loop_func=HodgkinHuxley.loop_func, i_out=None, dt=0.1, tensors=False):
-        assert(len(inits_p) == i_injs.shape[0])
+        assert(len(inits_p) == i_injs.shape[1])
         self.neurons = Neuron_fix(inits_p, loop_func=loop_func, dt=dt)
         self.connections = conns
         self.t = t
@@ -51,31 +51,30 @@ class Circuit():
 
     """runs the entire simulation"""
 
-    def run_sim(self, show=True, dump=False, general=True):
+    def run_sim(self, show=True, save=False, dump=False, general=True):
         #[state, neuron, time]
-        states = np.zeros((np.hstack((self.neurons.init_state.shape, len(self.t)))))
-        print(states.shape)
+        states = np.zeros((np.hstack((len(self.t), self.neurons.init_state.shape))))
         curs = np.zeros(self.i_injs.shape)
 
-        for t in range(self.i_injs.shape[1]):
+        for t in range(len(self.t)):
             if (t == 0):
-                curs[:, t] = self.step(self.i_injs[:, t])
+                curs[t, :] = self.step(self.i_injs[t ,:])
             else:
-                curs[:, t] = self.step(self.i_injs[:, t] + curs[:, t - 1])
+                curs[t, :] = self.step(self.i_injs[t, :] + curs[t - 1, :])
 
-            states[:, :, t] = self.neurons.state
+            states[t, :, :] = self.neurons.state
 
-        plots_output_mult(self.t, self.i_injs, [states[0,0, :], states[0,1, :]], [states[-1,0, :], states[-1,1, :]],
-                          i_syn=curs, show=show)
+        plots_output_mult(self.t, self.i_injs, states[:,0,:], states[:,-1,:],
+                          i_syn=curs, show=show, save=save, suffix='TARGET')
 
         if (dump):
             for i in range(self.neurons.num):
                 if(general):
                     cur = self.i_injs
                 else:
-                    cur = self.i_injs[i, :] + curs[i, :]
+                    cur = self.i_injs[:, i] + curs[:, i]
 
-                todump = [self.t, cur, states[0,i, :], states[-1,i, :]]
+                todump = [self.t, cur, states[:,0,i], states[:,-1,i]]
                 with open(DUMP_FILE + str(i), 'wb') as f:
                     pickle.dump(todump, f)
             return DUMP_FILE

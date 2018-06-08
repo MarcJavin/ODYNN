@@ -215,8 +215,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     if (i_syn is not None):
         n_plots = 4
         plt.subplot(n_plots, 1, 3)
-        for n in range(i_syn.shape[0]):
-            plt.plot(ts, i_syn[n, :])
+        plt.plot(ts, i_syn)
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{syn}$ ($\\mu{A}/cm^2$)')
         plt.legend(labels)
@@ -224,14 +223,12 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         n_plots = 3
 
     plt.subplot(n_plots, 1, 1)
-    for vs in Vs:
-        plt.plot(ts, vs)
+    plt.plot(ts, Vs)
     plt.ylabel('Voltage (mV)')
     plt.legend(labels)
 
     plt.subplot(n_plots, 1, 2)
-    for cacs in Cacs:
-        plt.plot(ts, cacs)
+    plt.plot(ts, Cacs)
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend(labels)
 
@@ -239,8 +236,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     if(len(i_inj.shape)<2):
         plt.plot(ts, i_inj, 'k')
     else:
-        for n in range(i_inj.shape[0]):
-            plt.plot(ts, i_inj[n, :])
+        plt.plot(ts, i_inj)
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     plt.legend(labels)
