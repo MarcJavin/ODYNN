@@ -20,7 +20,7 @@ class HodgkinHuxley():
         self.init_state = self.get_init_state()
         if (isinstance(init_p, list)):
             self.num = len(init_p)
-            init_p = dict([(var, np.array([p[var] for p in init_p])) for var in init_p[0].iterkeys()])
+            init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].iterkeys()])
             self.init_state = np.tile((self.init_state), (self.num, 1)).transpose()
         else:
             self.num = 1
@@ -224,6 +224,10 @@ class Neuron_tf(HodgkinHuxley):
 
     def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, loop_func=loop_func, dt=dt)
+        if(self.num == 1):
+            self.vars = [init_p]
+        else:
+            self.vars = init_p
         self.init_p = self.param
         self.fixed = fixed
         self.constraints_dic = constraints

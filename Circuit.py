@@ -98,7 +98,6 @@ class Circuit():
                       xs_,
                       initializer=init_state)
 
-
         out = res[:, 0, 1]
         losses = tf.square(tf.subtract(out, ys_[0]))
         loss = tf.reduce_mean(losses)

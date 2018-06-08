@@ -26,7 +26,8 @@ class HH_opt():
 
     def write_settings(self, dir, start_rate, decay_step, decay_rate, w):
         with open('%s%s_%s.txt' % (dir, OUT_SETTINGS, self.suffix), 'w') as f:
-            f.write('Initial params : %s' % self.neuron.init_p + '\n'+
+            f.write('Nb of neurons : %s' % self.neuron.num + '\n' +
+                    'Initial params : %s' % self.neuron.init_p + '\n'+
                     'Fixed variables : %s' % [c for c in self.neuron.fixed] + '\n'+
                     'Initial state : %s' % self.neuron.init_state + '\n' +
                     'Constraints : %s' % self.neuron.constraints_dic + '\n' +
@@ -38,6 +39,10 @@ class HH_opt():
     def build_loss(self, y, w):
         cac = self.res[:, -1]
         out = self.res[:, 0]
+        if (self.neuron.num > 1):
+            cac = tf.reduce_sum(cac, axis=1)
+            out = tf.reduce_sum(out, axis=1)
+            y = y * self.neuron.num
         losses_v = w[0] * tf.square(tf.subtract(out, y[0]))
         losses_ca = w[1] * tf.square(tf.subtract(cac, y[-1]))
         self.loss = tf.reduce_mean(losses_v + losses_ca)
@@ -55,9 +60,10 @@ class HH_opt():
         tf.summary.scalar('learning rate', self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         gvs = opt.compute_gradients(self.loss)
-        tf.summary.histogram('gradients', gvs)
+        grads, vars = zip(*gvs)
+        # tf.summary.histogram('gradients', gvs)
         # check if nan and clip the values
-        grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda: 0., lambda: grad), var) for grad, var in gvs])
+        # grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda: 0., lambda: grad), var) for grad, var in gvs])
         grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
@@ -80,9 +86,16 @@ class HH_opt():
             self.Ca = self.V
         assert(self.neuron.dt == self.T[1] - self.T[0])
         # inputs
-        xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
-        ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
-        init_state = tf.placeholder(shape=[len(self.neuron.init_state)], dtype=tf.float32)
+
+        if(self.neuron.num == 1):
+            xs_ = tf.placeholder(shape=[None], dtype=tf.float32)
+            ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
+            init_state = tf.placeholder(shape=[len(self.neuron.init_state)], dtype=tf.float32)
+        else:
+            xs_ = tf.placeholder(shape=[None, self.neuron.num], dtype=tf.float32)
+            ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32)
+            self.X = np.tile(self.X, (self.neuron.num, 1)).transpose()
+            init_state = tf.placeholder(shape=self.neuron.init_state.shape, dtype=tf.float32)
 
         self.res = tf.scan(self.neuron.step,
                       xs_,
@@ -105,12 +118,14 @@ class HH_opt():
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
-                vars = dict([(var, [val]) for var, val in self.neuron.init_p.items()])
+                vars = [dict([(var, [val]) for var, val in self.neuron.vars[i].items()]) for i in range(self.neuron.num)]
                 losses = np.zeros(epochs)
                 rates = np.zeros(epochs)
                 len_prev = 0
 
-            vars = dict([(var, np.concatenate((val, np.zeros(epochs)))) for var, val in vars.items()])
+            #list of param dictionnaries for each neuron
+
+            vars = [dict([(var, np.concatenate((val, np.zeros(epochs)))) for var, val in vars[i].items()]) for i in range(self.neuron.num)]
 
             for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([self.res, self.train_op, self.loss], feed_dict={
@@ -120,11 +135,16 @@ class HH_opt():
                 })
                 _ = sess.run(self.neuron.constraints)
 
+
                 with open('%s%s_%s.txt' % (DIR, OUT_PARAMS, suffix), 'w') as f:
                     for name, v in self.neuron.param.items():
                         v_ = sess.run(v)
-                        vars[name][len_prev + i + 1*(len_prev==0) ] = v_
                         f.write('%s : %s\n' % (name, v_))
+                        if(len(vars)==1):
+                            vars[0][name][len_prev + i + 1 * (len_prev == 0)] = v_
+                            continue
+                        for n in range(len(vars)):
+                            vars[n][name][len_prev + i + 1*(len_prev==0) ] = v_[n]
 
                 rates[len_prev+i] = sess.run(self.learning_rate)
                 losses[len_prev+i] = train_loss
@@ -134,7 +154,8 @@ class HH_opt():
                 if(i%10==0 or i==epochs-1):
                     with (open(DIR+FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
-                    plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
+                    for n in range(len(vars)):
+                        plot_vars(dict([(name, val[:len_prev + i + 1 + 1*(len_prev==0)]) for name,val in vars[n].items()]), suffix=suffix+'neuron%s'%n, show=False, save=True)
                     plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
 
