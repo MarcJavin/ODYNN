@@ -242,7 +242,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.legend(labels)
 
     plt.subplot(n_plots, 1, n_plots)
-    if(len(i_inj.shape)<2):
+    if(i_inj.ndim<2):
         plt.plot(ts, i_inj, 'b')
     else:
         plt.plot(ts, i_inj)
@@ -372,14 +372,14 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
 
     plt.subplot(5, 1, 1)
     plt.title('Hodgkin-Huxley Neuron')
-    if(len(V.shape)==1):
+    if(V.ndim==1):
         plt.plot(ts, V, 'k')
     else:
         plt.plot(ts, V)
     plt.ylabel('V (mV)')
 
     plt.subplot(5, 1, 2)
-    if (len(V.shape) == 1):
+    if (V.ndim == 1):
         plt.plot(ts, cac, 'r')
     else:
         plt.plot(ts, cac)

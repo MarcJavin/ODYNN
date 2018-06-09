@@ -15,6 +15,7 @@ SAVE_PATH = 'tmp/model.ckpt'
 class HH_opt():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
+    dim_batch= 1
 
     def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
         if(neuron is not None):
@@ -83,14 +84,15 @@ class HH_opt():
         if(self.neuron.loop_func == self.neuron.ik_from_v):
             self.Ca = self.V
         batch = False
-        if(self.X.ndim > 1): batch=True
+        if(self.X.ndim > 1):
+            batch=True
+            n_batch = self.X.shape[self.dim_batch]
         assert(self.neuron.dt == self.T[1] - self.T[0])
         # inputs
 
         #Xshape = [time, n_batch]
         xshape = list(self.X.shape)
         yshape = list(self.V.shape)
-        initshape = list(self.neuron.init_state.shape)
         yshape.insert(0,2)
         if(self.neuron.num > 1):
             #add dimension for neurons trained in parallel
@@ -102,10 +104,11 @@ class HH_opt():
         xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
         init_state = self.neuron.init_state
+        initshape = list(init_state.shape)
         if(batch):
             #reshape init state
-            initshape.insert(1, xshape[1])
-            init_state = np.stack([init_state for _ in range(xshape[1])], axis=1)
+            initshape.insert(self.dim_batch, n_batch)
+            init_state = np.stack([init_state for _ in range(n_batch)], axis=self.dim_batch)
 
         init_state_ = tf.placeholder(shape=initshape, dtype=tf.float32, name='init_state')
 

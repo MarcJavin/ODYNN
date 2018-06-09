@@ -54,6 +54,7 @@ class HH_simul():
         """
         start = time.time()
 
+        #[t,s,batch]
         X = self.calculate()
 
         print(time.time() - start)
@@ -80,8 +81,8 @@ class HH_simul():
 
 if __name__ == '__main__':
     i_injs = np.stack([params.i_inj_train, params.i_inj_train2], axis=1)
-    i_injs = params.i_inj_trains
-    sim = HH_simul(t=params.t_train, i_inj=i_injs)
+    t,i = params.give_train()
+    sim = HH_simul(t=t, i_inj=i)
     sim.simul(show=True, save=False, dump=True)
     #
     # exit(0)

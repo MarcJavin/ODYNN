@@ -253,6 +253,15 @@ class Neuron_tf(HodgkinHuxley):
                         self.constraints.append(
                             tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
 
+    def extend(self, n):
+        for var, val in self.init_p.items():
+            init = np.stack([val for _ in range(n)], axis=1)
+            print(init.shape)
+            if (var in self.fixed):
+                self.param[var] = tf.constant(init, name=var, dtype=tf.float32)
+            else:
+                self.param[var] = tf.get_variable(var, initializer=init, dtype=tf.float32)
+
 
 class Neuron_fix(HodgkinHuxley):
 

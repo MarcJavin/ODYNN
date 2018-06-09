@@ -120,14 +120,14 @@ def alternate(name=''):
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
-    sim.simul(show=False, suffix='train', dump=True)
+    file = sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
-    opt.optimize(dir, [wv, wca], epochs=20, step=0)
+    opt.optimize(dir, [wv, wca], epochs=20, step=0, file=file)
     for i in range(10):
         wv = 1 - wv
         wca = 1 - wca
-        opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1)
+        opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1, file=file)
     comp_pars(dir)
     test_xp(dir)
 
@@ -153,9 +153,6 @@ def comp_pars(dir):
 
 
 if __name__ == '__main__':
-
-    comp_pars('alternate_10')
-    exit(0)
 
     xp = sys.argv[1]
     if(xp == 'alt'):

@@ -42,13 +42,13 @@ if __name__ == '__main__':
 
     connections = {(0, 1) : params.SYNAPSE,
                    (1,0) : params.SYNAPSE}
-    t = np.array(sp.arange(0.0, 800., params.DT))
-    i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
-    i1 = np.zeros(t.shape)
-    i_injs = np.array([i0, i1]).transpose()
+    t, i = params.give_train()
+    i_1 = np.zeros(i.shape)
+    i_injs  = np.stack([i, i_1], axis=1)
+    print("i_inj : ",i_injs.shape)
     c = Circuit_simul(pars, connections, t, i_injs)
     connections = {(0, 1): params.get_syn_rand(),
                    (1,0): params.get_syn_rand()}
-    c.run_sim(dump=True, show=True)
+    c.run_sim(n_out=1, dump=True)
     c = Circuit_opt(pars, connections)
-    c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE+str(n_out))
+    c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE)

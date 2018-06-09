@@ -14,6 +14,8 @@ class Circuit_opt():
     Optimization of a neuron circuit
 
     """
+    dim_batch = 1
+
     def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL, dt=0.1):
         self.circuit = Circuit_tf(inits_p, conns=conns, loop_func=loop_func, fixed=fixed, dt=dt)
 
@@ -55,21 +57,41 @@ class Circuit_opt():
         DIR = set_dir(subdir + '/')
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
+        batch = False
+        if (self.X.ndim > self.dim_batch):
+            batch = True
+            n_batch = self.X.shape[self.dim_batch]
+
         tf.reset_default_graph()
         self.circuit.neurons.reset()
         self.circuit.reset()
         start_rate, decay_step, decay_rate = l_rate
         self.write_settings(DIR, start_rate, decay_step, decay_rate, w)
 
-        xs_ = tf.placeholder(shape=[None, self.circuit.neurons.num], dtype=tf.float32, name='in_current')
-        ys_ = tf.placeholder(shape=[2, None], dtype=tf.float32, name='out')
-        init_state = tf.placeholder(shape=self.circuit.neurons.init_state.shape, dtype=tf.float32, name='init_state')
+        # Xshape = [time, n_neuron, n_batch]
+        xs_ = tf.placeholder(shape=[len(self.T), None, self.circuit.neurons.num], dtype=tf.float32, name='in_current')
+        ys_ = tf.placeholder(shape=[2, len(self.T), None], dtype=tf.float32, name='out')
+        init_state = self.circuit.neurons.init_state
+        initshape = list(init_state.shape)
+        if (batch):
+            # reshape init state
+            initshape.insert(0, n_batch)
+            init_state = np.stack([init_state for _ in range(n_batch)], axis=0)
+        init_state_ = tf.placeholder(shape=initshape, dtype=tf.float32, name='init_state')
 
-        res = tf.scan(self.circuit.step,
+        print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', init_state.shape)
+
+        #apply in parallel the batch
+        def stepmap(hprev, x):
+            lambdaData = (hprev,x)
+            func = lambda x: (self.circuit.step(x[0], x[1]), 0)
+            return tf.map_fn(func, lambdaData)[0]
+
+        res = tf.scan(stepmap,
                       xs_,
-                      initializer=init_state)
+                      initializer=init_state_)
 
-        out = res[:, 0, n_out]
+        out = res[:, :, 0, n_out]
         losses = tf.square(tf.subtract(out, ys_[0]))
         loss = tf.reduce_mean(losses)
 
@@ -99,8 +121,8 @@ class Circuit_opt():
             for i in tqdm(range(epochs)):
                 results, _, train_loss = sess.run([res, train_op, loss], feed_dict={
                     xs_: self.X,
-                    ys_: np.vstack((self.V, self.Ca)),
-                    init_state: self.circuit.neurons.init_state
+                    ys_: np.array([self.V, self.Ca]),
+                    init_state_: init_state
                 })
                 _ = sess.run(self.circuit.neurons.constraints)
 
@@ -109,6 +131,7 @@ class Circuit_opt():
                 losses[i] = train_loss
                 print('[{}] loss : {}'.format(i, train_loss))
 
-                plots_output_double(self.T, self.X, results[:,0,n_out], self.V, results[:,-1,n_out], self.Ca, suffix=i, show=False, save=True)
-                plots_output_mult(self.T, self.X, results[:,0,:], results[:,-1,:], suffix='circuit_%s'%i, show=False, save=True)
+                for n_b in range(n_batch):
+                    plots_output_double(self.T, self.X[:,n_b], results[:,n_b,0,n_out], self.V[:, n_b], results[:,n_b,-1,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
+                    plots_output_mult(self.T, self.X[:,n_b], results[:,n_b,0,:], results[:,n_b,-1,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
                 plot_loss_rate(losses[:i+1], rates[:i+1], show=False, save=True)
