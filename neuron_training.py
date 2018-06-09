@@ -148,13 +148,14 @@ def only_calc(name=''):
 def comp_pars(dir):
     p = data.get_vars(dir)
     utils.set_dir(dir)
-    utils.plot_vars(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+    utils.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
 
 if __name__ == '__main__':
 
-
+    comp_pars('alternate_10')
+    exit(0)
 
     xp = sys.argv[1]
     if(xp == 'alt'):

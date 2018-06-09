@@ -169,7 +169,7 @@ class HH_opt():
                     plot_vars(dict([(name, val[:len_prev + i + 2]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
                     plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
                     saver.save(sess, '%s%s' % (DIR, SAVE_PATH))
-                
+
 
 
 if __name__ == '__main__':

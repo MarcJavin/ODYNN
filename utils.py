@@ -32,6 +32,8 @@ RATE_COLORS = {'p' : '#00ccff',
                'h' : '#ff1a1a'
                 }
 GATES = ['e', 'f', 'n', 'p', 'q']
+CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
+MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
 COLORS = ['k', 'c', 'm', 'Orange', 'Olive', 'Gold', 'b', 'Lime', 'Salmon', 'Darkred']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
@@ -77,6 +79,55 @@ def boxplot(ax, var):
     for b in bp["boxes"]:
         b.set_facecolor('Gold')
 
+def box(var_dic, cols, labels):
+    bp = plt.boxplot([var_dic[k] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
+    for b, color in zip(bp["boxes"], cols):
+        b.set_facecolor(color)
+
+def boxplot_vars(var_dic, suffix="", show=True, save=False):
+    plt.figure()
+    plt.subplot(121)
+    cols=[RATE_COLORS['n'], RATE_COLORS['n'], RATE_COLORS['f'], 'k']
+    labels = CONDS
+    box(var_dic, cols, labels)
+    plt.title('Conductances')
+    plt.subplot(122)
+    cols = ['b', RATE_COLORS['n'], RATE_COLORS['f'], 'k']
+    labels = MEMB
+    box(var_dic, cols, labels)
+    plt.title('Membrane')
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
+    if (show):
+        plt.show()
+
+    plt.figure()
+    plt.subplot(211)
+    box(var_dic, ['k'], ['rho_ca'])
+    plt.title('Rho_ca')
+    plt.subplot(212)
+    box(var_dic, ['b'], ['decay_ca'])  # , 'b')
+    plt.title('Decay_ca')
+    plt.tight_layout()
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
+    if (show):
+        plt.show()
+
+    for i, type in enumerate(['mdp', 'scale', 'tau']):
+        plt.subplot(3,1,i+1)
+        plt.title(type)
+        labels = ['%s__%s'%(rate,type) for rate in RATE_COLORS.keys()]
+        cols = RATE_COLORS.values()
+        if(type=='tau'):
+            labels[2] = 'h__alpha'
+        box(var_dic, cols, labels)
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
+    if (show):
+        plt.show()
+
+
 
 """plot variation/comparison/boxplots of all variables organized by categories"""
 def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
@@ -97,46 +148,22 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     fig = plt.figure()
     grid = plt.GridSpec(1, 2)
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
-    ax = plt.Subplot(fig, subgrid[0])
-    func(ax, var_dic['g_Ks'])#)
-    ax.set_ylabel('KS cond.')
-    ax.set_title('Conductances')
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[1])
-    func(ax, var_dic['g_Kf'])#)
-    ax.set_ylabel('KF cond.')
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[2])
-    func(ax, var_dic['g_Ca'])#)
-    ax.set_ylabel('Ca cond.')
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[3])
-    func(ax, var_dic['g_L'])#, 'k')
-    ax.set_ylabel('Leak cond.')
-    fig.add_subplot(ax)
-
+    for i, var in enumerate(CONDS):
+        ax = plt.Subplot(fig, subgrid[i])
+        func(ax, var_dic[var])#)
+        ax.set_ylabel(var)
+        if(i==0):
+            ax.set_title('Conductances')
+        fig.add_subplot(ax)
     subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[1], hspace=0.1)
-    ax = plt.Subplot(fig, subgrid[0])
-    func(ax, var_dic['C_m'])#
-    ax.set_ylabel('Capacitance')
-    ax.yaxis.tick_right()
-    ax.set_title('Membrane')
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[1])
-    func(ax, var_dic['E_K'])#)
-    ax.set_ylabel('K E_rev')
-    ax.yaxis.tick_right()
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[2])
-    func(ax, var_dic['E_Ca'])#)
-    ax.set_ylabel('Ca E_rev')
-    ax.yaxis.tick_right()
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[3])
-    func(ax, var_dic['E_L'])#, 'k')
-    ax.set_ylabel('Leak E_rev')
-    ax.yaxis.tick_right()
-    fig.add_subplot(ax)
+    for i, var in enumerate(MEMB):
+        ax = plt.Subplot(fig, subgrid[i])
+        func(ax, var_dic[var])#)
+        ax.set_ylabel(var)
+        if(i==0):
+            ax.set_title('Membrane')
+        ax.yaxis.tick_right()
+        fig.add_subplot(ax)
     plt.tight_layout()
     if(save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
