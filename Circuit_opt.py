@@ -1,7 +1,7 @@
 import numpy as np
-from Hodghux import HodgkinHuxley
+from Neuron import HodgkinHuxley
 from Circuit import Circuit_tf
-from HH_opt import HH_opt
+from Neuron_opt import HH_opt
 import params
 from utils import plots_output_mult, set_dir, plot_loss_rate, plots_output_double, OUT_SETTINGS
 from data import get_data_dump
@@ -11,7 +11,7 @@ from tqdm import tqdm
 class Circuit_opt():
 
     """
-    neurons : objects to optimize
+    Optimization of a neuron circuit
 
     """
     def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL, dt=0.1):

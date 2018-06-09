@@ -1,5 +1,5 @@
 import numpy as np
-from Hodghux import HodgkinHuxley
+from Neuron import HodgkinHuxley
 from Circuit import Circuit_fix
 from utils import plots_output_mult
 from data import DUMP_FILE
@@ -8,7 +8,7 @@ import pickle
 
 class Circuit_simul():
     """
-    neurons : objects to optimize
+    Simulation of a neuron circuit
 
     """
 

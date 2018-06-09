@@ -1,5 +1,5 @@
 import scipy as sp
-from Hodghux import Neuron_fix
+from Neuron import Neuron_fix
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils

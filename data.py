@@ -13,6 +13,7 @@ DUMP_FILE = 'data/dump'
 FILE_LV = 'tmp/dump_lossratevars'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
+"""get dic of vars from dumped file"""
 def get_vars(dir):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
@@ -30,6 +31,15 @@ def get_data_dump2(file=DUMP_FILE):
         T, X, Ca = pickle.load(f)
     return T, X, Ca
 
+
+def get_data(file='AVAL_test.csv'):
+    df = pd.read_csv(file)
+    Y = np.array(df['trace'])
+    X = np.array(df['inputCurrent']) * 10 + np.full(Y.shape, 0.001)
+    T = np.array(df['timeVector']) * 1000
+    return T, X, Y
+
+"""study the hill equation"""
 def check_alpha(tinit, i, trace):
     vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
     idx=0

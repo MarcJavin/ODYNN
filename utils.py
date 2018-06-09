@@ -36,6 +36,7 @@ GATES = ['e', 'f', 'n', 'p', 'q']
 COLORS = ['k', 'c', 'm', 'Orange', 'Olive', 'Gold', 'b', 'Lime', 'Salmon', 'Darkred']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 
+"""Set directory to save files"""
 def set_dir(subdir):
     global DIR
     DIR = RES_DIR + subdir + '/'
@@ -67,15 +68,6 @@ def get_dic_from_var(dir, suffix=""):
     return dic
 
 
-
-
-def get_data(file='AVAL_test.csv'):
-    df = pd.read_csv(file)
-    Y = np.array(df['trace'])
-    X = np.array(df['inputCurrent']) * 10 + np.full(Y.shape, 0.001)
-    T = np.array(df['timeVector']) * 1000
-    return T, X, Y
-
 def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
 def plot(ax, var):
@@ -86,7 +78,7 @@ def boxplot(ax, var):
         b.set_facecolor('Gold')
 
 
-"""plot variation of all variables organized by categories"""
+"""plot variation/comparison/boxplots of all variables organized by categories"""
 def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
@@ -165,7 +157,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
 
     plt.close('all')
 
-
+"""plot the gates variables"""
 def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
     ax = plt.Subplot(fig, subgrid[0])
@@ -191,12 +183,12 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
     fig.add_subplot(ax)
 
 
-
+"""plot loss (log10) and learning rate"""
 def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(2,1,1)
-    plt.plot(np.log10(losses), 'r')
+    plt.plot(losses, 'r')
     plt.ylabel('Loss')
     plt.yscale('log')
 
@@ -210,7 +202,7 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-
+"""plot multiple voltages and Ca2+ concentration"""
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
     plt.figure()
 
@@ -251,7 +243,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         plt.show()
     plt.close()
 
-
+"""plot voltage and Ca2+ conc compared to the target model"""
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
     plt.figure()
 

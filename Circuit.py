@@ -1,5 +1,5 @@
 import numpy as np
-from Hodghux import Neuron_tf, HodgkinHuxley, Neuron_fix
+from Neuron import Neuron_tf, HodgkinHuxley, Neuron_fix
 import params
 import scipy as sp
 import tensorflow as tf
@@ -7,7 +7,7 @@ import tensorflow as tf
 class Circuit():
 
     """
-    neurons : objects to optimize
+    Circuit of neurons with synapses
 
     """
     def __init__(self, conns, tensors=False):

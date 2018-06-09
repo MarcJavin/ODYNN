@@ -1,6 +1,6 @@
-from HH_opt import HH_opt
-from HH_simul import HH_simul
-from Hodghux import HodgkinHuxley
+from Neuron_opt import HH_opt
+from Neuron_simul import HH_simul
+from Neuron import HodgkinHuxley
 import params, data
 import utils
 import sys
@@ -16,25 +16,25 @@ K_CONST = params.ALL - K_VAR
 
 pars = [params.give_rand() for i in range(10)]
 dt=0.1
-
+t,i_inj = params.give_train(dt)
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
     name = 'Classic'
 
     opt = HH_opt(init_p=params.give_rand())
-    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
     loop_func = HodgkinHuxley.integ_comp
 
     if (xp == 'ica'):
         name = 'Icafromv'
         opt = HH_opt(init_p=params.give_rand(), fixed=CA_CONST)
-        sim = HH_simul(init_p=params.DEFAULT, t=params.t, i_inj=params.v_inj)
+        sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
         loop_func = HodgkinHuxley.ica_from_v
 
     elif(xp == 'ik'):
         name = 'Ikfromv'
         opt = HH_opt(init_p=params.give_rand(), fixed=K_CONST)
-        sim = HH_simul(init_p=params.DEFAULT, t=params.t, i_inj=params.v_inj_rev)
+        sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
         loop_func = HodgkinHuxley.ik_from_v
 
     elif (xp == 'notauca'):
@@ -68,7 +68,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=param, fixed=CA_VAR)
-    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
@@ -84,7 +84,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=param, fixed=K_VAR)
-    sim = HH_simul(init_p=params.DEFAULT, t=params.t_train, i_inj=params.i_inj_train)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
     loop_func = HodgkinHuxley.integ_comp
     opt.loop_func = loop_func
     sim.loop_func = loop_func
@@ -119,8 +119,7 @@ def alternate(name=''):
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func)
-    t, i = params.give_train(dt)
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
     sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
@@ -138,8 +137,7 @@ def only_calc(name=''):
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
-    t,i = params.give_train(dt)
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i, loop_func=loop_func)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
     sim.simul(show=False, suffix='train', dump=True)
     wv = 0
     wca = 1
@@ -156,8 +154,6 @@ def comp_pars(dir):
 
 if __name__ == '__main__':
 
-    comp_pars('Integcomp_alternate_yolo')
-    exit(0)
 
 
     xp = sys.argv[1]
