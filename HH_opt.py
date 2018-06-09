@@ -10,7 +10,6 @@ import params
 from tqdm import tqdm
 
 SAVE_PATH = 'tmp/model.ckpt'
-DUMP_V = 'final_params'
 
 
 class HH_opt():
@@ -173,6 +172,4 @@ class HH_opt():
 
 
 if __name__ == '__main__':
-    runner = HH_opt(l_rate=[0.9,9,0.9])
-    runner.loop_func = runner.integ_comp
-    runner.Main2('test')
+    pass

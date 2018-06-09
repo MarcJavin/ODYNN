@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import os
 import re
-from math import log10
 
 SMALL_SIZE = 8
 MEDIUM_SIZE = 10
@@ -197,7 +196,7 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(2,1,1)
-    plt.plot(log10(losses), 'r')
+    plt.plot(np.log10(losses), 'r')
     plt.ylabel('Loss')
     plt.yscale('log')
 
