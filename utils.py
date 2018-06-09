@@ -74,10 +74,6 @@ def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
 def plot(ax, var):
     ax.plot(var)
-def boxplot(ax, var):
-    bp = ax.boxplot(var, vert=True, showmeans=True, patch_artist=True)
-    for b in bp["boxes"]:
-        b.set_facecolor('Gold')
 
 def box(var_dic, cols, labels):
     bp = plt.boxplot([var_dic[k] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
@@ -187,27 +183,17 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
 """plot the gates variables"""
 def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
-    ax = plt.Subplot(fig, subgrid[0])
-    func(ax, mdp)#, 'r')
-    ax.set_xlabel([])
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-    if(labs):
-        ax.set_ylabel('Midpoint')
-    ax.set_title(name)
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[1])
-    func(ax, scale)# 'g')
-    ax.set_xlabel([])
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-    if (labs):
-        ax.set_ylabel('Scale')
-    fig.add_subplot(ax)
-    ax = plt.Subplot(fig, subgrid[2])
-    func(ax, tau)#
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
-    if (labs):
-        ax.set_ylabel('Tau')
-    fig.add_subplot(ax)
+    vars = [('Midpoint',mdp), ('Scale',scale), ('Tau',tau)]
+    for i, var in enumerate(vars):
+        ax = plt.Subplot(fig, subgrid[i])
+        func(ax, var[1])#, 'r')
+        ax.set_xlabel([])
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+        if(labs):
+            ax.set_ylabel(var[0])
+        if(i==0):
+            ax.set_title(name)
+        fig.add_subplot(ax)
 
 
 """plot loss (log10) and learning rate"""
