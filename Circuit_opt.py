@@ -66,7 +66,7 @@ class Circuit_opt(Optimizer):
         def stepmap(hprev, x):
             lambdaData = (hprev,x)
             func = lambda x: (self.circuit.step(x[0], x[1]), 0)
-            return tf.map_fn(func, lambdaData)[0]
+            return tf.map_fn(func, lambdaData, parallel_iterations=n_batch)[0]
 
         self.res = tf.scan(stepmap,
                       self.xs_,

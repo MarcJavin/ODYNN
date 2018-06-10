@@ -40,9 +40,18 @@ SYNAPSE_inhib = {
 }
 
 """constraints for synapse parameters"""
-CONSTRAINTS_syn = {
-        'G' : [1e-5,np.infty]
-}
+def give_constraints_syn(conns):
+
+        scale_con = np.array([const_scale(True) if p['scale']>0 else const_scale(False) for p in conns.values()])
+        print(scale_con)
+        return {'G' : [1e-5,np.infty],
+                'scale' : scale_con.transpose()}
+
+def const_scale(exc=True):
+        if(exc):
+                return [1e-3,np.infty]
+        else:
+                return [-np.infty,-1e-3]
 
 """constraints for neuron parameters"""
 CONSTRAINTS = {

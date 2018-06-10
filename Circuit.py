@@ -70,9 +70,9 @@ class Circuit():
 
 class Circuit_tf(Circuit):
 
-    def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL,
-                 constraints_s=params.CONSTRAINTS_syn, constraints_n=params.CONSTRAINTS, dt=0.1):
+    def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL, constraints_n=params.CONSTRAINTS, dt=0.1):
         Circuit.__init__(self, conns=conns, tensors=True)
+        constraints_s = params.give_constraints_syn(conns)
         self.neurons = Neuron_tf(inits_p, loop_func=loop_func, fixed=fixed, constraints=constraints_n, dt=dt)
         self.constraints_dic = constraints_s
 
