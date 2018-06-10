@@ -19,6 +19,7 @@ class Circuit_simul():
             self.batch = True
             self.n_batch = i_injs.shape[-1]
             i_injs = np.moveaxis(i_injs, -1, 0)
+            print(i_injs.shape)
             self.run_one = np.vectorize(self.run_one, signature='(t,n)->(t,s,n),(t,n)')
         assert (len(inits_p) == i_injs.shape[-1])
         self.connections = conns
@@ -30,11 +31,11 @@ class Circuit_simul():
         self.circuit.neurons.reset()
         states = np.zeros((np.hstack((len(self.t), self.circuit.neurons.init_state.shape))))
         curs = np.zeros(i_inj.shape)
+        print(curs.shape)
 
         for t in range(len(self.t)):
             if (t == 0):
-                c = self.circuit.step(curs=i_inj[t, :])
-                curs[t, :] = c
+                curs[t, :] = self.circuit.step(curs=i_inj[t, :])
             else:
                 curs[t, :] = self.circuit.step(curs=i_inj[t, :] + curs[t - 1, :])
             states[t, :, :] = self.circuit.neurons.state

@@ -37,12 +37,13 @@ if __name__ == '__main__':
     p = params.DEFAULT
     pars = [p,p]
     n_out = 1
-    dir = '2n-2exc'
+    dir = '2n-2exc-yolo'
     utils.set_dir(dir)
 
     connections = {(0, 1) : params.SYNAPSE,
                    (1,0) : params.SYNAPSE}
     t, i = params.give_train()
+    i = params.i_inj_train[:,np.newaxis]
     i_1 = np.zeros(i.shape)
     i_injs  = np.stack([i, i_1], axis=1)
     print("i_inj : ",i_injs.shape)

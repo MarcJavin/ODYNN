@@ -3,6 +3,7 @@ from Neuron import Neuron_tf, HodgkinHuxley, Neuron_fix
 import params
 import scipy as sp
 import tensorflow as tf
+import copy
 
 class Circuit():
 
@@ -15,11 +16,12 @@ class Circuit():
         self.connections = conns
         syns = zip(*[k for k in conns.iterkeys()])
         self.pres = np.array(syns[0], dtype=np.int32)
+        self.num = len(self.pres)
         self.posts = np.array(syns[1], dtype=np.int32)
         self.syns = ['%s-%s' % (a,b) for a,b in zip(self.pres, self.posts)]
-        self.param = {}
+        self.init_p = {}
         for k in self.connections.values()[0].keys():
-            self.param[k] = [p[k] for n, p in self.connections.items()]
+            self.init_p[k] = [p[k] for n, p in self.connections.items()]
 
     """synaptic current"""
     def syn_curr(self, vprev, vpost):
@@ -89,4 +91,5 @@ class Circuit_fix(Circuit):
 
     def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, dt=0.1):
         Circuit.__init__(self, conns=conns, tensors=False)
+        self.param = self.init_p
         self.neurons = Neuron_fix(inits_p, loop_func=loop_func, dt=dt)
