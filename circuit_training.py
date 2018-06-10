@@ -31,7 +31,11 @@ def opt_neurons():
     c = Circuit_opt([p, p], connections)
     c.opt_neurons(f)
 
-
+def comp_pars(dir):
+    p = data.get_vars(dir)
+    utils.set_dir(dir)
+    utils.plot_vars_syn(p, func=utils.bar, suffix='compared', show=False, save=True)
+    utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 
 if __name__ == '__main__':
     p = params.DEFAULT
@@ -53,3 +57,4 @@ if __name__ == '__main__':
     c.run_sim(n_out=1, dump=True)
     c = Circuit_opt(pars, connections)
     c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE)
+    comp_pars(dir)

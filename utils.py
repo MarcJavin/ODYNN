@@ -74,6 +74,8 @@ def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
 def plot(ax, var):
     ax.plot(var)
+def boxplot(ax, var):
+    ax.boxplot(var, vert=True, showmeans=True)
 
 def box(var_dic, cols, labels):
     bp = plt.boxplot([var_dic[k] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
@@ -120,6 +122,19 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
         box(var_dic, cols, labels)
     if (save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
+    if (show):
+        plt.show()
+
+"""plot variation/comparison/boxplots of synaptic variables"""
+def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
+    plt.figure()
+    for i,var in enumerate(['G', 'mdp', 'E', 'scale']):
+        plt.subplot(2,2,i+1)
+        func(plt, var_dic[var])
+        plt.ylabel(var)
+    plt.tight_layout()
+    if (save):
+        plt.savefig('%svar_%s_%s.png' % (DIR, 'Synapses', suffix), dpi=300)
     if (show):
         plt.show()
 

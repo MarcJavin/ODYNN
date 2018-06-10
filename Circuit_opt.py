@@ -4,8 +4,8 @@ from Circuit import Circuit_tf
 from Neuron_opt import HH_opt
 import params
 from Optimizer import Optimizer
-from utils import plots_output_mult, plot_loss_rate, plots_output_double, OUT_PARAMS
-from data import DUMP_FILE, get_data_dump, FILE_LV
+from utils import plots_output_mult, plot_loss_rate, plots_output_double, plot_vars_syn
+from data import DUMP_FILE, get_data_dump, FILE_LV, SAVE_PATH
 import tensorflow as tf
 from tqdm import tqdm
 import pickle
@@ -96,4 +96,7 @@ class Circuit_opt(Optimizer):
                 if (i % 10 == 0 or i == epochs - 1):
                     with (open(self.dir + FILE_LV, 'wb')) as f:
                         pickle.dump([losses, rates, vars], f)
+                    plot_vars_syn(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=suffix,
+                                  show=False, save=True)
                     plot_loss_rate(losses[:i + 1], rates[:i + 1], show=False, save=True)
+                    saver.save(sess, '%s%s' % (self.dir, SAVE_PATH))

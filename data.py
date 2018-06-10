@@ -10,6 +10,7 @@ import math
 import utils
 
 DUMP_FILE = 'data/dump'
+SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 

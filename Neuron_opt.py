@@ -4,13 +4,11 @@ from Neuron import Neuron_tf
 from Optimizer import Optimizer
 import tensorflow as tf
 import numpy as np
-from utils import  plots_output_double, OUT_PARAMS, plot_loss_rate, plot_vars
-from data import get_data_dump, FILE_LV, DUMP_FILE
+from utils import  plots_output_double, plot_loss_rate, plot_vars
+from data import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH
 import pickle
 import params
 from tqdm import tqdm
-
-SAVE_PATH = 'tmp/model.ckpt'
 
 
 class HH_opt(Optimizer):
@@ -100,7 +98,6 @@ class HH_opt(Optimizer):
 
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, len_prev+i, losses, rates, vars)
-
 
                 for b in range(n_batch):
                     plots_output_double(self.T, self.X[:,b,0], results[:,0,b], self.V[:,b,0], results[:,-1,b],
