@@ -14,7 +14,7 @@ class Circuit():
     def __init__(self, conns, tensors=False):
         self.tensors = tensors
         self.connections = conns
-        syns = zip(*[k for k in conns.iterkeys()])
+        syns = zip(*[k for k in conns.keys()])
         self.pres = np.array(syns[0], dtype=np.int32)
         self.num = len(self.pres)
         self.posts = np.array(syns[1], dtype=np.int32)
