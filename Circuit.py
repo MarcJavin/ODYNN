@@ -38,19 +38,25 @@ class Circuit():
     def step(self, hprev=None, curs=[]):
         if(self.tensors):
             # update synapses
+            #swap for synapses
+            hprev_swap = tf.transpose(hprev, [0,2,1])
             idx_pres = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.pres)).transpose()
             idx_post = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.posts)).transpose()
-            vpres = tf.gather_nd(hprev, idx_pres)
-            vposts = tf.gather_nd(hprev, idx_post)
+            vpres = tf.gather_nd(hprev_swap, idx_pres)
+            vposts = tf.gather_nd(hprev_swap, idx_post)
+            #voltage of the presynaptic cells
             curs_syn = self.syn_curr(vpres, vposts)
             curs_post = []
             for i in range(self.neurons.num):
                 if i not in self.posts:
-                    curs_post.append(0.)
+                    #0 synaptic current if no synapse coming in
+                    curs_post.append((tf.zeros(tf.shape(curs)[0])))
                     continue
-                curs_post.append(tf.reduce_sum(tf.gather(curs_syn, np.argwhere(self.posts == i))))
-            # update neurons
-            h = self.neurons.step(hprev, curs + tf.stack(curs_post))
+                print(curs_syn)
+                print(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)))
+                curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
+            final_curs = curs + tf.stack(curs_post, axis=1)
+            h = self.neurons.step(hprev, final_curs)
             return h
         else:
             # update neurons

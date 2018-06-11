@@ -50,29 +50,20 @@ class Circuit_opt(Optimizer):
 
         n_batch = self.X.shape[self.dim_batch]
 
-        # Xshape = [time, n_neuron, n_batch]
+        # Xshape = [time, n_batch, n_neuron]
         self.xs_ = tf.placeholder(shape=[None, None, self.circuit.neurons.num], dtype=tf.float32, name='in_current')
         self.ys_ = tf.placeholder(shape=[2, None, None], dtype=tf.float32, name='out')
-        init_state = self.circuit.neurons.init_state
-        initshape = list(init_state.shape)
             # reshape init state
-        initshape.insert(0, None)
-        self.init_state = np.stack([init_state for _ in range(n_batch)], axis=0)
-        self.init_state_ = tf.placeholder(shape=initshape, dtype=tf.float32, name='init_state')
+        self.init_state = np.stack([self.circuit.neurons.init_state for _ in range(n_batch)], axis=self.dim_batch)
+        self.init_state_ = tf.placeholder(shape=self.init_state.shape, dtype=tf.float32, name='init_state')
 
-        print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', init_state.shape)
+        print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', self.init_state.shape)
 
-        #apply in parallel the batch
-        def stepmap(hprev, x):
-            lambdaData = (hprev,x)
-            func = lambda x: (self.circuit.step(x[0], x[1]), 0)
-            return tf.map_fn(func, lambdaData, parallel_iterations=n_batch)[0]
-
-        self.res = tf.scan(stepmap,
+        self.res = tf.scan(self.circuit.step,
                       self.xs_,
                       initializer=self.init_state_)
 
-        out = self.res[:, :, 0, n_out]
+        out = self.res[:, 0, :, n_out]
         losses = tf.square(tf.subtract(out, self.ys_[0]))
         self.loss = tf.reduce_mean(losses)
         self.build_train()
@@ -88,10 +79,12 @@ class Circuit_opt(Optimizer):
 
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, i, losses, rates, vars)
+                print(results.shape)
 
                 for n_b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,n_b], results[:,n_b,0,n_out], self.V[:, n_b], results[:,n_b,-1,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
-                    plots_output_mult(self.T, self.X[:,n_b], results[:,n_b,0,:], results[:,n_b,-1,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
+                    print(n_b, results[:,0,n_b,n_out].shape)
+                    plots_output_double(self.T, self.X[:,n_b], results[:,0,n_b,n_out], self.V[:, n_b], results[:,-1,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
+                    plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
                     with (open(self.dir + FILE_LV, 'wb')) as f:

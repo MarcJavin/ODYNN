@@ -53,6 +53,7 @@ class HH_opt(Optimizer):
         yshape = [2, None, None]
         if(self.neuron.num > 1):
             #add dimension for neurons trained in parallel
+            #[time, n_batch, neuron]
             self.X = np.stack([self.X for _ in range(self.neuron.num)], axis=self.X.ndim)
             self.V = np.stack([self.V for _ in range(self.neuron.num)], axis=self.V.ndim)
             self.Ca = np.stack([self.Ca for _ in range(self.neuron.num)], axis=self.Ca.ndim)
@@ -62,7 +63,7 @@ class HH_opt(Optimizer):
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
         init_state = self.neuron.init_state
         initshape = list(init_state.shape)
-        #reshape init state
+        #reshape init state : [state, n_batch, n_neuron]
         initshape.insert(self.dim_batch, n_batch)
         self.init_state = np.stack([init_state for _ in range(n_batch)], axis=self.dim_batch)
 

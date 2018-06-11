@@ -27,9 +27,9 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 SYNAPSE = {
         'G' : 1.,
-        'mdp' : -35.,
+        'mdp' : -25.,
         'scale' : 2.,
-        'E' : 20.
+        'E' : 0.
 }
 
 SYNAPSE_inhib = {

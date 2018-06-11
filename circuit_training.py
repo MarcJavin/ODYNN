@@ -5,8 +5,9 @@ import numpy as np
 import scipy as sp
 import params
 import data
+import sys
 
-p = [params.DEFAULT, params.DEFAULT]
+p = params.DEFAULT
 
 def inhibit():
     inhib = params.SYNAPSE_inhib
@@ -37,23 +38,55 @@ def comp_pars(dir):
     utils.plot_vars_syn(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 
-if __name__ == '__main__':
-    p = params.DEFAULT
-    pars = [p,p]
-    n_out = 1
-    dir = '2n-2exc-yolo'
-    utils.set_dir(dir)
 
-    connections = {(0, 1) : params.SYNAPSE,
-                   (1,0) : params.SYNAPSE}
-    t, i = params.give_train()
-    i_1 = np.zeros(i.shape)
-    i_injs  = np.stack([i, i_1], axis=1)
-    print("i_inj : ",i_injs.shape)
-    c = Circuit_simul(pars, connections, t, i_injs)
-    connections = {(0, 1): params.get_syn_rand(),
-                   (1,0): params.get_syn_rand()}
-    c.run_sim(n_out=1, dump=True)
-    c = Circuit_opt(pars, connections)
+def test(nb_neuron, conns, conns_opt, dir):
+    pars = [p for _ in range(nb_neuron)]
+    n_out = 1
+    utils.set_dir(dir)
+    #
+    # t, i = params.give_train()
+    # i_1 = np.zeros(i.shape)
+    # i_injs = np.stack([i, i_1], axis=1)
+    #
+    # c = Circuit_simul(pars, conns, t, i_injs)
+    # c.run_sim(n_out=1, dump=True)
+    c = Circuit_opt(pars, conns_opt)
     c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE)
     comp_pars(dir)
+
+if __name__ == '__main__':
+
+
+    xp = sys.argv[1]
+    if(xp == '21exc'):
+        n_neuron = 2
+        conns = {(0,1) : params.SYNAPSE}
+        conns_opt = {(0,1) : params.get_syn_rand(True)}
+        dir = '2n-1exc-test'
+    elif(xp=='21inh'):
+        n_neuron = 2
+        conns = {(0,1): params.SYNAPSE_inhib}
+        conns_opt = {(0,1): params.get_syn_rand(False)}
+        dir = '2n-1inh-test'
+    elif(xp == '22exc'):
+        n_neuron = 2
+        conns = {(0,1): params.SYNAPSE,
+                 (1,0): params.SYNAPSE}
+        conns_opt = {(0,1): params.get_syn_rand(True),
+                     (1,0): params.get_syn_rand(True)}
+        dir = '2n-2exc-test'
+    elif(xp == '21exc1inh'):
+        n_neuron = 2
+        conns = {(0, 1): params.SYNAPSE,
+                 (1, 0): params.SYNAPSE_inhib}
+        conns_opt = {(0, 1): params.get_syn_rand(True),
+                     (1, 0): params.get_syn_rand(False)}
+        dir = '2n-1exc1inh-test'
+    elif (xp == '22inh'):
+        n_neuron = 2
+        conns = {(0, 1): params.SYNAPSE_inhib,
+                 (1, 0): params.SYNAPSE_inhib}
+        conns_opt = {(0, 1): params.get_syn_rand(False),
+                     (1, 0): params.get_syn_rand(False)}
+        dir = '2n-2inh-test'
+    test(n_neuron, conns, conns_opt, dir)

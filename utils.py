@@ -124,6 +124,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
     if (show):
         plt.show()
+    plt.close()
 
 """plot variation/comparison/boxplots of synaptic variables"""
 def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
@@ -137,6 +138,7 @@ def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Synapses', suffix), dpi=300)
     if (show):
         plt.show()
+    plt.close()
 
 
 

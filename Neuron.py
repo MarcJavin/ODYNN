@@ -21,7 +21,7 @@ class HodgkinHuxley():
         if (isinstance(init_p, list)):
             self.num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self.init_state = np.tile((self.init_state), (self.num, 1)).transpose()
+            self.init_state = np.stack([self.init_state for _ in range(self.num)], axis=1)
         else:
             self.num = 1
         self.param = init_p
@@ -85,6 +85,10 @@ class HodgkinHuxley():
         """
         Integrate
         """
+        # print('X : ', X.shape]
+        if(self.tensors and False):
+            X = tf.Print(X, [X[0]], 'V : ')
+            i_inj = tf.Print(i_inj, [i_inj], 'i_inj : ')
         V = X[0]
         p = X[1]
         q = X[2]

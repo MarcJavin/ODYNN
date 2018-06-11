@@ -48,16 +48,16 @@ class Circuit_simul():
         if(self.batch):
             for i in range(self.i_injs.shape[0]):
                 plots_output_mult(self.t, self.i_injs[i], states[i,:,0,:], states[i,:,-1,:],
-                          i_syn=curs[i], show=show, save=save, suffix='TARGET')
+                          i_syn=curs[i], show=show, save=save, suffix='TARGET%s'%i)
         else:
             plots_output_mult(self.t, self.i_injs, states[:,0,:], states[:,-1,:],
                           i_syn=curs, show=show, save=save, suffix='TARGET')
 
         if (dump):
-            #[t, state, neuron(, batch)]
-            states = np.moveaxis(states, 0, -1)
+            #[t, state, (batch,) neuron]
+            states = np.moveaxis(states, 0, -2)
             i_injs = np.moveaxis(self.i_injs, 0, 1)
-            todump = [self.t, i_injs, states[:,0,n_out], states[:,-1,n_out]]
+            todump = [self.t, i_injs, states[:,0,:,n_out], states[:,-1,:,n_out]]
             with open(DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return DUMP_FILE
@@ -76,4 +76,4 @@ if __name__ == '__main__':
     i_injs = np.stack([i, i_0], axis=1)
     print("i_inj : ", i_injs.shape)
     c = Circuit_simul(pars, connections, t, i_injs)
-    c.run_sim(dump=True, n_out=1, show=True, save=False)
+    c.run_sim(dump=False, n_out=1, show=True, save=False)
