@@ -20,7 +20,7 @@ class Circuit():
         self.posts = np.array(syns[1], dtype=np.int32)
         self.syns = ['%s-%s' % (a,b) for a,b in zip(self.pres, self.posts)]
         self.init_p = {}
-        for k in self.connections.values()[0].keys():
+        for k in list(self.connections.values())[0].keys():
             self.init_p[k] = [p[k] for n, p in self.connections.items()]
 
     """synaptic current"""
