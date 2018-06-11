@@ -85,7 +85,7 @@ class Circuit_tf(Circuit):
     def reset(self):
         self.param = {}
         self.constraints = []
-        for var in self.connections.values()[0].keys():
+        for var in list(self.connections.values())[0].keys():
             self.param[var] = tf.get_variable(var, initializer=[p[var] for n, p in self.connections.items()],
                                             dtype=tf.float32)
             if(var in self.constraints_dic):
