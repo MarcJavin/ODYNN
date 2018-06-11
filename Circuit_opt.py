@@ -79,10 +79,8 @@ class Circuit_opt(Optimizer):
 
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, i, losses, rates, vars)
-                print(results.shape)
 
                 for n_b in range(n_batch):
-                    print(n_b, results[:,0,n_b,n_out].shape)
                     plots_output_double(self.T, self.X[:,n_b], results[:,0,n_b,n_out], self.V[:, n_b], results[:,-1,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
                     plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
