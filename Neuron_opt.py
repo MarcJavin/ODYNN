@@ -23,6 +23,7 @@ class HH_opt(Optimizer):
         else:
             self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=dt, fixed=fixed, constraints=constraints)
         self.optimized = self.neuron
+        self.plot_vars = plot_vars
 
     """Define how the loss is computed"""
     def build_loss(self, w):
@@ -37,7 +38,7 @@ class HH_opt(Optimizer):
 
 
 
-    def optimize(self, subdir, w=[1,0], epochs=200, l_rate=[0.9,9,0.9], suffix='', step=None, file=DUMP_FILE, reload=False):
+    def optimize(self, subdir, w=[1,0], epochs=400, l_rate=[0.9,9,0.9], suffix='', step=None, file=DUMP_FILE, reload=False):
         self.init(subdir, suffix, l_rate, w, neur=self.neuron)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
@@ -77,12 +78,11 @@ class HH_opt(Optimizer):
         self.build_train()
 
         summary = tf.summary.merge_all()
-        saver = tf.train.Saver()
 
         with tf.Session() as sess:
             if(reload):
                 """Get variables and measurements from previous steps"""
-                saver.restore(sess, '%s%s'%(self.dir, SAVE_PATH))
+                self.saver.restore(sess, '%s%s'%(self.dir, SAVE_PATH))
                 with open(self.dir+FILE_LV, 'rb') as f:
                     l,r,vars = pickle.load(f)
                 losses = np.concatenate((l, np.zeros(epochs)))
@@ -100,16 +100,16 @@ class HH_opt(Optimizer):
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, len_prev+i, losses, rates, vars)
 
+                if(losses[len_prev+i]<self.min_loss):
+                    self.plots_dump(sess, losses, rates, vars, len_prev + i)
+                    break
+
                 for b in range(n_batch):
                     plots_output_double(self.T, self.X[:,b,0], results[:,0,b], self.V[:,b,0], results[:,-1,b],
                                         self.Ca[:,b, 0], suffix='%s_%s_%s_trace%s' % (suffix, step, i + 1, b), show=False,
                                         save=True)
                 if(i%10==0 or i==epochs-1):
-                    with (open(self.dir+FILE_LV, 'wb')) as f:
-                        pickle.dump([losses, rates, vars], f)
-                    plot_vars(dict([(name, val[:len_prev + i + 2]) for name,val in vars.items()]), suffix=suffix, show=False, save=True)
-                    plot_loss_rate(losses[:len_prev+i+1], rates[:len_prev+i+1], suffix=suffix, show=False, save=True)
-                    saver.save(sess, '%s%s' % (self.dir, SAVE_PATH))
+                    self.plots_dump(sess, losses, rates, vars, len_prev+i)
 
 
 

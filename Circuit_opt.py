@@ -22,6 +22,7 @@ class Circuit_opt(Optimizer):
         Optimizer.__init__(self)
         self.circuit = Circuit_tf(inits_p, conns=conns, loop_func=loop_func, fixed=fixed, dt=dt)
         self.optimized = self.circuit
+        self.plot_vars = plot_vars_syn
 
 
     """train 1 neuron"""
@@ -43,7 +44,7 @@ class Circuit_opt(Optimizer):
 
 
     """optimize synapses"""
-    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=200, n_out=1, w=[1,0], l_rate=[0.9,9,0.9]):
+    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=1, w=[1,0], l_rate=[0.9,9,0.9]):
         self.init(subdir, suffix, l_rate, w, circuit=self.circuit)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
@@ -67,7 +68,6 @@ class Circuit_opt(Optimizer):
         losses = tf.square(tf.subtract(out, self.ys_[0]))
         self.loss = tf.reduce_mean(losses)
         self.build_train()
-        saver = tf.train.Saver()
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -80,14 +80,13 @@ class Circuit_opt(Optimizer):
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, i, losses, rates, vars)
 
+                if (losses[i] < self.min_loss):
+                    self.plots_dump(sess, losses, rates, vars, i)
+                    break
+
                 for n_b in range(n_batch):
                     plots_output_double(self.T, self.X[:,n_b], results[:,0,n_b,n_out], self.V[:, n_b], results[:,-1,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
                     plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
-                    with (open(self.dir + FILE_LV, 'wb')) as f:
-                        pickle.dump([losses, rates, vars], f)
-                    plot_vars_syn(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=suffix,
-                                  show=False, save=True)
-                    plot_loss_rate(losses[:i + 1], rates[:i + 1], show=False, save=True)
-                    saver.save(sess, '%s%s' % (self.dir, SAVE_PATH))
+                    self.plots_dump(sess, losses, rates, vars, i)
