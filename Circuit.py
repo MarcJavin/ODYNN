@@ -52,8 +52,6 @@ class Circuit():
                     #0 synaptic current if no synapse coming in
                     curs_post.append((tf.zeros(tf.shape(curs)[0])))
                     continue
-                print(curs_syn)
-                print(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)))
                 curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
             final_curs = curs + tf.stack(curs_post, axis=1)
             h = self.neurons.step(hprev, final_curs)

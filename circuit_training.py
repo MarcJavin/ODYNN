@@ -43,13 +43,13 @@ def test(nb_neuron, conns, conns_opt, dir):
     pars = [p for _ in range(nb_neuron)]
     n_out = 1
     utils.set_dir(dir)
-    #
-    # t, i = params.give_train()
-    # i_1 = np.zeros(i.shape)
-    # i_injs = np.stack([i, i_1], axis=1)
-    #
-    # c = Circuit_simul(pars, conns, t, i_injs)
-    # c.run_sim(n_out=1, dump=True)
+
+    t, i = params.give_train()
+    i_1 = np.zeros(i.shape)
+    i_injs = np.stack([i, i_1], axis=1)
+
+    c = Circuit_simul(pars, conns, t, i_injs)
+    c.run_sim(n_out=1, dump=True)
     c = Circuit_opt(pars, conns_opt)
     c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE)
     comp_pars(dir)
