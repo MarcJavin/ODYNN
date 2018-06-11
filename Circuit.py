@@ -45,7 +45,8 @@ class Circuit():
             vpres = tf.gather_nd(hprev_swap, idx_pres)
             vposts = tf.gather_nd(hprev_swap, idx_post)
             #voltage of the presynaptic cells
-            curs_syn = self.syn_curr(vpres, vposts)
+            curs_syn = self.syn_curr(tf.transpose(vpres), tf.transpose(vposts))
+            curs_syn = tf.transpose(curs_syn)
             curs_post = []
             for i in range(self.neurons.num):
                 if i not in self.posts:
