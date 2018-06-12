@@ -118,6 +118,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     if (show):
         plt.show()
 
+    plt.figure()
     for i, type in enumerate(['mdp', 'scale', 'tau']):
         plt.subplot(3,1,i+1)
         plt.title(type)
