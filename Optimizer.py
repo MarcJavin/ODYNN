@@ -51,7 +51,7 @@ class Optimizer():
 
 
     def write_settings(self, dir, neur, w, circuit=None):
-        with open('%s%s_%s.txt' % (dir, OUT_SETTINGS, self.suffix), 'w') as f:
+        with open('%s%s_%s.txt' % (self.dir, OUT_SETTINGS, self.suffix), 'w') as f:
             if(circuit is not None):
                 f.write('Circuit optimization'.center(20, '.') + '\n')
                 f.write('Connections : \n %s \n %s' % (circuit.pres, circuit.posts) + '\n' +
