@@ -38,7 +38,7 @@ class HH_opt(Optimizer):
 
 
 
-    def optimize(self, subdir, w=[1,0], epochs=400, l_rate=[0.9,9,0.95], suffix='', step=None, file=DUMP_FILE, reload=False):
+    def optimize(self, subdir, w=[1,0], epochs=500, l_rate=[0.9,9,0.95], suffix='', step=None, file=DUMP_FILE, reload=False):
         self.init(subdir, suffix, l_rate, w, neur=self.neuron)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 

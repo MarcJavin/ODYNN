@@ -14,7 +14,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(10)]
+pars = [params.give_rand() for i in range(20)]
 dt=0.1
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
@@ -124,13 +124,25 @@ def alternate(name=''):
     wv = 0.2
     wca = 0.8
     opt.optimize(dir, [wv, wca], epochs=20, step=0, file=file)
-    for i in range(20):
+    for i in range(24):
         wv = 1 - wv
         wca = 1 - wca
         n = opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1, file=file)
     comp_pars(dir, n)
     test_xp(dir)
 
+def only_v(name=''):
+    dir = 'Integcomp_calc_%s' % name
+    utils.set_dir(dir)
+    loop_func = HodgkinHuxley.integ_comp
+    opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
+    sim.simul(show=False, suffix='train', dump=True)
+    wv = 1
+    wca = 0
+    n = opt.optimize(dir, [wv, wca], epochs=500)
+    comp_pars(dir, n)
+    test_xp(dir)
 
 def only_calc(name=''):
     dir = 'Integcomp_calc_%s' % name
@@ -141,7 +153,7 @@ def only_calc(name=''):
     sim.simul(show=False, suffix='train', dump=True)
     wv = 0
     wca = 1
-    n = opt.optimize(dir, [wv, wca], epochs=400)
+    n = opt.optimize(dir, [wv, wca], epochs=500)
     comp_pars(dir, n)
     test_xp(dir)
 
@@ -161,6 +173,9 @@ if __name__ == '__main__':
     elif(xp=='cac'):
         name = sys.argv[2]
         only_calc(name)
+    elif(xp=='v'):
+        name = sys.argv[2]
+        only_v(name)
     elif(xp == 'single'):
         xp = sys.argv[2]
         w_v, w_ca = list(map(int, sys.argv[3:5]))
