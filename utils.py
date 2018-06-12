@@ -79,7 +79,7 @@ def get_dic_from_var(dir, suffix=""):
 def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
 def plot(ax, var):
-    ax.plot(var)
+    ax.plot(var, linewidth=0.5)
 def boxplot(ax, var):
     ax.boxplot(var, vert=True, showmeans=True)
 
@@ -225,7 +225,10 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.figure()
 
     plt.subplot(2,1,1)
-    plt.plot(losses, 'r')
+    if(losses.ndim == 1):
+        plt.plot(losses, 'r')
+    else:
+        plt.plot(losses, linewidth=0.8)
     plt.ylabel('Loss')
     plt.yscale('log')
 
@@ -279,18 +282,18 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.close()
 
 """plot voltage and Ca2+ conc compared to the target model"""
-def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False):
+def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1):
     plt.figure()
 
     plt.subplot(3, 1, 2)
-    plt.plot(ts, cac)
-    plt.plot(ts, y_cac, 'r', label='target model')
+    plt.plot(ts, cac, linewidth=l)
+    plt.plot(ts, y_cac, 'r', linewidth=lt, label='target model')
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
-    plt.plot(ts, v)
-    plt.plot(ts, y_v, 'r', label='target model')
+    plt.plot(ts, v, linewidth=l)
+    plt.plot(ts, y_v, 'r', linewidth=lt, label='target model')
     plt.ylabel('Voltage (mV)')
     plt.legend()
 

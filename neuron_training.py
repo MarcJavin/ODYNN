@@ -14,8 +14,8 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(20)]
-dt=0.1
+pars = [params.give_rand() for i in range(100)]
+dt=0.2
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -115,10 +115,12 @@ def test_xp(dir, suffix='', show=False):
     sim.simul(show=show, suffix='test3')
 
 def alternate(name=''):
-    dir = 'Integcomp_alternate_%s' % name
+    dir = 'Integcomp_alternate_par_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
-    opt = HH_opt(init_p=pars, loop_func=loop_func)
+    pars = data.get_vars('Integcomp_alternate_100-YAYY', 0)
+    pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
+    opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
     file = sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
@@ -159,12 +161,26 @@ def only_calc(name=''):
 
 def comp_pars(dir, i=-1):
     p = data.get_vars(dir, i)
+    pall = data.get_vars_all(dir, i)
     utils.set_dir(dir)
+    utils.plot_vars(pall, func=utils.plot, suffix='evolution', show=False, save=True)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
 
+def add_plots():
+    import glob
+    import re
+    for filename in glob.iglob(utils.RES_DIR+'*'):
+        dir = re.sub(utils.RES_DIR, '', filename)
+        try:
+            comp_pars(dir)
+        except:
+            print(dir)
+
+
 if __name__ == '__main__':
+
 
     xp = sys.argv[1]
     if(xp == 'alt'):
