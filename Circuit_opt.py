@@ -44,7 +44,7 @@ class Circuit_opt(Optimizer):
 
 
     """optimize synapses"""
-    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=1, w=[1,0], l_rate=[0.9,9,0.9]):
+    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=1, w=[1,0], l_rate=[0.9,9,0.95]):
         self.init(subdir, suffix, l_rate, w, circuit=self.circuit)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
