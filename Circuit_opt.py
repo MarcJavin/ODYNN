@@ -90,7 +90,7 @@ class Circuit_opt(Optimizer):
 
                 if (losses[i] < self.min_loss):
                     self.plots_dump(sess, losses, rates, vars, i)
-                    break
+                    return i
 
                 for n_b in range(n_batch):
                     plots_output_double(self.T, self.X[:,n_b], results[:,V_pos,n_b,n_out], self.V[:, n_b], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
@@ -101,3 +101,5 @@ class Circuit_opt(Optimizer):
                         plots_output_mult(self.T, self.X[:, n_b], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
                                           suffix='circuit_trace%s_%s' % (n_b, i), show=False, save=True)
                     self.plots_dump(sess, losses, rates, vars, i)
+
+        return -1

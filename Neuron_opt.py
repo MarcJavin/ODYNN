@@ -102,7 +102,7 @@ class HH_opt(Optimizer):
 
                 if(losses[len_prev+i]<self.min_loss):
                     self.plots_dump(sess, losses, rates, vars, len_prev + i)
-                    break
+                    return i+len_prev
 
                 for b in range(n_batch):
                     plots_output_double(self.T, self.X[:,b,0], results[:,V_pos,b], self.V[:,b,0], results[:,Ca_pos,b],
@@ -110,6 +110,8 @@ class HH_opt(Optimizer):
                                         save=True)
                 if(i%10==0 or i==epochs-1):
                     self.plots_dump(sess, losses, rates, vars, len_prev+i)
+
+        return  -1
 
 
 

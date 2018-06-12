@@ -15,11 +15,11 @@ FILE_LV = 'tmp/dump_lossratevars'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 """get dic of vars from dumped file"""
-def get_vars(dir):
+def get_vars(dir, i=-1):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, val[-1]) for var, val in dic.items()])
+        dic = dict([(var, val[i]) for var, val in dic.items()])
     return dic
 
 def get_data_dump(file=DUMP_FILE):
