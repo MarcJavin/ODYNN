@@ -106,7 +106,7 @@ class HH_opt(Optimizer):
 
                 for b in range(n_batch):
                     plots_output_double(self.T, self.X[:,b,0], results[:,V_pos,b], self.V[:,b,0], results[:,Ca_pos,b],
-                                        self.Ca[:,b, 0], suffix='%s_%s_%s_trace%s' % (suffix, step, i + 1, b), show=False,
+                                        self.Ca[:,b, 0], suffix='%s_%s_trace%s_%s' % (suffix, step, b, i + 1), show=False,
                                         save=True)
                 if(i%10==0 or i==epochs-1):
                     self.plots_dump(sess, losses, rates, vars, len_prev+i)

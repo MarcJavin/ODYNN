@@ -31,6 +31,13 @@ SYNAPSE1 = {
     'E': 20.
 }
 
+SYNAPSE2 = {
+    'G': 10.,
+    'mdp': 0.,
+    'scale': 5.,
+    'E': -10.
+}
+
 SYNAPSE = {
     'G': 5.,
     'mdp': -25.,
@@ -218,17 +225,20 @@ i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
 """time and currents for optimization"""
 
 
-def give_train(dt=DT):
+def give_train(dt=DT, nb_neuron_zero=None):
     t = np.array(sp.arange(0.0, 1200., dt))
     i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950))
     i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))
     i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
     i4 = 15. * ((t > 400) & (t < 800))
-    is_ = np.stack([i, i2, i3, i4], axis=1)
-    return t, is_
+    i_fin = np.stack([i, i2, i3, i4], axis=1)
+    if(nb_neuron_zero is not None):
+        i_zeros = np.zeros(i_fin.shape)
+        i_fin= np.stack([i_fin, i_zeros], axis=2)
+    return t, i_fin
 
 
-def full4(dt=DT):
+def full4(dt=DT, nb_neuron_zero=None):
     t = np.array(sp.arange(0.0, 1200., dt))
     i1 = 10. * ((t > 200) & (t < 600))
     i2 = 10. * ((t > 300) & (t < 700))
@@ -236,14 +246,27 @@ def full4(dt=DT):
     i4 = 10. * ((t > 500) & (t < 900))
     is_ = np.stack([i1, i2, i3, i4], axis=1)
     is_2 = is_ * 2
-    return np.stack([is_, is_2], axis=2)
+    i1 = np.sum([10. * ((t > n) & (t < n + 100)) for n in range(70, 1100, 200)], axis=0)
+    i2 = np.sum([(10. + (n * 1 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
+    i3 = np.sum([(22. - (n * 1 / 100)) * ((t > n) & (t < n + 50)) for n in range(120, 1100, 100)], axis=0)
+    i4 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 20)) for n in range(100, 1100, 80)], axis=0)
+    is_3 = np.stack([i1, i2, i3, i4], axis=1)
+    i_fin = np.stack([is_, is_3], axis=1)
+    if(nb_neuron_zero is not None):
+        i_zeros = np.zeros((len(t), i_fin.shape[1], 6))
+        i_fin = np.append(i_fin, i_zeros, axis=2)
+    return t, i_fin
+
+
 
 
 if __name__ == '__main__':
-    t,i = give_train()
-    i_1 = np.zeros(i.shape)
-    i_injs = np.vstack([i, i_1])
-    print(i_injs.shape)
+    t, i = full4()
+    print(i.shape)
+    i_1 = np.zeros((len(t), i.shape[1], 6))
+    print(i_1.shape)
+    i = np.append(i, i_1, axis=2)
+    print(i.shape)
 
 t_len = 5000.
 t = np.array(sp.arange(0.0, t_len, DT))

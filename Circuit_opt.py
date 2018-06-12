@@ -93,11 +93,11 @@ class Circuit_opt(Optimizer):
                     break
 
                 for n_b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,n_b], results[:,V_pos,n_b,n_out], self.V[:, n_b], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
+                    plots_output_double(self.T, self.X[:,n_b], results[:,V_pos,n_b,n_out], self.V[:, n_b], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
                     # plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
                     for n_b in range(n_batch):
                         plots_output_mult(self.T, self.X[:, n_b], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
-                                          suffix='circuit_%s_trace%s' % (i, n_b), show=False, save=True)
+                                          suffix='circuit_trace%s_%s' % (n_b, i), show=False, save=True)
                     self.plots_dump(sess, losses, rates, vars, i)
