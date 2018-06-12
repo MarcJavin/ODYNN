@@ -1,5 +1,5 @@
 import numpy as np
-from Neuron import HodgkinHuxley
+from Neuron import HodgkinHuxley, V_pos, Ca_pos
 from Circuit import Circuit_tf
 from Neuron_opt import HH_opt
 import params
@@ -53,9 +53,13 @@ class Circuit_opt(Optimizer):
 
         # Xshape = [time, n_batch, n_neuron]
         self.xs_ = tf.placeholder(shape=[None, None, self.circuit.neurons.num], dtype=tf.float32, name='in_current')
-        self.ys_ = tf.placeholder(shape=[2, None, None], dtype=tf.float32, name='out')
+        if(len(n_out)>1):
+            self.ys_ = tf.placeholder(shape=[2, None, None, len(n_out)], dtype=tf.float32, name='out')
+        else:
+            self.ys_ = tf.placeholder(shape=[2, None, None], dtype=tf.float32, name='out')
             # reshape init state
         self.init_state = np.stack([self.circuit.neurons.init_state for _ in range(n_batch)], axis=self.dim_batch)
+        initshape = list(self.circuit.neurons.init_state.shape).insert(1, None)
         self.init_state_ = tf.placeholder(shape=self.init_state.shape, dtype=tf.float32, name='init_state')
 
         print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', self.init_state.shape)
@@ -64,8 +68,12 @@ class Circuit_opt(Optimizer):
                       self.xs_,
                       initializer=self.init_state_)
 
-        out = self.res[:, 0, :, n_out]
-        losses = tf.square(tf.subtract(out, self.ys_[0]))
+        out = []
+        for n in n_out:
+            out.append(self.res[:, V_pos, :, n])
+        out = tf.stack(out, axis=2)
+        # out = self.res[:, 0, :, n_out]
+        losses = tf.square(tf.subtract(out, self.ys_[V_pos]))
         self.loss = tf.reduce_mean(losses)
         self.build_train()
 
@@ -85,8 +93,11 @@ class Circuit_opt(Optimizer):
                     break
 
                 for n_b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,n_b], results[:,0,n_b,n_out], self.V[:, n_b], results[:,-1,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
-                    plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
+                    plots_output_double(self.T, self.X[:,n_b], results[:,V_pos,n_b,n_out], self.V[:, n_b], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b], suffix='%s_trace%s'%(i,n_b), show=False, save=True)
+                    # plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
+                    for n_b in range(n_batch):
+                        plots_output_mult(self.T, self.X[:, n_b], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
+                                          suffix='circuit_%s_trace%s' % (i, n_b), show=False, save=True)
                     self.plots_dump(sess, losses, rates, vars, i)

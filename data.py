@@ -19,7 +19,7 @@ def get_vars(dir):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, val[-2]) for var, val in dic.items()])
+        dic = dict([(var, val[-1]) for var, val in dic.items()])
     return dic
 
 def get_data_dump(file=DUMP_FILE):

@@ -1,5 +1,4 @@
-import scipy as sp
-from Neuron import Neuron_fix
+from Neuron import Neuron_fix, V_pos, Ca_pos
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
@@ -32,8 +31,8 @@ class HH_simul():
         for p in ps:
             self.neuron.param = p
             X = self.calculate()
-            Vs.append(X[:,0])
-            Cacs.append(X[:,-1])
+            Vs.append(X[:,V_pos])
+            Cacs.append(X[:,Ca_pos])
         utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, save=False, show=True)
 
     """Compare 2 parameters sets"""
@@ -44,7 +43,7 @@ class HH_simul():
         self.param = p_targ
         S_targ = self.calculate()
 
-        utils.plots_output_double(self.t, self.i_inj, S[:,0], S_targ[:,0], S[:,-1], S_targ[:,-1], save=False, show=True)
+        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], save=False, show=True)
 
 
     """Runs and plot the neuron"""
@@ -72,7 +71,7 @@ class HH_simul():
                 plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
 
         if (dump):
-            todump = [self.t, self.i_inj, X[:, 0], X[:, -1]]
+            todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
             with open(data.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return data.DUMP_FILE

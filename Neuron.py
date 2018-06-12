@@ -4,6 +4,8 @@ import params
 import numpy as np
 
 
+V_pos = 0
+Ca_pos = -1
 
 class HodgkinHuxley():
     """Full Hodgkin-Huxley Model implemented in Python"""
@@ -89,13 +91,13 @@ class HodgkinHuxley():
         if(self.tensors and False):
             X = tf.Print(X, [X[0]], 'V : ')
             i_inj = tf.Print(i_inj, [i_inj], 'i_inj : ')
-        V = X[0]
+        V = X[V_pos]
         p = X[1]
         q = X[2]
         n = X[3]
         e = X[4]
         f = X[5]
-        cac = X[6]
+        cac = X[Ca_pos]
 
         h = self.h(cac)
         # V = V * (i_inj + self.g_Ca(e,f,h)*self.param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self.param['E_K'] + self.param['g_L']*self.param['E_L']) / \
@@ -124,13 +126,13 @@ class HodgkinHuxley():
         """
         Integrate
         """
-        V = X[0]
+        V = X[V_pos]
         p = X[1]
         q = X[2]
         n = X[3]
         e = X[4]
         f = X[5]
-        cac = X[6]
+        cac = X[Ca_pos]
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.param['C_m']) * self.dt
@@ -154,13 +156,13 @@ class HodgkinHuxley():
         """
         Integrate
         """
-        V = X[0]
+        V = X[V_pos]
         p = X[1]
         q = X[2]
         n = X[3]
         e = X[4]
         f = X[5]
-        cac = X[6]
+        cac = X[Ca_pos]
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.param['C_m']) * self.dt
@@ -181,7 +183,7 @@ class HodgkinHuxley():
     def ica_from_v(X, v_fix, self):
         e = X[1]
         f = X[2]
-        cac = X[-1]
+        cac = X[Ca_pos]
 
         h = self.h(cac)
         tau = self.param['e__tau']
@@ -274,7 +276,10 @@ class Neuron_fix(HodgkinHuxley):
         self.state = self.init_state
 
     def get_volt(self):
-        return self.state[0]
+        return self.state[V_pos]
+
+    def init_batch(self, n):
+        self.init_state = np.stack([self.init_state for _ in range(n)], axis=1)
 
     def step(self, i):
         self.state = np.array(self.loop_func(self.state, i, self))

@@ -35,10 +35,11 @@ class Circuit():
         return g * (self.param['E'] - vpost)
 
     """run one time step"""
-    def step(self, hprev=None, curs=[]):
+    def step(self, hprev, curs):
         if(self.tensors):
             # update synapses
             #swap for synapses
+            print('curs : ',curs)
             hprev_swap = tf.transpose(hprev, [0,2,1])
             idx_pres = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.pres)).transpose()
             idx_post = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.posts)).transpose()
@@ -48,14 +49,21 @@ class Circuit():
             curs_syn = self.syn_curr(tf.transpose(vpres), tf.transpose(vposts))
             curs_syn = tf.transpose(curs_syn)
             curs_post = []
+            print('posts : ' ,self.posts)
             for i in range(self.neurons.num):
                 if i not in self.posts:
                     #0 synaptic current if no synapse coming in
                     curs_post.append((tf.zeros(tf.shape(curs)[0])))
                     continue
+                print(i, tf.gather_nd(curs_syn, np.argwhere(self.posts == i)))
+                print(i, tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
                 curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
-            final_curs = curs + tf.stack(curs_post, axis=1)
+            print('postsyn cur : ', curs_post)
+            print('stack : ', tf.stack(curs_post, axis=1))
+            final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
+            print(final_curs)
             h = self.neurons.step(hprev, final_curs)
+            print(h)
             return h
         else:
             # update neurons
@@ -64,7 +72,7 @@ class Circuit():
             vpres = self.neurons.state[0, self.pres]
             vposts = self.neurons.state[0, self.posts]
             curs_syn = self.syn_curr(vpres, vposts)
-            curs_post = np.zeros(len(curs))
+            curs_post = np.zeros(curs.shape)
             for i in range(self.neurons.num):
                 if i not in self.posts:
                     curs_post[i] = 0

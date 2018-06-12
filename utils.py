@@ -35,8 +35,14 @@ GATES = ['e', 'f', 'n', 'p', 'q']
 CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
 MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
-COLORS = ['k', 'c', 'm', 'Orange', 'Olive', 'Gold', 'b', 'Lime', 'Salmon', 'Darkred']
+COLORS = ['k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
+
+
+if __name__ == '__main__':
+    plt.figure()
+    plt.bar(x=range(len(COLORS)), height=[1 for _ in range(len(COLORS))], color=COLORS)
+    plt.show()
 
 """Set directory to save files"""
 def set_dir(subdir):
@@ -244,19 +250,18 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         plt.plot(ts, i_syn)
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{syn}$ ($\\mu{A}/cm^2$)')
-        plt.legend(labels)
+        plt.legend(labels, ncol=int(Vs.shape[1]/4)+1)
     else:
         n_plots = 3
 
     plt.subplot(n_plots, 1, 1)
     plt.plot(ts, Vs)
     plt.ylabel('Voltage (mV)')
-    plt.legend(labels)
+    plt.legend(labels, ncol=int(Vs.shape[1]/4)+1)
 
     plt.subplot(n_plots, 1, 2)
     plt.plot(ts, Cacs)
     plt.ylabel('[$Ca^{2+}$]')
-    plt.legend(labels)
 
     plt.subplot(n_plots, 1, n_plots)
     if(i_inj.ndim<2):
@@ -265,7 +270,6 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         plt.plot(ts, i_inj)
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-    plt.legend(labels)
 
     if (save):
         plt.savefig('%s%soutput_%s.png' % (DIR, IMG_DIR, suffix))

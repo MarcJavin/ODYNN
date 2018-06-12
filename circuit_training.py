@@ -39,22 +39,71 @@ def comp_pars(dir):
     utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 
 
-def test(nb_neuron, conns, conns_opt, dir):
+def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=1):
     pars = [p for _ in range(nb_neuron)]
-    n_out = 1
     utils.set_dir(dir)
 
-    t, i = params.give_train()
-    i_1 = np.zeros(i.shape)
-    i_injs = np.stack([i, i_1], axis=1)
-
     c = Circuit_simul(pars, conns, t, i_injs)
-    c.run_sim(n_out=1, dump=True)
+    file = c.run_sim(n_out=n_out, dump=True, show=True)
     c = Circuit_opt(pars, conns_opt)
-    c.opt_circuits(dir, n_out=n_out, file=data.DUMP_FILE)
+    c.opt_circuits(dir, n_out=n_out, file=file)
     comp_pars(dir)
 
+def full4to1():
+    t,i = params.full4()
+    i_1 = np.zeros((i.shape[0],1))
+    i = np.append(i, i_1, axis=1)
+    n_neuron = 5
+    conns = {(0, 4): params.SYNAPSE,
+             (1, 4): params.SYNAPSE,
+             (2, 4): params.SYNAPSE,
+             (3, 4): params.SYNAPSE,
+             }
+    conns_opt = {(0, 4): params.get_syn_rand(),
+             (1, 4): params.get_syn_rand(),
+             (2, 4): params.get_syn_rand(),
+             (3, 4): params.get_syn_rand(),
+             }
+    dir = '4to1-test'
+    test(n_neuron, conns, conns_opt, dir, t, i, n_out=4)
+
 if __name__ == '__main__':
+
+
+    t,i = params.full4()
+    i_1 = np.zeros((i.shape[0],6))
+    i = np.append(i, i_1, axis=1)
+    print(i.shape)
+    n_neuron = 10
+    conns = {(0, 4): params.SYNAPSE,
+             (1, 4): params.SYNAPSE,
+             (2, 4): params.SYNAPSE,
+             (3, 4): params.SYNAPSE,
+             (0, 5): params.SYNAPSE,
+             (1, 5): params.SYNAPSE,
+             (2, 5): params.SYNAPSE,
+             (3, 5): params.SYNAPSE,
+             (0, 6): params.SYNAPSE,
+             (1, 6): params.SYNAPSE,
+             (2, 6): params.SYNAPSE,
+             (3, 6): params.SYNAPSE,
+             (0, 7): params.SYNAPSE,
+             (1, 7): params.SYNAPSE,
+             (2, 7): params.SYNAPSE,
+             (3, 7): params.SYNAPSE,
+             (4, 8): params.SYNAPSE,
+             (5, 8): params.SYNAPSE,
+             (6, 8): params.SYNAPSE,
+             (7, 8): params.SYNAPSE,
+             (4, 9): params.SYNAPSE,
+             (5, 9): params.SYNAPSE,
+             (6, 9): params.SYNAPSE,
+             (7, 9): params.SYNAPSE,
+             }
+    conns_opt = dict([(k, params.get_syn_rand()) for k in conns.keys()])
+    dir = '4to4to2-test'
+    test(n_neuron, conns, conns_opt, dir, t, i, n_out=[8,9])
+    exit(0)
 
 
     xp = sys.argv[1]
@@ -89,4 +138,7 @@ if __name__ == '__main__':
         conns_opt = {(0, 1): params.get_syn_rand(False),
                      (1, 0): params.get_syn_rand(False)}
         dir = '2n-2inh-test'
-    test(n_neuron, conns, conns_opt, dir)
+    t, i = params.give_train()
+    i_1 = np.zeros(i.shape)
+    i_injs = np.stack([i, i_1], axis=1)
+    test(n_neuron, conns, conns_opt, dir, t, i_injs)

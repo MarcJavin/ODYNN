@@ -6,7 +6,7 @@ import numpy as np
 
 class Optimizer():
 
-    min_loss = 2.
+    min_loss = 1.
 
     def __init__(self):
         pass
@@ -14,13 +14,13 @@ class Optimizer():
     def build_train(self):
         global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
-        self.learning_rate = 0.1
-        t = tf.train.exponential_decay(
+        self.learning_rate = tf.train.exponential_decay(
             self.start_rate,  # Base learning rate.
             global_step,  # Current index to the dataset.
             self.decay_step,  # Decay step.
             self.decay_rate,  # Decay rate.
             staircase=True)
+        # self.learning_rate = 0.1
         tf.summary.scalar('learning rate', self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         gvs = opt.compute_gradients(self.loss)
@@ -81,7 +81,7 @@ class Optimizer():
                 f.write('%s : %s\n' % (name, v_))
                 vars[name][i + 1] = v_
 
-        rates[i] = self.learning_rate#sess.run(self.learning_rate)
+        rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
         print('[{}] loss : {}'.format(i, train_loss))
         return results

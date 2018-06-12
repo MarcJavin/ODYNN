@@ -1,6 +1,6 @@
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
-from Neuron import Neuron_tf
+from Neuron import Neuron_tf, V_pos, Ca_pos
 from Optimizer import Optimizer
 import tensorflow as tf
 import numpy as np
@@ -27,8 +27,8 @@ class HH_opt(Optimizer):
 
     """Define how the loss is computed"""
     def build_loss(self, w):
-        cac = self.res[:, -1]
-        out = self.res[:, 0]
+        cac = self.res[:, Ca_pos]
+        out = self.res[:, V_pos]
         losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
         losses_ca = w[1] * tf.square(tf.subtract(cac, self.ys_[-1]))
         self.loss = losses_v + losses_ca
@@ -105,7 +105,7 @@ class HH_opt(Optimizer):
                     break
 
                 for b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,b,0], results[:,0,b], self.V[:,b,0], results[:,-1,b],
+                    plots_output_double(self.T, self.X[:,b,0], results[:,V_pos,b], self.V[:,b,0], results[:,Ca_pos,b],
                                         self.Ca[:,b, 0], suffix='%s_%s_%s_trace%s' % (suffix, step, i + 1, b), show=False,
                                         save=True)
                 if(i%10==0 or i==epochs-1):
