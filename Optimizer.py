@@ -85,7 +85,6 @@ class Optimizer():
 
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
-        if hasattr(train_loss, "__len__") : train_loss=np.mean(train_loss)
         print('[{}] loss : {}'.format(i, train_loss))
         return results
 

@@ -14,7 +14,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(100)]
+pars = [params.give_rand() for i in range(10)]
 dt=0.1
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
@@ -118,8 +118,8 @@ def alternate(name=''):
     dir = 'Integcomp_alternate_par_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
-    pars = data.get_vars('Integcomp_alternate_100-YAYY', 0)
-    pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
+    # pars = data.get_vars('Integcomp_alternate_100-YAYY', 0)
+    # pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
     opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
     file = sim.simul(show=False, suffix='train', dump=True)
