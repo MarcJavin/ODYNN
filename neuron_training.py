@@ -15,6 +15,8 @@ CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
 pars = [params.give_rand() for i in range(100)]
+pars = data.get_vars('Init_settings_100', 0)
+pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt=0.1
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
