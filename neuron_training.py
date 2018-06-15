@@ -14,7 +14,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
-pars = [params.give_rand() for i in range(10)]
+pars = [params.give_rand() for i in range(100)]
 dt=0.1
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
@@ -115,7 +115,7 @@ def test_xp(dir, suffix='', show=False):
     sim.simul(show=show, suffix='test3')
 
 def alternate(name=''):
-    dir = 'Integcomp_alternate_par_%s' % name
+    dir = 'Integcomp_alternate_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     # pars = data.get_vars('Integcomp_alternate_100-YAYY', 0)

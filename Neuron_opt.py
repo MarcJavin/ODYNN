@@ -16,10 +16,10 @@ class HH_opt(Optimizer):
     """Full Hodgkin-Huxley Model implemented in Python"""
 
     dim_batch= 1
-    loss_scal = False
 
     def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
         Optimizer.__init__(self)
+        self.loss_scal = False
         if(neuron is not None):
             self.neuron = neuron
         else:
@@ -92,7 +92,7 @@ class HH_opt(Optimizer):
 
         with tf.Session() as sess:
             if(self.loss_scal):
-                np.zeros((epochs))
+                add_l = np.zeros((epochs))
             else:
                 add_l = np.zeros((epochs, self.neuron.num))
             if(reload):

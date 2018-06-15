@@ -9,14 +9,15 @@ class Optimizer():
     min_loss = 1.
 
     def __init__(self):
-        pass
+        self.loss_scal = True
+
     """learning rate and optimization"""
     def build_train(self):
-        global_step = tf.Variable(0, trainable=False)
+        self.global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
         self.learning_rate = tf.train.exponential_decay(
             self.start_rate,  # Base learning rate.
-            global_step,  # Current index to the dataset.
+            self.global_step,  # Current index to the dataset.
             self.decay_step,  # Decay step.
             self.decay_rate,  # Decay rate.
             staircase=True)
@@ -24,13 +25,25 @@ class Optimizer():
         tf.summary.scalar('learning rate', self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
-        gvs = opt.compute_gradients(self.loss)
+        if(not self.loss_scal):
+            loss = self.loss / (self.neuron.num**0.5)
+        gvs = opt.compute_gradients(loss)
         grads, vars = zip(*gvs)
-        # tf.summary.histogram('gradients', gvs)
-        # check if nan and clip the values
-        # grads, vars = zip(*[(tf.cond(tf.is_nan(grad), lambda: 0., lambda: grad), var) for grad, var in gvs])
-        grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
-        self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
+
+        if(self.neuron is not None):
+            grads_normed = []
+            for i in range(self.neuron.num):
+                #clip by norm for each neuron
+                gi = [g[i] for g in grads]
+                gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
+                grads_normed.append(gi_norm)
+            grads_normed = np.array(grads_normed)
+            #resize to tf format
+            grads_normed = [tf.stack([grads_normed[neur, var] for neur in range(grads_normed.shape[0])]) for var in range(grads_normed.shape[1])]
+        else:
+            grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
+        self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=self.global_step)
+
         self.saver = tf.train.Saver()
 
     """initialize objects to be optimized and write setting in the directory"""
@@ -85,6 +98,8 @@ class Optimizer():
 
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
+        if(not self.loss_scal):
+            train_loss = np.mean(train_loss)
         print('[{}] loss : {}'.format(i, train_loss))
         return results
 
