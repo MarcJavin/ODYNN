@@ -132,7 +132,7 @@ def alternate(name=''):
     test_xp(dir)
 
 def only_v(name=''):
-    dir = 'Integcomp_calc_%s' % name
+    dir = 'Integcomp_volt_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
