@@ -38,25 +38,29 @@ class Circuit():
     def step(self, hprev, curs):
         if(self.tensors):
             # update synapses
-            #swap for synapses
+            #curs : [batch, neuron(, model)]
             print('curs : ',curs)
+            #hprev : [state, batch, neuron(, model)] -> [state, neuron, batch(, model)]
             hprev_swap = tf.transpose(hprev, [0,2,1])
-            idx_pres = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.pres)).transpose()
-            idx_post = np.vstack((np.zeros(self.pres.shape, dtype=np.int32), self.posts)).transpose()
-            vpres = tf.gather_nd(hprev_swap, idx_pres)
-            vposts = tf.gather_nd(hprev_swap, idx_post)
+            idx_pres = np.stack((np.zeros(self.pres.shape, dtype=np.int32), self.pres), axis=1)#transpose()
+            idx_post = np.stack((np.zeros(self.pres.shape, dtype=np.int32), self.posts), axis=1)#.transpose()
+            #[neuron, batch(, model)] -> [batch, neuron(, model)]
+            vpres = tf.gather_nd(hprev_swap, idx_pres).swapaxes(1,0)
+            vposts = tf.gather_nd(hprev_swap, idx_post).swapaxes(1,0)
             #voltage of the presynaptic cells
-            curs_syn = self.syn_curr(tf.transpose(vpres), tf.transpose(vposts))
+            curs_syn = self.syn_curr(vpres, vposts)
+            # [batch, neuron(, model)] -> [neuron, batch(, model)]
             curs_syn = tf.transpose(curs_syn)
             curs_post = []
             print('posts : ' ,self.posts)
             for i in range(self.neurons.num):
                 if i not in self.posts:
                     #0 synaptic current if no synapse coming in
-                    curs_post.append((tf.zeros(tf.shape(curs)[0])))
+                    curs_post.append(tf.reduce_sum(tf.zeros(tf.shape(curs)), axis=1))
                     continue
                 print(i, tf.gather_nd(curs_syn, np.argwhere(self.posts == i)))
                 print(i, tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
+                #[batch(, model)]
                 curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
             print('postsyn cur : ', curs_post)
             print('stack : ', tf.stack(curs_post, axis=1))

@@ -125,7 +125,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
         labels = ['%s__%s'%(rate,type) for rate in RATE_COLORS.keys()]
         cols = RATE_COLORS.values()
         if(type=='tau'):
-            labels[2] = 'h__alpha'
+            labels = ['h__alpha' if x=='h__tau' else x for x in labels]
         box(var_dic, cols, labels)
     if (save):
         plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
@@ -228,7 +228,7 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     if(losses.ndim == 1):
         plt.plot(losses, 'r')
     else:
-        plt.plot(losses, linewidth=0.8)
+        plt.plot(losses, linewidth=0.6)
     plt.ylabel('Loss')
     plt.yscale('log')
 
@@ -237,7 +237,7 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.ylabel('Learning rate')
 
     if(save):
-        plt.savefig('%slosses_%s.png' % (DIR,suffix))
+        plt.savefig('%slosses_%s.png' % (DIR,suffix), dpi=300)
     if(show):
         plt.show()
     plt.close()
