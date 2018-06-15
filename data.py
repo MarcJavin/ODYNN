@@ -12,6 +12,8 @@ import utils
 DUMP_FILE = 'data/dump'
 SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
+FILE_NEUR = 'tmp/neuron'
+FILE_CIRC = 'tmp/circuit'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 """get dic of vars from dumped file"""
@@ -19,7 +21,15 @@ def get_vars(dir, i=-1):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, val[i]) for var, val in dic.items()])
+        dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
+    return dic
+
+"""get dic of vars from dumped file"""
+def get_vars_all(dir, i=-1):
+    file = utils.RES_DIR+dir+'/'+FILE_LV
+    with open(file, 'rb') as f:
+        l,r,dic = pickle.load(f)
+        dic = dict([(var, val[:i]) for var, val in dic.items()])
     return dic
 
 def get_data_dump(file=DUMP_FILE):

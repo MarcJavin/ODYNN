@@ -5,7 +5,7 @@ from Neuron_opt import HH_opt
 import params
 from Optimizer import Optimizer
 from utils import plots_output_mult, plot_loss_rate, plots_output_double, plot_vars_syn
-from data import DUMP_FILE, get_data_dump, FILE_LV, SAVE_PATH
+from data import DUMP_FILE, get_data_dump, FILE_CIRC
 import tensorflow as tf
 from tqdm import tqdm
 import pickle
@@ -45,6 +45,8 @@ class Circuit_opt(Optimizer):
 
     """optimize synapses"""
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=1, w=[1,0], l_rate=[0.9,9,0.95]):
+        with(open(FILE_CIRC, 'wb')) as f:
+            pickle.dump(self.circuit, f)
         self.init(subdir, suffix, l_rate, w, circuit=self.circuit)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 

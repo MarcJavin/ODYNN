@@ -23,6 +23,7 @@ class Optimizer():
         # self.learning_rate = 0.1
         tf.summary.scalar('learning rate', self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+
         gvs = opt.compute_gradients(self.loss)
         grads, vars = zip(*gvs)
         # tf.summary.histogram('gradients', gvs)
@@ -63,6 +64,7 @@ class Optimizer():
                     'Initial state : %s' % neur.init_state + '\n' +
                     'Constraints : %s' % neur.constraints_dic + '\n' +
                     'Model solver : %s' % neur.loop_func + '\n' +
+                    'dt : %s' % neur.dt + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
 
@@ -91,5 +93,5 @@ class Optimizer():
             pickle.dump([losses, rates, vars], f)
         plot_loss_rate(losses[:i + 1], rates[:i + 1], suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, '%s%s' % (self.dir, SAVE_PATH))
-        self.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=self.suffix, show=False,
+        self.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=self.suffix+'evolution', show=False,
                   save=True)
