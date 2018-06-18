@@ -17,7 +17,7 @@ K_CONST = params.ALL - K_VAR
 pars = [params.give_rand() for i in range(100)]
 pars = data.get_vars('Init_settings_100', 0)
 pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt=0.1
+dt=0.5
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -99,18 +99,23 @@ def steps2_exp_k(w_v2, w_ca2):
 
 def test_xp(dir, i=i_inj, suffix='', show=False):
 
-    dt = 0.05
-    t = np.array(sp.arange(0.0, 4000, dt))
-    t3 = np.array(sp.arange(0.0, 6000, dt))
-    i1 = (t-1000)*(30./200)*((t>1000)&(t<=1200)) + 30*((t>1200)&(t<=3000)) - (t-2800)*(30./200)*((t>2800)&(t<=3000))
-    i2 = (t - 1000) * (50. / 1000) * ((t > 1000) & (t <= 2000)) + (3000 - t) * (50. / 1000) * ((t > 2000) & (t <= 3000))
-    i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
-
     utils.set_dir(dir)
     param = data.get_best_result(dir)
-    for i_ in i:
+    for j, i_ in enumerate(i.transpose()):
         sim = HH_simul(init_p=param, t=t, i_inj=i_)
-        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='test%s'%i)
+        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='train%s'%j)
+
+    dt = 0.05
+    tt = np.array(sp.arange(0.0, 4000, dt))
+    t3 = np.array(sp.arange(0.0, 6000, dt))
+    i1 = (tt-1000)*(30./200)*((tt>1000)&(tt<=1200)) + 30*((tt>1200)&(tt<=3000)) - (tt-2800)*(30./200)*((tt>2800)&(tt<=3000))
+    i2 = (tt - 1000) * (50. / 1000) * ((tt > 1000) & (tt <= 2000)) + (3000 - tt) * (50. / 1000) * ((tt > 2000) & (tt <= 3000))
+    i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
+    is_ = [i1,i2,i3]
+    ts_ = [tt,tt,t3]
+    for j, i_ in enumerate(is_):
+        sim = HH_simul(init_p=param, t=ts_[j], i_inj=i_)
+        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='test%s' % j)
 
 def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
