@@ -97,7 +97,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 
-def test_xp(dir, suffix='', show=False):
+def test_xp(dir, i=i_inj, suffix='', show=False):
 
     dt = 0.05
     t = np.array(sp.arange(0.0, 4000, dt))
@@ -107,17 +107,10 @@ def test_xp(dir, suffix='', show=False):
     i3 = (t3-1000)*(1./2000)*((t3>1000)&(t3<=3000)) + (5000-t3)*(1./2000)*((t3>3000)&(t3<=5000))
 
     utils.set_dir(dir)
-    param = data.get_vars(dir)
-    print(param)
-    param = dict([(var,val[-1]) for var,val in param.items()])
-    print(param)
-    sim = HH_simul(init_p=param, t=t, i_inj=i1)
-    sim.simul(show=show, suffix='test1')
-    sim.i_inj = i2
-    sim.simul(show=show, suffix='test2')
-    sim.i_inj=i3
-    sim.t = t3
-    sim.simul(show=show, suffix='test3')
+    param = data.get_best_result(dir)
+    for i_ in i:
+        sim = HH_simul(init_p=param, t=t, i_inj=i_)
+        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='test%s'%i)
 
 def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name

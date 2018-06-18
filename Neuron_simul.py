@@ -36,14 +36,14 @@ class HH_simul():
         utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, save=False, show=True)
 
     """Compare 2 parameters sets"""
-    def comp_targ(self, p, p_targ):
+    def comp_targ(self, p, p_targ, suffix='', save=False, show=True):
         self.neuron.param = p
         S = self.calculate()
 
         self.neuron.param = p_targ
         S_targ = self.calculate()
 
-        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], save=False, show=True, l=2, lt=2)
+        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2)
 
 
     """Runs and plot the neuron"""
