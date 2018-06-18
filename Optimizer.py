@@ -4,12 +4,16 @@ from data import FILE_LV, SAVE_PATH
 import pickle
 import numpy as np
 import time
+import Circuit
 
 class Optimizer():
 
     min_loss = 1.
 
     def __init__(self):
+        self.start_time = time.time()
+        self.parallel = 1
+        self.optimized = None
         self.loss_scal = True
 
     """learning rate and optimization"""
@@ -27,20 +31,31 @@ class Optimizer():
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         if(not self.loss_scal):
-            loss = self.loss / (self.neuron.num**0.5)
+            loss = self.loss / (self.parallel**0.5)
+        else:
+            loss = self.loss
         gvs = opt.compute_gradients(loss)
         grads, vars = zip(*gvs)
+        print(grads)
 
-        if(self.neuron is not None):
+        if(self.parallel > 1):
             grads_normed = []
-            for i in range(self.neuron.num):
-                #clip by norm for each neuron
-                gi = [g[i] for g in grads]
+            for i in range(self.parallel):
+                #clip by norm for each parallel model (neuron or circuit)
+                if(isinstance(self.optimized, Circuit.Circuit)):
+                    #[synapse, model]
+                    gi = [g[:,i] for g in grads]
+                else:
+                    gi = [g[i] for g in grads]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
-            grads_normed = np.array(grads_normed)
+            grads_normed = tf.stack(grads_normed)
             #resize to tf format
-            grads_normed = [tf.stack([grads_normed[neur, var] for neur in range(grads_normed.shape[0])]) for var in range(grads_normed.shape[1])]
+            if (isinstance(self.optimized, Circuit.Circuit)):
+                grads_normed = tf.transpose(grads_normed, perm=[1,2,0])
+                grads_normed = tf.unstack(grads_normed, axis=0)
+            else:
+                grads_normed = tf.unstack(grads_normed, axis=1)
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=self.global_step)

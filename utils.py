@@ -52,7 +52,7 @@ def set_dir(subdir):
         os.makedirs(DIR)
     if not os.path.exists(DIR+IMG_DIR):
         os.makedirs(DIR+IMG_DIR)
-        os.makedirs(DIR+'tmp')
+        os.makedirs(DIR+'tmp/')
     return DIR
 
 
@@ -133,6 +133,8 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
 """plot variation/comparison/boxplots of synaptic variables"""
 def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
     plt.figure()
+    if(list(var_dic.values())[0].ndim > 2):
+        var_dic = dict([(var, np.reshape(val, (val.shape[0], -1))) for var, val in var_dic.items()])
     for i,var in enumerate(['G', 'mdp', 'E', 'scale']):
         plt.subplot(2,2,i+1)
         func(plt, var_dic[var])
@@ -243,6 +245,10 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
     plt.figure()
 
+    if (Vs.ndim > 2):
+        Vs = np.reshape(Vs, (Vs.shape[0], -1))
+        Cacs = np.reshape(Cacs, (Cacs.shape[0], -1))
+
     if(labels is None):
         labels = range(len(Vs))
     if (i_syn is not None):
@@ -281,6 +287,10 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
 """plot voltage and Ca2+ conc compared to the target model"""
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1):
     plt.figure()
+
+    if(v.ndim > 2):
+        v = np.reshape(v, (v.shape[0], -1))
+        cac = np.reshape(cac, (cac.shape[0], -1))
 
     plt.subplot(3, 1, 2)
     plt.plot(ts, cac, linewidth=l)

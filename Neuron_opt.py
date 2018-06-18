@@ -20,12 +20,12 @@ class HH_opt(Optimizer):
 
     def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
         Optimizer.__init__(self)
-        self.start_time = time.time()
         self.loss_scal = False
         if(neuron is not None):
             self.neuron = neuron
         else:
             self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=dt, fixed=fixed, constraints=constraints)
+        self.parallel = self.neuron.num
         self.optimized = self.neuron
         self.plot_vars = plot_vars
 
@@ -34,9 +34,9 @@ class HH_opt(Optimizer):
     def build_loss(self, w):
         cac = self.res[:, Ca_pos]
         out = self.res[:, V_pos]
-        # if (self.neuron.num > 1):
+        # if (self.parallel > 1):
         #     self.loss = []
-        #     for i in range(self.neuron.num):
+        #     for i in range(self.parallel):
         #         losses_v = w[0] * tf.square(tf.subtract(out[:,:,i], self.ys_[0,:,:,i]))
         #         losses_ca = w[1] * tf.square(tf.subtract(cac[:,:,i], self.ys_[-1,:,:,i]))
         #         self.loss.append(tf.reduce_mean(losses_v + losses_ca))
@@ -68,14 +68,16 @@ class HH_opt(Optimizer):
         #Xshape = [time, n_batch]
         xshape = [None, None]
         yshape = [2, None, None]
-        if(self.neuron.num > 1):
+
+        if(self.parallel > 1):
             #add dimension for neurons trained in parallel
             #[time, n_batch, neuron]
-            self.X = np.stack([self.X for _ in range(self.neuron.num)], axis=self.X.ndim)
-            self.V = np.stack([self.V for _ in range(self.neuron.num)], axis=self.V.ndim)
-            self.Ca = np.stack([self.Ca for _ in range(self.neuron.num)], axis=self.Ca.ndim)
-            xshape.append(self.neuron.num)
-            yshape.append(self.neuron.num)
+            self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
+            self.V = np.stack([self.V for _ in range(self.parallel)], axis=self.V.ndim)
+            self.Ca = np.stack([self.Ca for _ in range(self.parallel)], axis=self.Ca.ndim)
+            xshape.append(self.parallel)
+            yshape.append(self.parallel)
+
         self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
         init_state = self.neuron.init_state
@@ -99,7 +101,7 @@ class HH_opt(Optimizer):
             if(self.loss_scal):
                 add_l = np.zeros((epochs))
             else:
-                add_l = np.zeros((epochs, self.neuron.num))
+                add_l = np.zeros((epochs, self.parallel))
             if(reload):
                 """Get variables and measurements from previous steps"""
                 self.saver.restore(sess, '%s%s'%(self.dir, SAVE_PATH))
@@ -115,7 +117,7 @@ class HH_opt(Optimizer):
                 rates = np.zeros(epochs)
                 len_prev = 0
 
-            vars = dict([(var, np.vstack((val, np.zeros((epochs, self.neuron.num))))) for var, val in vars.items()])
+            vars = dict([(var, np.vstack((val, np.zeros((epochs, self.parallel))))) for var, val in vars.items()])
 
             for i in tqdm(range(epochs)):
 

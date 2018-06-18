@@ -21,8 +21,11 @@ class Circuit_opt(Optimizer):
     def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL, dt=0.1):
         Optimizer.__init__(self)
         self.circuit = Circuit_tf(inits_p, conns=conns, loop_func=loop_func, fixed=fixed, dt=dt)
+        self.parallel = self.circuit.num
         self.optimized = self.circuit
         self.plot_vars = plot_vars_syn
+        if(self.parallel > 1):
+            self.loss_scal = False
 
 
     """train 1 neuron"""
@@ -44,28 +47,35 @@ class Circuit_opt(Optimizer):
 
 
     """optimize synapses"""
-    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=1, w=[1,0], l_rate=[0.9,9,0.95]):
-        with(open(FILE_CIRC, 'wb')) as f:
-            pickle.dump(self.circuit, f)
-        self.init(subdir, suffix, l_rate, w, circuit=self.circuit)
+    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1,0], l_rate=[0.9,9,0.95]):
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
-
         n_batch = self.X.shape[self.dim_batch]
+        xshape = [None, None, self.circuit.neurons.num]
+        yshape = [2, None, None, len(n_out)]
+
+        if(self.parallel>1):
+            # add dimension for neurons trained in parallel
+            # [time, n_batch, neuron]
+            self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
+            self.V = np.stack([self.V for _ in range(self.parallel)], axis=self.V.ndim)
+            self.Ca = np.stack([self.Ca for _ in range(self.parallel)], axis=self.Ca.ndim)
+            xshape.append(self.parallel)
+            yshape.append(self.parallel)
+
+        self.init(subdir, suffix, l_rate, w, circuit=self.circuit)
 
         # Xshape = [time, n_batch, n_neuron]
-        self.xs_ = tf.placeholder(shape=[None, None, self.circuit.neurons.num], dtype=tf.float32, name='in_current')
-        if(len(n_out)>1):
-            self.ys_ = tf.placeholder(shape=[2, None, None, len(n_out)], dtype=tf.float32, name='out')
-        else:
-            self.ys_ = tf.placeholder(shape=[2, None, None], dtype=tf.float32, name='out')
-            # reshape init state
+        self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='in_current')
+        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='out')
+        # reshape init state
         self.init_state = np.stack([self.circuit.neurons.init_state for _ in range(n_batch)], axis=self.dim_batch)
         initshape = list(self.circuit.neurons.init_state.shape).insert(1, None)
         self.init_state_ = tf.placeholder(shape=self.init_state.shape, dtype=tf.float32, name='init_state')
 
         print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', self.init_state.shape)
 
+        # res shape : [t, state, batch, neuron, model]
         self.res = tf.scan(self.circuit.step,
                       self.xs_,
                       initializer=self.init_state_)
@@ -76,32 +86,36 @@ class Circuit_opt(Optimizer):
         out = tf.stack(out, axis=2)
         # out = self.res[:, 0, :, n_out]
         losses = tf.square(tf.subtract(out, self.ys_[V_pos]))
-        self.loss = tf.reduce_mean(losses)
+        self.loss = tf.reduce_mean(losses, axis=[0,1])
         self.build_train()
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
-            losses = np.zeros(epochs)
+            losses = np.zeros((epochs, self.parallel))
             rates = np.zeros(epochs)
             vars = dict([(var, [val]) for var, val in self.circuit.init_p.items()])
+            print(vars)
 
-            vars = dict([(var, np.vstack((val, np.zeros((epochs, self.circuit.num))))) for var, val in vars.items()])
+            shapevars = [epochs, self.circuit.n_synapse]
+            if(self.parallel>1):
+                shapevars.append(self.parallel)
+            vars = dict([(var, np.vstack((val, np.zeros(shapevars)))) for var, val in vars.items()])
+
+            print(tf.trainable_variables())
 
             for i in tqdm(range(epochs)):
                 results = self.train_and_gather(sess, i, losses, rates, vars)
 
-                if (losses[i] < self.min_loss):
-                    self.plots_dump(sess, losses, rates, vars, i)
-                    return i
 
                 for n_b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,n_b], results[:,V_pos,n_b,n_out], self.V[:, n_b], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
+                    plots_output_double(self.T, self.X[:,n_b,0], results[:,V_pos,n_b,n_out], self.V[:, n_b,0], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b,0], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
                     # plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
                     for n_b in range(n_batch):
-                        plots_output_mult(self.T, self.X[:, n_b], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
+                        plots_output_mult(self.T, self.X[:, n_b,0], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
                                           suffix='circuit_trace%s_%s' % (n_b, i), show=False, save=True)
+
                     self.plots_dump(sess, losses, rates, vars, i)
 
         return -1

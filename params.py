@@ -57,7 +57,7 @@ SYNAPSE_inhib = {
 
 def give_constraints_syn(conns):
     scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
-    return {'G': [1e-5, np.infty],
+    return {'G': np.array([1e-5, np.infty]),
             'scale': scale_con.transpose()}
 
 

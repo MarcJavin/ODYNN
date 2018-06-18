@@ -4,6 +4,7 @@ from Circuit import Circuit_fix
 from utils import plots_output_mult
 from data import DUMP_FILE
 import pickle
+import time
 
 
 class Circuit_simul():
@@ -47,7 +48,9 @@ class Circuit_simul():
 
     def run_sim(self, n_out, dump=False, show=False, save=True):
         #[(batch,) time, state, neuron]
+        start = time.time()
         states, curs = self.run_one(self.i_injs)
+        print(time.time() - start)
 
         if(self.batch):
             for i in range(self.i_injs.shape[0]):

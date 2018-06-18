@@ -28,7 +28,7 @@ def opt_neurons():
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1]).transpose()
     c = Circuit_simul([p, p], connections, t, i_injs)
-    f = c.run_sim(dump=True, general=False)
+    f = c.run_sim(dump=True)
     c = Circuit_opt([p, p], connections)
     c.opt_neurons(f)
 
@@ -39,12 +39,12 @@ def comp_pars(dir):
     utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 
 
-def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=1):
+def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     pars = [p for _ in range(nb_neuron)]
     utils.set_dir(dir)
 
     c = Circuit_simul(pars, conns, t, i_injs)
-    file = c.run_sim(n_out=n_out, dump=True, show=True)
+    file = c.run_sim(n_out=n_out, dump=True, show=False)
     c = Circuit_opt(pars, conns_opt)
     c.opt_circuits(dir, n_out=n_out, file=file)
     comp_pars(dir)
@@ -65,12 +65,11 @@ def full4to1():
              (3, 4): params.get_syn_rand(),
              }
     dir = '4to1-test'
-    test(n_neuron, conns, conns_opt, dir, t, i, n_out=4)
-
-if __name__ == '__main__':
+    test(n_neuron, conns, conns_opt, dir, t, i, n_out=[4])
 
 
-    t,i = params.full4(nb_neuron_zero=6)
+def full441():
+    t, i = params.full4(nb_neuron_zero=6)
     print(i.shape)
     n_neuron = 10
     conns = {(0, 4): params.SYNAPSE,
@@ -100,8 +99,11 @@ if __name__ == '__main__':
              }
     conns_opt = dict([(k, params.get_syn_rand()) for k in conns.keys()])
     dir = '4to4to2-test'
-    test(n_neuron, conns, conns_opt, dir, t, i, n_out=[8,9])
+    test(n_neuron, conns, conns_opt, dir, t, i, n_out=[8, 9])
     exit(0)
+
+
+if __name__ == '__main__':
 
 
     xp = sys.argv[1]
@@ -119,8 +121,8 @@ if __name__ == '__main__':
         n_neuron = 2
         conns = {(0,1): params.SYNAPSE,
                  (1,0): params.SYNAPSE}
-        conns_opt = {(0,1): params.get_syn_rand(True),
-                     (1,0): params.get_syn_rand(True)}
+        conns_opt = [{(0,1): params.get_syn_rand(True),
+                     (1,0): params.get_syn_rand(True)} for _ in range(100)]
         dir = '2n-2exc-test'
     elif(xp == '21exc1inh'):
         n_neuron = 2
@@ -136,7 +138,7 @@ if __name__ == '__main__':
         conns_opt = {(0, 1): params.get_syn_rand(False),
                      (1, 0): params.get_syn_rand(False)}
         dir = '2n-2inh-test'
-    t, i = params.give_train()
+    t, i = params.give_train(dt=0.5)
     i_1 = np.zeros(i.shape)
     i_injs = np.stack([i, i_1], axis=2)
     test(n_neuron, conns, conns_opt, dir, t, i_injs)
