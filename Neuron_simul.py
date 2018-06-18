@@ -43,7 +43,7 @@ class HH_simul():
         self.neuron.param = p_targ
         S_targ = self.calculate()
 
-        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], save=False, show=True, l=0.7, lt=2)
+        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], save=False, show=True, l=2, lt=2)
 
 
     """Runs and plot the neuron"""
@@ -81,9 +81,11 @@ class HH_simul():
 if __name__ == '__main__':
     i_injs = np.stack([params.i_inj_train, params.i_inj_train2], axis=1)
     t,i = params.give_train()
+    param = data.get_vars('Integcomp_alternate_yolo-YAYYY')
+    param = dict([(var, val[31]) for var, val in param.items()])
     for n in range(i.shape[1]):
         sim = HH_simul(t=t, i_inj=i[:,n])
-        sim.comp_targ(data.get_vars('Integcomp_alternate_yolo', -1), params.DEFAULT)
+        sim.comp_targ(param, params.DEFAULT)
     # sim.simul(show=True, save=False, dump=True)
     #
     # exit(0)

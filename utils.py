@@ -35,7 +35,7 @@ GATES = ['e', 'f', 'n', 'p', 'q']
 CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
 MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
-COLORS = ['k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
+COLORS = [ 'c', 'k', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 
 
@@ -287,13 +287,13 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
 
     plt.subplot(3, 1, 2)
     plt.plot(ts, cac, linewidth=l)
-    plt.plot(ts, y_cac, 'r', linewidth=lt, label='target model')
+    plt.plot(ts, y_cac, 'r', linestyle='-.', linewidth=lt, label='target model')
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
     plt.plot(ts, v, linewidth=l)
-    plt.plot(ts, y_v, 'r', linewidth=lt, label='target model')
+    plt.plot(ts, y_v, 'r', linestyle='-.', linewidth=lt, label='target model')
     plt.ylabel('Voltage (mV)')
     plt.legend()
 

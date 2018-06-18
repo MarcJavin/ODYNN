@@ -9,6 +9,7 @@ from data import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH, FILE_NEUR
 import pickle
 import params
 from tqdm import tqdm
+import time
 
 
 
@@ -19,6 +20,7 @@ class HH_opt(Optimizer):
 
     def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
         Optimizer.__init__(self)
+        self.start_time = time.time()
         self.loss_scal = False
         if(neuron is not None):
             self.neuron = neuron
@@ -126,6 +128,9 @@ class HH_opt(Optimizer):
                                         save=True, l=0.7, lt=2)
                 if(i%10==0 or i==epochs-1):
                     self.plots_dump(sess, losses, rates, vars, len_prev+i)
+
+            with open(self.dir + 'time', 'w') as f:
+                f.write(str(time.time() - self.start_time))
 
         return  -1
 

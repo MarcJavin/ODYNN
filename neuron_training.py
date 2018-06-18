@@ -15,7 +15,7 @@ CA_CONST = params.ALL - CA_VAR
 K_CONST = params.ALL - K_VAR
 
 pars = [params.give_rand() for i in range(100)]
-dt=0.1
+dt = 0.2
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -106,6 +106,9 @@ def test_xp(dir, suffix='', show=False):
 
     utils.set_dir(dir)
     param = data.get_vars(dir)
+    print(param)
+    param = dict([(var,val[-1]) for var,val in param.items()])
+    print(param)
     sim = HH_simul(init_p=param, t=t, i_inj=i1)
     sim.simul(show=show, suffix='test1')
     sim.i_inj = i2
@@ -161,9 +164,7 @@ def only_calc(name=''):
 
 def comp_pars(dir, i=-1):
     p = data.get_vars(dir, i)
-    pall = data.get_vars_all(dir, i)
     utils.set_dir(dir)
-    utils.plot_vars(pall, func=utils.plot, suffix='evolution', show=False, save=True)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
@@ -181,6 +182,7 @@ def add_plots():
 
 if __name__ == '__main__':
 
+    test_xp('Integcomp_alternate_yolo', show=True)
 
     xp = sys.argv[1]
     if(xp == 'alt'):
