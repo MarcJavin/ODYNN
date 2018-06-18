@@ -36,7 +36,7 @@ def get_best_result(dir, i=-1):
     file = utils.RES_DIR + dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l, r, dic = pickle.load(f)
-        idx = np.argmin.min(l[-1])
+        idx = np.nanargmin(l[-1])
         dic = dict([(var, val[i,idx]) for var, val in dic.items()])
     return dic
 
