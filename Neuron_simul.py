@@ -22,6 +22,7 @@ class HH_simul():
         self.neuron.reset()
         for i in self.i_inj:
             X.append(self.neuron.step(i))
+        print(X[0])
         return np.array(X)
 
     """Compare different parameter sets on the same experiment"""
@@ -79,14 +80,39 @@ class HH_simul():
 
 
 if __name__ == '__main__':
-    i_injs = np.stack([params.i_inj_train, params.i_inj_train2], axis=1)
-    t,i = params.give_train()
-    param = data.get_vars('Integcomp_alternate_yolo-YAYYY')
-    param = dict([(var, val[31]) for var, val in param.items()])
-    for n in range(i.shape[1]):
-        sim = HH_simul(t=t, i_inj=i[:,n])
-        sim.comp_targ(param, params.DEFAULT)
-    # sim.simul(show=True, save=False, dump=True)
-    #
-    # exit(0)
 
+
+    TIME=['p__tau', 'q__tau', 'n__tau', 'e__tau', 'f__tau', 'decay_ca']
+    import scipy as sp
+    t = np.array(sp.arange(0.0, 30., 0.001))
+    i = 2.*(t==0) + 10. *  ((t > 10) & (t < 20))
+    # td = np.array(sp.arange(0.0, 1., 0.01))
+    # id = 10. * ((td > 0) & (td < 100)) + 1. * ((td > 2000) & (td < 3000))
+
+    t10 = np.array(sp.arange(0.0, 300., 0.01))
+    i10 = 2.*(t10==0) + 10. * ((t10 > 100) & (t10 < 200))
+
+
+    p = params.DEFAULT
+    p10 = dict([(var, val*10) if var in TIME else (var, val) for var, val in p.items()])
+
+    for ti in TIME:
+        print(ti)
+        print(p[ti], p10[ti])
+
+    sim = HH_simul(init_p=p, t=t, i_inj=i)
+    print(sim.neuron.dt)
+    sim.simul( suffix='yo')
+
+    p['rho_ca'] = p['rho_ca']*10
+    sim = HH_simul(init_p=p, t=t, i_inj=i)
+    print(sim.neuron.dt)
+    sim.simul(suffix='yorho')
+
+    sim10 = HH_simul(init_p=p10, t=t10, i_inj=i10)
+    print(sim10.neuron.dt)
+    sim10.simul( suffix='yo10')
+
+
+    # simdt = HH_simul(init_p=p, t=td, i_inj=id)
+    # simdt.simul(suffix='yo_dt')

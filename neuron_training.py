@@ -17,7 +17,7 @@ K_CONST = params.ALL - K_VAR
 pars = [params.give_rand() for i in range(100)]
 pars = data.get_vars('Init_settings_100', 0)
 pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt=0.5
+dt=0.2
 t,i_inj = params.give_train(dt)
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
@@ -121,13 +121,11 @@ def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
-    # pars = data.get_vars('Integcomp_alternate_100-YAYY', 0)
-    # pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-    opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
     file = sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
+    opt = HH_opt(init_p=pars, dt=dt)
     opt.optimize(dir, [wv, wca], epochs=20, step=0, file=file)
     for i in range(24):
         wv = 1 - wv
@@ -136,31 +134,32 @@ def alternate(name=''):
     comp_pars(dir, n)
     test_xp(dir)
 
-def only_v(name=''):
-    dir = 'Integcomp_volt_%s' % name
+
+def classic(name, wv, wca):
+    if(wv == 0):
+        dir = 'Integcomp_calc_%s' % name
+    elif(wca == 0):
+        dir = 'Integcomp_volt_%s' % name
+    else:
+        dir = 'Integcomp_both_%s' % name
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
-    opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
+    opt = HH_opt(init_p=pars, dt=dt)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
-    sim.simul(show=False, suffix='train', dump=True)
-    wv = 1
-    wca = 0
-    n = opt.optimize(dir, [wv, wca], epochs=500)
+    file = sim.simul(show=False, suffix='train', dump=True)
+    n = opt.optimize(dir, w=[1, 0], epochs=500, file=file)
     comp_pars(dir, n)
     test_xp(dir)
 
-def only_calc(name=''):
-    dir = 'Integcomp_calc_%s' % name
+def real_data(name):
+    dir = 'Real_data_%s' % name
     utils.set_dir(dir)
-    loop_func = HodgkinHuxley.integ_comp
-    opt = HH_opt(init_p=pars, loop_func=loop_func, dt=dt)
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
-    sim.simul(show=False, suffix='train', dump=True)
-    wv = 0
-    wca = 1
-    n = opt.optimize(dir, [wv, wca], epochs=500)
+    opt = HH_opt(init_p=pars, dt=dt)
+    file = data.dump_data()
+    n = opt.optimize(dir, w=[0, 1], epochs=500, file=file)
     comp_pars(dir, n)
     test_xp(dir)
+
 
 def comp_pars(dir, i=-1):
     p = data.get_vars(dir, i)
@@ -182,16 +181,20 @@ def add_plots():
 
 if __name__ == '__main__':
 
+
     xp = sys.argv[1]
     if(xp == 'alt'):
         name = sys.argv[2]
         alternate(name)
     elif(xp=='cac'):
         name = sys.argv[2]
-        only_calc(name)
+        classic(name, wv=0, wca=1)
     elif(xp=='v'):
         name = sys.argv[2]
-        only_v(name)
+        classic(name, wv=1, wca=0)
+    elif(xp=='real'):
+        name = sys.argv[2]
+        real_data(name)
     elif(xp == 'single'):
         xp = sys.argv[2]
         w_v, w_ca = list(map(int, sys.argv[3:5]))

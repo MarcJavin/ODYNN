@@ -1,6 +1,7 @@
 # from statsmodels.nonparametric.smoothers_lowess import lowess
 from scipy.interpolate import interp1d, splrep, splev
 from scipy.signal import savgol_filter
+import scipy as sp
 import numpy as np
 import pandas as pd
 import pylab as plt
@@ -21,7 +22,7 @@ def get_vars(dir, i=-1):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, np.array(val[i], dfype=np.float32)) for var, val in dic.items()])
+        dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 
 """get dic of vars from dumped file"""
@@ -83,14 +84,47 @@ def check_alpha(tinit, i, trace):
         plt.legend()
     plt.show()
 
+"""dump real data into our format"""
+def dump_data():
+    df = pd.read_csv('data/AVAL1.csv')
+    # df = df.head(510)
+    trace = np.array(df['trace'])
+
+    delta = 500
+    final_time = 4000.
+    t = sp.arange(0., final_time, 0.2)
+    i = np.array(df['inputCurrent']) * 10
+    intervals = [0, 420, 1140, 2400]
+    curs = np.zeros((len(t), len(intervals)))
+    cas = np.zeros(curs.shape)
+    for j, st in enumerate(intervals):
+        td = np.arange(0., final_time, final_time/delta)
+        ca = trace[st:st + delta]
+        spl = splrep(td, ca, s=0.25)
+        s_ca = splev(t, spl)
+        spli = splrep(td, i[st:st+delta])
+        s_i = splev(t, spli)
+        plt.subplot(len(intervals), 1, j + 1)
+        plt.plot(td, ca)
+        plt.plot(t, s_ca)
+        curs[:,j] = s_i
+        cas[:,j] = s_ca
+    plt.show()
+    with open(DUMP_FILE, 'wb') as f:
+        pickle.dump([t, curs, None, cas], f)
+    return DUMP_FILE
+
+
 if __name__ == '__main__':
     df = pd.read_csv('data/AVAL1.csv')
-    df = df.head(510)
+    # df = df.head(510)
     trace = np.array(df['trace'])
-    i = np.array(df['inputCurrent'])*10
-    tinit = np.array(df['timeVector'])*1000
-    t = np.arange(0,tinit[-1],step=2)
-    print(trace.shape)
+    i = np.array(df['inputCurrent']) * 10
+    tinit = np.array(df['timeVector']) * 1000
+    t = np.arange(0, tinit[-1], step=2)
+
+    dump_data()
+    exit(0)
 
 
     t1 = time.time()
@@ -103,20 +137,20 @@ if __name__ == '__main__':
     t1 = time.time()
     exact = splrep(tinit, trace, k=1)
     spl = splrep(tinit, trace, s=0.25)
-    zexact = splev(t, exact)
-    z = splev(t, spl)
+    zexact = splev(tinit, exact)
+    z = splev(tinit, spl)
     t2 = time.time()
     print('splrep : %s' % (t2-t1))
 
     spli = splrep(tinit, i, k=2)
-    i = splev(t, spli)
+    i = splev(tinit, spli)
 
     plt.subplot(211)
     plt.plot(tinit, trace, 'r', label='trace')
-    plt.plot(t, z, 'b', label='splrev')
+    plt.plot(tinit, z, 'b', label='splrev')
     plt.legend()
     plt.subplot(212)
-    plt.plot(t, i)
+    plt.plot(i)
     plt.show()
 
     pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))

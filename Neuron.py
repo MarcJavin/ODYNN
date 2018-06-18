@@ -87,10 +87,6 @@ class HodgkinHuxley():
         """
         Integrate
         """
-        # print('X : ', X.shape]
-        if(self.tensors and False):
-            X = tf.Print(X, [X[0]], 'V : ')
-            i_inj = tf.Print(i_inj, [i_inj], 'i_inj : ')
         V = X[V_pos]
         p = X[1]
         q = X[2]
@@ -104,6 +100,8 @@ class HodgkinHuxley():
         #     ((self.param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self.param['g_L'])
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self.param[
             'C_m']) * self.dt
+
+
         cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - ((cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
         tau = self.param['p__tau']
         p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
@@ -166,9 +164,11 @@ class HodgkinHuxley():
         h = self.h(cac)
         V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
             V)) / self.param['C_m']) * self.dt
-
-        cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - (
-                    (cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
+        # cac = (self.param['decay_ca'] / (self.dt + self.param['decay_ca'])) * (
+        #             cac - self.I_Ca(V, e, f, h) * self.param['rho_ca'] * self.dt + self.REST_CA * self.param['decay_ca'] / self.dt)
+        # 
+        # cac += (-self.I_Ca(V, e, f, h) * self.param['rho_ca'] - (
+        #             (cac - self.REST_CA) / self.param['decay_ca'])) * self.dt
         p = self.inf(V, 'p')
         q = self.inf(V, 'q')
         e = self.inf(V, 'e')

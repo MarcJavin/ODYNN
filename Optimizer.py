@@ -100,7 +100,7 @@ class Optimizer():
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
         if(not self.loss_scal):
-            train_loss = np.mean(train_loss)
+            train_loss = np.nanmean(train_loss)
         print('[{}] loss : {}'.format(i, train_loss))
         return results
 
