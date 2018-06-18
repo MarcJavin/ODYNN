@@ -21,11 +21,7 @@ def get_vars(dir, i=-1):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        print(dic['C_m'].shape)
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
-        print(l.shape)
-        print(l[-1])
-        print(np.argmin(l[-1]))
     return dic
 
 """get dic of vars from dumped file"""

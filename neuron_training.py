@@ -184,8 +184,6 @@ def add_plots():
 
 if __name__ == '__main__':
 
-    test_xp('Integcomp_alternate_yolo', show=True)
-
     xp = sys.argv[1]
     if(xp == 'alt'):
         name = sys.argv[2]

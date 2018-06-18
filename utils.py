@@ -62,10 +62,7 @@ def get_dic_from_var(dir, suffix=""):
     dic = {}
     with open(file, 'r') as f:
         for line in f:
-            print('line', line)
             m = re.search(REGEX_VARS, line)
-            print(m)
-            print(m.group(2))
             if(m.group(2)[0]=='['):
                 #several params
                 l = re.findall('[-]?[\d]*[\.]?[\d]+[e]?[+-]?[\d]+', m.group(2))
@@ -84,7 +81,7 @@ def boxplot(ax, var):
     ax.boxplot(var, vert=True, showmeans=True)
 
 def box(var_dic, cols, labels):
-    bp = plt.boxplot([var_dic[k] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
+    bp = plt.boxplot([var_dic[k][~np.isnan(var_dic[k])] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
     for b, color in zip(bp["boxes"], cols):
         b.set_facecolor(color)
 
