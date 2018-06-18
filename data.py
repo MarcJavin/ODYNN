@@ -21,7 +21,7 @@ def get_vars(dir, i=-1):
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
-        dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
+        dic = dict([(var, np.array(val[i], dfype=np.float32)) for var, val in dic.items()])
     return dic
 
 """get dic of vars from dumped file"""
@@ -84,20 +84,16 @@ def check_alpha(tinit, i, trace):
     plt.show()
 
 if __name__ == '__main__':
-    dt = pd.read_csv('data/AVAL1.csv')
-    # dt = dt.head(400)
-    trace = np.array(dt['trace'])
-    i = np.array(dt['inputCurrent'])*10
-    tinit = np.array(dt['timeVector'])*1000
-    t = np.arange(0,tinit[-1],step=1)
-
-
-    check_alpha(tinit, i, trace)
-    exit(0)
+    df = pd.read_csv('data/AVAL1.csv')
+    df = df.head(510)
+    trace = np.array(df['trace'])
+    i = np.array(df['inputCurrent'])*10
+    tinit = np.array(df['timeVector'])*1000
+    t = np.arange(0,tinit[-1],step=2)
+    print(trace.shape)
 
 
     t1 = time.time()
-    # l = lowess(trace, tinit, return_sorted=False, frac=0.01)
 
     # f = interp1d(tinit, l, kind='cubic')
     # z = f(t)
@@ -106,23 +102,21 @@ if __name__ == '__main__':
 
     t1 = time.time()
     exact = splrep(tinit, trace, k=1)
-    spl = splrep(tinit, trace, s=0.5)
+    spl = splrep(tinit, trace, s=0.25)
     zexact = splev(t, exact)
-    z2 = splev(t, spl)
+    z = splev(t, spl)
     t2 = time.time()
     print('splrep : %s' % (t2-t1))
 
     spli = splrep(tinit, i, k=2)
     i = splev(t, spli)
 
-    # plt.subplot(211)
-    # plt.plot(trace)
-    # plt.plot(l)
-    # plt.subplot(212)
-    # plt.plot(z, 'g', label='lowess+interp1d')
-    plt.plot(z2, 'b', label='splrev')
-    plt.plot(zexact, 'r', label='exact')
+    plt.subplot(211)
+    plt.plot(tinit, trace, 'r', label='trace')
+    plt.plot(t, z, 'b', label='splrev')
     plt.legend()
+    plt.subplot(212)
+    plt.plot(t, i)
     plt.show()
 
-    pickle.dump([t, i, z2], open(DUMP_FILE, 'wb'))
+    pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))
