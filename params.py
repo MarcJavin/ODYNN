@@ -198,8 +198,6 @@ def get_syn_rand(exc=True):
 
 
 """Random parameters for a neuron"""
-
-
 def give_rand():
     return {
         'decay_ca': 110.,
