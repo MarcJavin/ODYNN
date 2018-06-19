@@ -91,7 +91,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
-    
+
     unit_time = final_time/delta
     t = sp.arange(0., final_time, dt)
     i = np.array(df['inputCurrent']) * 10
@@ -125,7 +125,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     plt.show()
     with open(DUMP_real_all, 'wb') as f:
         pickle.dump([t_all, s_i_all, None, s_ca_all], f)
-    return DUMP_FILE, DUMP_real_all
+    return DUMP_real, DUMP_real_all
 
 
 

@@ -418,7 +418,7 @@ def plots_results(model, ts, i_inj_values, results, ca_true=None, suffix="", sho
         plt.plot(ts, cac, 'r')
     else:
         plt.plot(ts, cac)
-    plt.ylabel('$Ca^{2+}$ concentration')
+    plt.ylabel('[$Ca^{2+}$]')
 
     plt.subplot(5, 1, 3)
     plt.plot(ts, ica, RATE_COLORS['f'], label='$I_{Ca}$')
