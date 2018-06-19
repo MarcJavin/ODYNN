@@ -147,7 +147,7 @@ def classic(name, wv, wca, default=params.DEFAULT_2):
     opt = HH_opt(init_p=pars, dt=dt)
     sim = HH_simul(init_p=default, t=t, i_inj=i_inj, loop_func=loop_func)
     file = sim.simul(show=False, suffix='train', dump=True)
-    n = opt.optimize(dir, w=[1, 0], epochs=500, file=file)
+    n = opt.optimize(dir, w=[wv, wca], epochs=500, file=file)
     comp_pars(dir, n)
     test_xp(dir, default=default)
 
@@ -182,16 +182,6 @@ def add_plots():
 
 
 if __name__ == '__main__':
-
-    dir = 'Real_data_test-YAY'
-    utils.set_dir(dir)
-    filetrain, filetest = data.dump_data()
-    t, i, v, ca = data.get_data_dump(filetest)
-    print(t.shape, i.shape)
-    sim = HH_simul(init_p=data.get_best_result(dir), t=t, i_inj=i)
-    sim.simul(suffix='test', save=True, ca_true=ca)
-    exit(0)
-
 
     xp = sys.argv[1]
     if(xp == 'alt'):
