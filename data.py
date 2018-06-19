@@ -88,7 +88,7 @@ def check_alpha(tinit, i, trace):
 def dump_data():
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
-    trace = np.array(df['trace'])
+    trace = np.array(df['trace'])*10
 
     delta = 500
     final_time = 4000.

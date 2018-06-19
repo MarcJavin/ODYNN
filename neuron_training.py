@@ -97,13 +97,13 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 
-def test_xp(dir, i=i_inj, suffix='', show=False):
+def test_xp(dir, i=i_inj, default=params.DEFAULT, suffix='', show=False):
 
     utils.set_dir(dir)
     param = data.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim = HH_simul(init_p=param, t=t, i_inj=i_)
-        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='train%s'%j)
+        sim.comp_targ(param, default, show=show, save=True, suffix='train%s'%j)
 
     dt = 0.05
     tt = np.array(sp.arange(0.0, 4000, dt))
@@ -115,7 +115,7 @@ def test_xp(dir, i=i_inj, suffix='', show=False):
     ts_ = [tt,tt,t3]
     for j, i_ in enumerate(is_):
         sim = HH_simul(init_p=param, t=ts_[j], i_inj=i_)
-        sim.comp_targ(param, params.DEFAULT, show=show, save=True, suffix='test%s' % j)
+        sim.comp_targ(param, default, show=show, save=True, suffix='test%s' % j)
 
 def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
@@ -135,7 +135,7 @@ def alternate(name=''):
     test_xp(dir)
 
 
-def classic(name, wv, wca):
+def classic(name, wv, wca, default=params.DEFAULT_2):
     if(wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif(wca == 0):
@@ -145,11 +145,11 @@ def classic(name, wv, wca):
     utils.set_dir(dir)
     loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, dt=dt)
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
+    sim = HH_simul(init_p=default, t=t, i_inj=i_inj, loop_func=loop_func)
     file = sim.simul(show=False, suffix='train', dump=True)
     n = opt.optimize(dir, w=[1, 0], epochs=500, file=file)
     comp_pars(dir, n)
-    test_xp(dir)
+    test_xp(dir, default=default)
 
 def real_data(name):
     dir = 'Real_data_%s' % name
