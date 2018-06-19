@@ -55,7 +55,7 @@ class HH_opt(Optimizer):
         self.init(subdir, suffix, l_rate, w, neur=self.neuron)
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
         if(self.V is None):
-            self.V = self.Ca
+            self.V = np.full(self.Ca.shape, -50.)
             w[0] = 0
 
         if(self.neuron.loop_func == self.neuron.ik_from_v):
