@@ -91,6 +91,36 @@ CONSTRAINTS = {
     'q__tau': [1e-3, np.infty]
 }
 
+DEFAULT_2 = {
+    'decay_ca': 110.,
+    'rho_ca': 0.23,
+    'p__tau': 100.,  # ms
+    'p__scale': 7.43,  # mV
+    'p__mdp': -8.05,  # mV
+    'q__tau': 100.,
+    'q__scale': -9.97,
+    'q__mdp': -15.6,
+    'n__tau': 1050.,
+    'n__scale': 20.,
+    'n__mdp': 2.,
+    'f__tau': 301.,
+    'f__scale': -20.03,
+    'f__mdp': 5.2,
+    'e__tau': 20.,
+    'e__scale': 15.,
+    'e__mdp': -6.,
+    'h__alpha': 0.282,  # None
+    'h__scale': -1.,  # mol per m3
+    'h__mdp': 302.,
+    'C_m': 20.0,
+    'g_Ca': 3.,
+    'g_Ks': 6.0,
+    'g_Kf': 0.07,
+    'g_L': 0.005,
+    'E_Ca': 20.0,
+    'E_K': -60.0,
+    'E_L': -60.0
+}
 DEFAULT = {
     'decay_ca': 110.,
     'rho_ca': 0.23,

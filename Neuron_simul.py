@@ -22,7 +22,6 @@ class HH_simul():
         self.neuron.reset()
         for i in self.i_inj:
             X.append(self.neuron.step(i))
-        print(X[0])
         return np.array(X)
 
     """Compare different parameter sets on the same experiment"""
@@ -80,6 +79,11 @@ class HH_simul():
 
 
 if __name__ == '__main__':
+
+
+
+    sim = HH_simul(init_p=params.DEFAULT,t=params.t, i_inj=params.i_inj)
+    sim.comp_targ(params.DEFAULT, params.DEFAULT_2, show=True, save=False)
 
 
     TIME=['p__tau', 'q__tau', 'n__tau', 'e__tau', 'f__tau', 'decay_ca']
