@@ -43,7 +43,7 @@ class HH_simul():
         self.neuron.param = p_targ
         S_targ = self.calculate()
 
-        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2)
+        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
 
     """Runs and plot the neuron"""

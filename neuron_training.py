@@ -192,6 +192,9 @@ if __name__ == '__main__':
     elif(xp=='v'):
         name = sys.argv[2]
         classic(name, wv=1, wca=0)
+    elif (xp == 'both'):
+        name = sys.argv[2]
+        classic(name, wv=1, wca=0)
     elif(xp=='real'):
         name = sys.argv[2]
         real_data(name)

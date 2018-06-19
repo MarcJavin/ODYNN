@@ -212,7 +212,7 @@ def give_rand():
         'q__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
         'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'n__tau': random.uniform(0.1, MAX_TAU),
+        'n__tau': random.uniform(MAX_TAU, 5*MAX_TAU),
         'n__scale': random.uniform(MIN_SCALE, MAX_SCALE),
         'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
 

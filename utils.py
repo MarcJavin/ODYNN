@@ -285,7 +285,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.close()
 
 """plot voltage and Ca2+ conc compared to the target model"""
-def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1):
+def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1, targstyle='-'):
     plt.figure()
 
     if(v.ndim > 2):
@@ -294,13 +294,13 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
 
     plt.subplot(3, 1, 2)
     plt.plot(ts, cac, linewidth=l)
-    plt.plot(ts, y_cac, 'r', linestyle='-.', linewidth=lt, label='target model')
+    plt.plot(ts, y_cac, 'r', linestyle=targstyle, linewidth=lt, label='target model')
     plt.ylabel('[$Ca^{2+}$]')
     plt.legend()
 
     plt.subplot(3, 1, 1)
     plt.plot(ts, v, linewidth=l)
-    plt.plot(ts, y_v, 'r', linestyle='-.', linewidth=lt, label='target model')
+    plt.plot(ts, y_v, 'r', linestyle=targstyle, linewidth=lt, label='target model')
     plt.ylabel('Voltage (mV)')
     plt.legend()
 

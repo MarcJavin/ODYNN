@@ -50,6 +50,10 @@ class Circuit_opt(Optimizer):
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1,0], l_rate=[0.9,9,0.95]):
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
 
+        X = self.X
+        V = self.V
+        Ca = self.Ca
+
         n_batch = self.X.shape[self.dim_batch]
         xshape = [None, None, self.circuit.neurons.num]
         yshape = [2, None, None, len(n_out)]
@@ -108,12 +112,12 @@ class Circuit_opt(Optimizer):
 
 
                 for n_b in range(n_batch):
-                    plots_output_double(self.T, self.X[:,n_b,0], results[:,V_pos,n_b,n_out], self.V[:, n_b,0], results[:,Ca_pos,n_b,n_out], self.Ca[:, n_b,0], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
+                    plots_output_double(self.T, X[:,n_b,0], results[:,V_pos,n_b,n_out], V[:, n_b,0], results[:,Ca_pos,n_b,n_out], Ca[:, n_b,0], suffix='trace%s_%s'%(n_b, i), show=False, save=True)
                     # plots_output_mult(self.T, self.X[:,n_b], results[:,0,n_b,:], results[:,-1,n_b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if (i % 10 == 0 or i == epochs - 1):
                     for n_b in range(n_batch):
-                        plots_output_mult(self.T, self.X[:, n_b,0], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
+                        plots_output_mult(self.T, X[:, n_b,0], results[:, V_pos, n_b, :], results[:, Ca_pos, n_b, :],
                                           suffix='circuit_trace%s_%s' % (n_b, i), show=False, save=True)
 
                     self.plots_dump(sess, losses, rates, vars, i)
