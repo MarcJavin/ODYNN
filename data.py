@@ -11,6 +11,8 @@ import math
 import utils
 
 DUMP_FILE = 'data/dump'
+DUMP_real = 'data/real'
+DUMP_real_all = 'data/real_all'
 SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
 FILE_NEUR = 'tmp/neuron'
@@ -85,20 +87,19 @@ def check_alpha(tinit, i, trace):
     plt.show()
 
 """dump real data into our format"""
-def dump_data():
+def dump_data(delta=500, final_time=4000., dt=0.2):
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
-    trace = np.array(df['trace'])
+    trace = np.array(df['trace'])*10
+    unit_time = final_time/delta
 
-    delta = 500
-    final_time = 4000.
-    t = sp.arange(0., final_time, 0.2)
+    t = sp.arange(0., final_time, dt)
     i = np.array(df['inputCurrent']) * 10
     intervals = [0, 420, 1140, 2400]
     curs = np.zeros((len(t), len(intervals)))
     cas = np.zeros(curs.shape)
     for j, st in enumerate(intervals):
-        td = np.arange(0., final_time, final_time/delta)
+        td = np.arange(0., final_time, unit_time)
         ca = trace[st:st + delta]
         spl = splrep(td, ca, s=0.25)
         s_ca = splev(t, spl)
@@ -110,9 +111,23 @@ def dump_data():
         curs[:,j] = s_i
         cas[:,j] = s_ca
     plt.show()
-    with open(DUMP_FILE, 'wb') as f:
+    plt.close()
+    with open(DUMP_real, 'wb') as f:
         pickle.dump([t, curs, None, cas], f)
-    return DUMP_FILE
+    t_all = sp.arange(0., len(trace)*unit_time, dt)
+    td_all = sp.arange(0., len(trace))*unit_time
+    spl = splrep(td_all, trace, s=0.25)
+    s_ca_all = splev(t_all, spl)
+    spli = splrep(td_all, i)
+    s_i_all = splev(t_all, spli)
+    plt.plot(td_all, trace)
+    plt.plot(t_all, s_ca_all)
+    plt.show()
+    with open(DUMP_real_all, 'wb') as f:
+        pickle.dump([t_all, s_i_all, None, s_ca_all], f)
+    return DUMP_FILE, DUMP_real_all
+
+
 
 
 if __name__ == '__main__':

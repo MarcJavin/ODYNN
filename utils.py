@@ -386,7 +386,7 @@ def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
 
 
 """plot all dynamics"""
-def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=False):
+def plots_results(model, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
     V = results[:, 0]
     p = results[:, 1]
     q = results[:, 2]
@@ -411,6 +411,9 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.ylabel('V (mV)')
 
     plt.subplot(5, 1, 2)
+    if(ca_true is not None):
+        plt.plot(ts, ca_true, 'Navy', linestyle='-.', label='real data')
+        plt.legend()
     if (V.ndim == 1):
         plt.plot(ts, cac, 'r')
     else:
@@ -418,9 +421,9 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     plt.ylabel('$Ca^{2+}$ concentration')
 
     plt.subplot(5, 1, 3)
-    plt.plot(ts, ica, 'c', label='$I_{Ca}$')
-    plt.plot(ts, ik, 'y', label='$I_{K}$')
-    plt.plot(ts, il, 'm', label='$I_{L}$')
+    plt.plot(ts, ica, RATE_COLORS['f'], label='$I_{Ca}$')
+    plt.plot(ts, ik, 'm', label='$I_{K}$')
+    plt.plot(ts, il, 'g', label='$I_{L}$')
     plt.ylabel('Current')
     plt.legend()
 
@@ -441,7 +444,7 @@ def plots_results(model, ts, i_inj_values, results, suffix="", show=True, save=F
     # plt.ylim(-1, 40)
 
     if(save):
-        plt.savefig('%sresults_%s.png' % (DIR,suffix))
+        plt.savefig('%sresults_%s.png' % (DIR,suffix), dpi=300)
     if(show):
         plt.show()
     plt.close()

@@ -47,7 +47,7 @@ class HH_simul():
 
 
     """Runs and plot the neuron"""
-    def simul(self, dump=False, suffix='', show=False, save=True):
+    def simul(self, dump=False, suffix='', show=False, save=True, ca_true=None):
         """
         Main demo for the Hodgkin Huxley neuron model
         """
@@ -68,7 +68,7 @@ class HH_simul():
                     plots_results(self.neuron, self.t, self.i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
                                   save=save)
             else:
-                plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
+                plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
         if (dump):
             todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]

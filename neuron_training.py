@@ -155,10 +155,12 @@ def real_data(name):
     dir = 'Real_data_%s' % name
     utils.set_dir(dir)
     opt = HH_opt(init_p=pars, dt=dt)
-    file = data.dump_data()
-    n = opt.optimize(dir, w=[0, 1], epochs=500, file=file)
+    filetrain, filetest = data.dump_data()
+    n = opt.optimize(dir, w=[0, 1], epochs=500, file=filetrain)
     comp_pars(dir, n)
-    test_xp(dir)
+    t,i,v,ca = data.get_data_dump(filetest)
+    sim = HH_simul(init_p=data.get_best_result(dir), t=t, i_inj=i)
+    sim.simul(suffix='test', save=True, ca_true=ca)
 
 
 def comp_pars(dir, i=-1):
@@ -180,6 +182,15 @@ def add_plots():
 
 
 if __name__ == '__main__':
+
+    dir = 'Real_data_test-YAY'
+    utils.set_dir(dir)
+    filetrain, filetest = data.dump_data()
+    t, i, v, ca = data.get_data_dump(filetest)
+    print(t.shape, i.shape)
+    sim = HH_simul(init_p=data.get_best_result(dir), t=t, i_inj=i)
+    sim.simul(suffix='test', save=True, ca_true=ca)
+    exit(0)
 
 
     xp = sys.argv[1]
