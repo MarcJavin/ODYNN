@@ -91,8 +91,8 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
+    
     unit_time = final_time/delta
-
     t = sp.arange(0., final_time, dt)
     i = np.array(df['inputCurrent']) * 10
     intervals = [0, 420, 1140, 2400]
