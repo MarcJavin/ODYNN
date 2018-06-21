@@ -253,8 +253,8 @@ i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
 """time and currents for optimization"""
 
 
-def give_train(dt=DT, nb_neuron_zero=None):
-    t = np.array(sp.arange(0.0, 1200., dt))
+def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
+    t = np.array(sp.arange(0.0, max_t, dt))
     i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950))
     i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))
     i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)

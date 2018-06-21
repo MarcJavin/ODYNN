@@ -47,13 +47,7 @@ class HH_opt(Optimizer):
 
     def optimize(self, subdir, w=[1,0], epochs=500, l_rate=[0.9,9,0.95], suffix='', step=None, file=DUMP_FILE, reload=False):
         print(suffix, step)
-        if(self.V is None):
-            self.V = np.full(self.Ca.shape, -50.)
-            w[0] = 0
-
-        if(self.neuron.loop_func == self.neuron.ik_from_v):
-            self.Ca = self.V
-
+        T, X, V, Ca = get_data_dump(file)
 
         #Xshape = [time, n_batch]
         xshape = [None, None]
@@ -61,13 +55,20 @@ class HH_opt(Optimizer):
 
         self.init(subdir, suffix, file, l_rate, w, xshape, yshape, neur=self.neuron)
 
+        if (self.V is None):
+            self.V = np.full(self.Ca.shape, -50.)
+            w[0] = 0
+
+        if (self.neuron.loop_func == self.neuron.ik_from_v):
+            self.Ca = self.V
+
         self.build_loss(w)
         self.build_train()
 
         summary = tf.summary.merge_all()
 
         with tf.Session() as sess:
-            if(self.parallel>1):
+            if(self.parallel==1):
                 add_l = np.zeros((epochs))
             else:
                 add_l = np.zeros((epochs, self.parallel))
@@ -97,8 +98,8 @@ class HH_opt(Optimizer):
                 #     return i+len_prev
 
                 for b in range(self.n_batch):
-                    plots_output_double(self.T, self.X[:,b,0], results[:,V_pos,b], self.V[:,b,0], results[:,Ca_pos,b],
-                                        self.Ca[:,b, 0], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                    plots_output_double(self.T, X[:,b], results[:,V_pos,b], V[:,b], results[:,Ca_pos,b],
+                                        self.Ca[:,b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
                 if(i%10==0 or i==epochs-1):
                     self.plots_dump(sess, losses, rates, vars, len_prev+i)

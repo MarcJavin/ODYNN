@@ -12,7 +12,6 @@ class Optimizer():
 
     def __init__(self, optimized):
         self.start_time = time.time()
-        self.parallel = 1
         self.optimized = optimized
         self.parallel = self.optimized.num
 
@@ -102,6 +101,7 @@ class Optimizer():
                            initializer=self.init_state_)
 
 
+
     def write_settings(self, dir, neur, w, circuit=None):
         with open('%s%s_%s.txt' % (self.dir, OUT_SETTINGS, self.suffix), 'w') as f:
             if(circuit is not None):
@@ -136,7 +136,7 @@ class Optimizer():
 
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
-        if(not self.loss_scal):
+        if(self.parallel > 1):
             train_loss = np.nanmean(train_loss)
         print('[{}] loss : {}'.format(i, train_loss))
         return results

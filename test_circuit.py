@@ -13,7 +13,12 @@ class TestCircuit(TestCase):
              (3, 2): params.SYNAPSE,
              }
     circ = Circuit(conns, neuron)
-    conns2 = [conns for _ in range(7)]
+
+    conns2 = [{(0, 4): params.SYNAPSE,
+             (1, 4): params.SYNAPSE,
+             (2, 4): params.SYNAPSE,
+             (3, 2): params.SYNAPSE,
+             } for _ in range(7)]
     circ2 = Circuit(conns2, neuron)
 
     def test_init(self):
@@ -65,7 +70,7 @@ class TestCircuit(TestCase):
         self.assertEqual(i.shape, (10, 4, 7))
 
     def test_step(self):
-
+        pass
 
 
 
