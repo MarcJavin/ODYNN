@@ -11,7 +11,7 @@ class Circuit():
     Circuit of neurons with synapses
 
     """
-    def __init__(self, conns, tensors=False, neurons=None):
+    def __init__(self, conns, neurons, tensors=False):
         self.tensors = tensors
         self.neurons = neurons
         if (isinstance(conns, list)):
@@ -38,7 +38,7 @@ class Circuit():
         self.posts = np.array(syns[1], dtype=np.int32)
         self.syns = ['%s-%s' % (a,b) for a,b in zip(self.pres, self.posts)]
         self.n_synapse = len(self.pres)
-
+        assert(len(np.unique(np.hstack((self.pres,self.posts)))) == self.neurons.num), "Invalid number of neurons"
 
     """synaptic current"""
     def syn_curr(self, vprev, vpost):
@@ -142,6 +142,7 @@ class Circuit_tf(Circuit):
                 #add dimension for later
                 con = self.constraints_dic[var]
                 self.constraints.append(tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
+        self.neurons.reset()
 
 class Circuit_fix(Circuit):
 

@@ -17,7 +17,7 @@ def inhibit():
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
     c = Circuit_simul(p, connections, t, i_injs)
-    c.run_sim()
+    c.simul()
 
 
 def opt_neurons():
@@ -28,7 +28,7 @@ def opt_neurons():
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1]).transpose()
     c = Circuit_simul([p, p], connections, t, i_injs)
-    f = c.run_sim(dump=True)
+    f = c.simul(dump=True)
     c = Circuit_opt([p, p], connections)
     c.opt_neurons(f)
 
@@ -44,7 +44,7 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     utils.set_dir(dir)
 
     c = Circuit_simul(pars, conns, t, i_injs)
-    file = c.run_sim(n_out=n_out, dump=True, show=False)
+    file = c.simul(n_out=n_out, dump=True, show=False)
     c = Circuit_opt(pars, conns_opt)
     c.opt_circuits(dir, n_out=n_out, file=file)
     comp_pars(dir)

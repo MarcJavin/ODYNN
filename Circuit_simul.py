@@ -31,7 +31,7 @@ class Circuit_simul():
         return self.circuit.step(None, curs)
 
 
-    def run_one(self, i_inj):
+    def calculate(self, i_inj):
         self.circuit.neurons.reset()
         states = np.zeros((np.hstack((len(self.t), self.circuit.neurons.init_state.shape))))
         curs = np.zeros(i_inj.shape)
@@ -46,7 +46,7 @@ class Circuit_simul():
 
     """runs the entire simulation"""
 
-    def run_sim(self, n_out, dump=False, show=False, save=True):
+    def simul(self, n_out, dump=False, suffix='', show=False, save=True):
         #[(batch,) time, state, neuron]
         start = time.time()
         states, curs = self.run_one(self.i_injs)
@@ -55,13 +55,13 @@ class Circuit_simul():
         if(self.batch):
             for i in range(self.i_injs.shape[0]):
                 plots_output_mult(self.t, self.i_injs[i], states[i,:,V_pos,:], states[i,:,Ca_pos,:],
-                          i_syn=curs[i], show=show, save=save, suffix='TARGET%s'%i)
+                          i_syn=curs[i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i))
             # [t, state, (batch,) neuron]
             states = np.moveaxis(states, 0, -2)
             i_injs = np.moveaxis(self.i_injs, 0, 1)
         else:
             plots_output_mult(self.t, self.i_injs, states[:,V_pos,:], states[:,Ca_pos,:],
-                          i_syn=curs, show=show, save=save, suffix='TARGET')
+                          i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
             #reshape for batch dimension
             states = states[:,:,np.newaxis,:]
             i_injs = self.i_injs[:,np.newaxis,:]

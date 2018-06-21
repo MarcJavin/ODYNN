@@ -19,14 +19,11 @@ class HH_opt(Optimizer):
     dim_batch= 1
 
     def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
-        Optimizer.__init__(self)
-        self.loss_scal = False
         if(neuron is not None):
             self.neuron = neuron
         else:
             self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=dt, fixed=fixed, constraints=constraints)
-        self.parallel = self.neuron.num
-        self.optimized = self.neuron
+        Optimizer.__init__(self, self.neuron)
         self.plot_vars = plot_vars
 
 
@@ -45,15 +42,11 @@ class HH_opt(Optimizer):
         losses_ca = w[1] * tf.square(tf.subtract(cac, self.ys_[-1]))
         self.loss = losses_v + losses_ca
         self.loss = tf.reduce_mean(self.loss, axis=[0,1])
-        if (self.loss_scal):
-            self.loss = tf.reduce_sum(self.loss)
 
 
 
     def optimize(self, subdir, w=[1,0], epochs=500, l_rate=[0.9,9,0.95], suffix='', step=None, file=DUMP_FILE, reload=False):
         print(suffix, step)
-        self.init(subdir, suffix, l_rate, w, neur=self.neuron)
-        self.T, self.X, self.V, self.Ca = get_data_dump(file)
         if(self.V is None):
             self.V = np.full(self.Ca.shape, -50.)
             w[0] = 0
@@ -61,36 +54,12 @@ class HH_opt(Optimizer):
         if(self.neuron.loop_func == self.neuron.ik_from_v):
             self.Ca = self.V
 
-        n_batch = self.X.shape[self.dim_batch]
-        assert(self.neuron.dt == self.T[1] - self.T[0])
-        # inputs
 
         #Xshape = [time, n_batch]
         xshape = [None, None]
         yshape = [2, None, None]
 
-        if(self.parallel > 1):
-            #add dimension for neurons trained in parallel
-            #[time, n_batch, neuron]
-            self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
-            self.V = np.stack([self.V for _ in range(self.parallel)], axis=self.V.ndim)
-            self.Ca = np.stack([self.Ca for _ in range(self.parallel)], axis=self.Ca.ndim)
-            xshape.append(self.parallel)
-            yshape.append(self.parallel)
-
-        self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
-        init_state = self.neuron.init_state
-        initshape = list(init_state.shape)
-        #reshape init state : [state, n_batch, n_neuron]
-        initshape.insert(self.dim_batch, n_batch)
-        self.init_state = np.stack([init_state for _ in range(n_batch)], axis=self.dim_batch)
-
-        self.init_state_ = tf.placeholder(shape=initshape, dtype=tf.float32, name='init_state')
-
-        self.res = tf.scan(self.neuron.step,
-                      self.xs_,
-                     initializer=self.init_state_)
+        self.init(subdir, suffix, file, l_rate, w, xshape, yshape, neur=self.neuron)
 
         self.build_loss(w)
         self.build_train()
@@ -98,7 +67,7 @@ class HH_opt(Optimizer):
         summary = tf.summary.merge_all()
 
         with tf.Session() as sess:
-            if(self.loss_scal):
+            if(self.parallel>1):
                 add_l = np.zeros((epochs))
             else:
                 add_l = np.zeros((epochs, self.parallel))
@@ -112,7 +81,7 @@ class HH_opt(Optimizer):
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
-                vars = dict([(var, [val]) for var, val in self.neuron.init_p.items()])
+                vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
                 losses = add_l
                 rates = np.zeros(epochs)
                 len_prev = 0
@@ -127,7 +96,7 @@ class HH_opt(Optimizer):
                 #     self.plots_dump(sess, losses, rates, vars, len_prev + i)
                 #     return i+len_prev
 
-                for b in range(n_batch):
+                for b in range(self.n_batch):
                     plots_output_double(self.T, self.X[:,b,0], results[:,V_pos,b], self.V[:,b,0], results[:,Ca_pos,b],
                                         self.Ca[:,b, 0], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)

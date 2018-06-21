@@ -1,6 +1,6 @@
 import tensorflow as tf
 from utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
-from data import FILE_LV, SAVE_PATH
+from data import FILE_LV, SAVE_PATH, get_data_dump
 import pickle
 import numpy as np
 import time
@@ -10,11 +10,11 @@ class Optimizer():
 
     min_loss = 1.
 
-    def __init__(self):
+    def __init__(self, optimized):
         self.start_time = time.time()
         self.parallel = 1
-        self.optimized = None
-        self.loss_scal = True
+        self.optimized = optimized
+        self.parallel = self.optimized.num
 
     """learning rate and optimization"""
     def build_train(self):
@@ -30,11 +30,7 @@ class Optimizer():
         tf.summary.scalar('learning rate', self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
-        if(not self.loss_scal):
-            loss = self.loss / (self.parallel**0.5)
-        else:
-            loss = self.loss
-        gvs = opt.compute_gradients(loss)
+        gvs = opt.compute_gradients(self.loss)
         grads, vars = zip(*gvs)
         print(grads)
 
@@ -42,11 +38,12 @@ class Optimizer():
             grads_normed = []
             for i in range(self.parallel):
                 #clip by norm for each parallel model (neuron or circuit)
-                if(isinstance(self.optimized, Circuit.Circuit)):
-                    #[synapse, model]
-                    gi = [g[:,i] for g in grads]
-                else:
-                    gi = [g[i] for g in grads]
+                gi = [g[..., i] for g in grads]
+                # if(isinstance(self.optimized, Circuit.Circuit)):
+                #     #[synapse, model]
+                #     gi = [g[:,i] for g in grads]
+                # else:
+                #     gi = [g[i] for g in grads]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
             grads_normed = tf.stack(grads_normed)
@@ -63,21 +60,46 @@ class Optimizer():
         self.saver = tf.train.Saver()
 
     """initialize objects to be optimized and write setting in the directory"""
-    def init(self, subdir, suffix, l_rate, w, neur=None, circuit=None):
+    def init(self, subdir, suffix, file, l_rate, w, xshape, yshape, neur=None, circuit=None):
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
         tf.reset_default_graph()
-        assert(neur is not None or circuit is not None)
-        if(circuit is not None):
-            circuit.reset()
-            circuit.neurons.reset()
-        else:
-            neur.reset()
+        self.optimized.reset()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
+        assert (neur is not None or circuit is not None)
         if(circuit is not None):
             self.write_settings(subdir, circuit.neurons, w, circuit)
         else:
             self.write_settings(subdir, neur, w)
+
+        self.T, self.X, self.V, self.Ca = get_data_dump(file)
+        assert (self.optimized.dt == self.T[1] - self.T[0])
+
+        self.n_batch = self.X.shape[self.dim_batch]
+
+        if (self.parallel > 1):
+            # add dimension for neurons trained in parallel
+            # [time, n_batch, neuron]
+            self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
+            self.V = np.stack([self.V for _ in range(self.parallel)], axis=self.V.ndim)
+            self.Ca = np.stack([self.Ca for _ in range(self.parallel)], axis=self.Ca.ndim)
+            xshape.append(self.parallel)
+            yshape.append(self.parallel)
+
+        self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
+        init_state = self.neuron.init_state
+        initshape = list(init_state.shape)
+        # reshape init state : [state, n_batch, n_neuron]
+        self.init_state = np.stack([init_state for _ in range(self.n_batch)], axis=self.dim_batch)
+
+        self.init_state_ = tf.placeholder(shape=self.init_state.shape, dtype=tf.float32, name='init_state')
+
+        print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', self.init_state.shape)
+
+        self.res = tf.scan(self.optimized.step,
+                           self.xs_,
+                           initializer=self.init_state_)
 
 
     def write_settings(self, dir, neur, w, circuit=None):
