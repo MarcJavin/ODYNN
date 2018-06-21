@@ -14,6 +14,8 @@ class Circuit():
     def __init__(self, conns, neurons, tensors=False):
         self.tensors = tensors
         self.neurons = neurons
+        self.init_state = self.neurons.init_state
+        self.dt = self.neurons.dt
         if (isinstance(conns, list)):
             self.num = len(conns)
             inits_p = []

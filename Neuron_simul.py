@@ -33,7 +33,7 @@ class HH_simul():
             X = self.calculate()
             Vs.append(X[:,V_pos])
             Cacs.append(X[:,Ca_pos])
-        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, save=False, show=True)
+        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, show=False, save=True)
 
     """Compare 2 parameters sets"""
     def comp_targ(self, p, p_targ, suffix='', save=False, show=True):

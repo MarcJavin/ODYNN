@@ -87,7 +87,7 @@ class Optimizer():
 
         self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
-        init_state = self.neuron.init_state
+        init_state = self.optimized.init_state
         initshape = list(init_state.shape)
         # reshape init state : [state, n_batch, n_neuron]
         self.init_state = np.stack([init_state for _ in range(self.n_batch)], axis=self.dim_batch)

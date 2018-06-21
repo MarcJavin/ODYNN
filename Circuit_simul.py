@@ -14,13 +14,14 @@ class Circuit_simul():
     """
 
     def __init__(self, inits_p, conns, t, i_injs, loop_func=HodgkinHuxley.loop_func, dt=0.1):
+        assert(dt == t[1] - t[0])
         self.circuit = Circuit_fix(inits_p=inits_p, conns=conns, loop_func=loop_func, dt=dt)
         self.batch = False
         if (i_injs.ndim > 2):
             self.batch = True
             self.n_batch = i_injs.shape[1]
             i_injs = np.moveaxis(i_injs, 1, 0)
-            self.run_one = np.vectorize(self.run_one, signature='(t,n)->(t,s,n),(t,n)')
+            self.calculate = np.vectorize(self.calculate, signature='(t,n)->(t,s,n),(t,n)')
         assert (len(inits_p) == i_injs.shape[-1])
         self.connections = conns
         self.t = t
@@ -49,7 +50,7 @@ class Circuit_simul():
     def simul(self, n_out, dump=False, suffix='', show=False, save=True):
         #[(batch,) time, state, neuron]
         start = time.time()
-        states, curs = self.run_one(self.i_injs)
+        states, curs = self.calculate(self.i_injs)
         print(time.time() - start)
 
         if(self.batch):
