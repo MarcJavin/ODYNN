@@ -90,6 +90,21 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(i.get_shape().as_list(), [None, None, 8])
 
 
+    def test_calculate(self):
+        n = Neuron_tf(init_p=p)
+        nn = Neuron_tf(init_p=[p for _ in range(8)])
+        i = np.array([2., 3., 0.])
+        x = n.calculate(i)
+        self.assertEqual(n.init_state.shape[0], x.shape[1])
+        self.assertEqual(x.shape[0], len(i))
+
+        i = np.array([[2., 2.], [3., 3.], [0., 0.]])
+        x = n.calculate(i)
+        self.assertEqual(i.shape[1], x.shape[-1])
+        self.assertEqual(x.shape[0], i.shape[0])  # same time
+        self.assertEqual(x.shape[1], n.init_state.shape[0])
+        self.assertEqual(x.shape[2], i.shape[1])  # same nb of batch
+
 
 
 class TestNeuron_fix(TestCase):

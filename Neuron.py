@@ -296,10 +296,11 @@ class Neuron_tf(HodgkinHuxley):
 
     def calculate(self, i):
         if(i.ndim > 1 and self.num==1 or i.ndim > 2 and self.num > 1):
-            input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
+            input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
-            input_cur, res_ = self.build_graph(batch=False)
+            input_cur, res_ = self.build_graph()
         with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
             results = sess.run(res_, feed_dict={
                 input_cur: i
             })
