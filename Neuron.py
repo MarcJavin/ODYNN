@@ -248,7 +248,6 @@ class Neuron_tf(HodgkinHuxley):
 
     """rebuild tf variable graph"""
     def reset(self):
-        tf.reset_default_graph()
         with(tf.variable_scope(self.id)):
             self.param = {}
             self.constraints = []
@@ -274,6 +273,7 @@ class Neuron_tf(HodgkinHuxley):
 
 
     def build_graph(self, batch=None):
+        tf.reset_default_graph()
         self.reset()
         xshape = [None]
         initializer = self.init_state
@@ -321,7 +321,7 @@ class Neuron_fix(HodgkinHuxley):
         self.state = np.array(self.loop_func(self.state, i, self))
         return self.state
 
-    def calculate(self, i_inj):
+    def calculate(self, i_inj, currents=False):
         X = []
         self.reset()
         for i in i_inj:

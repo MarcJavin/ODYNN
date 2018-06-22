@@ -17,7 +17,7 @@ K_CONST = params.ALL - K_VAR
 pars = [params.give_rand() for i in range(100)]
 pars = data.get_vars('Init_settings_100_2', 0)
 pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt=0.2
+dt=0.01
 t,i_inj = params.give_train(dt)
 
 
@@ -186,8 +186,9 @@ def add_plots():
 
 if __name__ == '__main__':
 
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
-    file = sim.simul(show=False, suffix='train', dump=True)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj[:,2])
+    file = sim.comp(ps=[params.give_rand() for _ in range(40)])
+    sim.comp_targ(p=params.give_rand(), p_targ=params.DEFAULT)
     exit(0)
 
     xp = sys.argv[1]

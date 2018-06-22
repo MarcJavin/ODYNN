@@ -13,31 +13,27 @@ class HH_simul():
 
     def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
         self.dt = t[1]-t[0]
-        self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=self.dt)
+        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=self.dt)
         self.t = t
         self.i_inj = i_inj
 
 
     """Compare different parameter sets on the same experiment"""
-    def comp(self, ps):
-        Vs = []
-        Cacs = []
-        for p in ps:
-            self.neuron.init_p = p
-            X = self.neuron.calculate(self.i_inj)
-            Vs.append(X[:,V_pos])
-            Cacs.append(X[:,Ca_pos])
-        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, show=False, save=True)
+    def comp(self, ps, show=True, save=False):
+        start = time.time()
+        neurons = Neuron_tf(init_p=ps, dt=self.dt)
+        X = neurons.calculate(self.i_inj)
+        Vs = X[:,V_pos]
+        Cacs = X[:,Ca_pos]
+        print(time.time() - start)
+        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, show=show, save=save)
 
     """Compare 2 parameters sets"""
     def comp_targ(self, p, p_targ, suffix='', save=False, show=True):
-        self.neuron.init_p = p
-        S = self.neuron.calculate(self.i_inj)
+        neurons = Neuron_tf(init_p=[p, p_targ], dt=self.dt)
+        X = neurons.calculate(self.i_inj)
 
-        self.neuron.init_p = p_targ
-        S_targ = self.neuron.calculate(self.i_inj)
-
-        utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
+        utils.plots_output_double(self.t, self.i_inj, X[:,V_pos, 0], X[:,V_pos, -1], X[:,Ca_pos, 0], X[:,Ca_pos, -1], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
 
     """Runs and plot the neuron"""
