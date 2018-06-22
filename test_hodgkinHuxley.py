@@ -94,16 +94,30 @@ class TestNeuron_tf(TestCase):
         n = Neuron_tf(init_p=p)
         nn = Neuron_tf(init_p=[p for _ in range(8)])
         i = np.array([2., 3., 0.])
+        ii = np.array([[2., 2.], [3., 3.], [0., 0.]])
+
         x = n.calculate(i)
         self.assertEqual(n.init_state.shape[0], x.shape[1])
         self.assertEqual(x.shape[0], len(i))
 
-        i = np.array([[2., 2.], [3., 3.], [0., 0.]])
-        x = n.calculate(i)
-        self.assertEqual(i.shape[1], x.shape[-1])
-        self.assertEqual(x.shape[0], i.shape[0])  # same time
+        x = n.calculate(ii)
+        self.assertEqual(ii.shape[1], x.shape[2])
+        self.assertEqual(x.shape[0], ii.shape[0])  # same time
         self.assertEqual(x.shape[1], n.init_state.shape[0])
-        self.assertEqual(x.shape[2], i.shape[1])  # same nb of batch
+        self.assertEqual(x.shape[2], ii.shape[1])  # same nb of batch
+
+        x = nn.calculate(i) #several neurons, one batch
+        self.assertEqual(x.shape[-1], nn.num)
+        self.assertEqual(x.shape[0], len(i))
+        self.assertEqual(x.shape[1], nn.init_state.shape[0])
+
+        xx2 = nn.calculate(ii) #several neurons, several batches
+        xx = nn.calculate(np.stack([ii for _ in range(8)], axis=ii.ndim))  # several neurons, several batches
+        self.assertEqual(xx.shape[-1], nn.num)
+        self.assertEqual(xx.shape[0], ii.shape[0])  # same time
+        self.assertEqual(xx.shape[1], nn.init_state.shape[0])
+        self.assertEqual(xx.shape[2], ii.shape[1])  # same nb of batch
+        self.assertEqual(xx.all(), xx2.all())
 
 
 

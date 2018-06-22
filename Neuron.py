@@ -282,23 +282,20 @@ class Neuron_tf(HodgkinHuxley):
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
         if (self.num > 1):
             xshape.append(self.num)
-        # if(self.parallel is not None):
-        #     xshape.append(self.parallel)
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-
-        res = tf.scan(self.step,
+        res_ = tf.scan(self.step,
                       curs_,
                       initializer=initializer.astype(np.float32))
-
-        return curs_, res
-
+        return curs_, res_
 
 
     def calculate(self, i):
-        if(i.ndim > 1 and self.num==1 or i.ndim > 2 and self.num > 1):
+        if(i.ndim > 1):
             input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
             input_cur, res_ = self.build_graph()
+        if(i.ndim < 3 and self.num > 1):
+            i = np.stack([i for _ in range(self.num)], axis=i.ndim)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             results = sess.run(res_, feed_dict={
@@ -331,5 +328,5 @@ class Neuron_fix(HodgkinHuxley):
             X.append(self.step(i))
         return np.array(X)
 
-    def reset(self):
+    def reset(self, init_p=None):
         self.state = self.init_state

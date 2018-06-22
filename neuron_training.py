@@ -186,6 +186,10 @@ def add_plots():
 
 if __name__ == '__main__':
 
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
+    file = sim.simul(show=False, suffix='train', dump=True)
+    exit(0)
+
     xp = sys.argv[1]
     if(xp == 'alt'):
         name = sys.argv[2]

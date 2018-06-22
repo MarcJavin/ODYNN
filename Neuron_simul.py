@@ -1,4 +1,4 @@
-from Neuron import Neuron_fix, V_pos, Ca_pos
+from Neuron import Neuron_fix, Neuron_tf, V_pos, Ca_pos
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
@@ -12,7 +12,8 @@ class HH_simul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
     def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
-        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=t[1]-t[0])
+        self.dt = t[1]-t[0]
+        self.neuron = Neuron_tf(init_p, loop_func=loop_func, dt=self.dt)
         self.t = t
         self.i_inj = i_inj
 
@@ -22,7 +23,7 @@ class HH_simul():
         Vs = []
         Cacs = []
         for p in ps:
-            self.neuron.param = p
+            self.neuron.init_p = p
             X = self.neuron.calculate(self.i_inj)
             Vs.append(X[:,V_pos])
             Cacs.append(X[:,Ca_pos])
@@ -30,10 +31,10 @@ class HH_simul():
 
     """Compare 2 parameters sets"""
     def comp_targ(self, p, p_targ, suffix='', save=False, show=True):
-        self.neuron.param = p
+        self.neuron.init_p = p
         S = self.neuron.calculate(self.i_inj)
 
-        self.neuron.param = p_targ
+        self.neuron.init_p = p_targ
         S_targ = self.neuron.calculate(self.i_inj)
 
         utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
