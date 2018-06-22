@@ -246,8 +246,9 @@ class Neuron_tf(HodgkinHuxley):
     def step(self, hprev, x):
         return self.loop_func(hprev, x, self)
 
-    """build tf graph"""
+    """rebuild tf variable graph"""
     def reset(self):
+        tf.reset_default_graph()
         with(tf.variable_scope(self.id)):
             self.param = {}
             self.constraints = []
@@ -264,8 +265,46 @@ class Neuron_tf(HodgkinHuxley):
 
     def parallelize(self, n):
         """Add a dimension of size n in the parameters"""
-        self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
+        if(self.num > 1):
+            self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
+        else:
+            self.init_p = dict(
+                [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self.init_p.items()])
         self.init_state = np.stack([self.init_state for _ in range(n)], axis=self.init_state.ndim)
+
+
+    def build_graph(self, batch=None):
+        self.reset()
+        xshape = [None]
+        initializer = self.init_state
+        if (batch is not None):
+            xshape.append(None)
+            initializer = np.stack([initializer for _ in range(batch)], axis=1)
+        if (self.num > 1):
+            xshape.append(self.num)
+        # if(self.parallel is not None):
+        #     xshape.append(self.parallel)
+        curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+
+        res = tf.scan(self.step,
+                      curs_,
+                      initializer=initializer.astype(np.float32))
+
+        return curs_, res
+
+
+
+    def calculate(self, i):
+        if(i.ndim > 1 and self.num==1 or i.ndim > 2 and self.num > 1):
+            input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
+        else:
+            input_cur, res_ = self.build_graph(batch=False)
+        with tf.Session() as sess:
+            results = sess.run(res_, feed_dict={
+                input_cur: i
+            })
+        return results
+
 
 
 class Neuron_fix(HodgkinHuxley):
@@ -283,6 +322,13 @@ class Neuron_fix(HodgkinHuxley):
     def step(self, i):
         self.state = np.array(self.loop_func(self.state, i, self))
         return self.state
+
+    def calculate(self, i_inj):
+        X = []
+        self.reset()
+        for i in i_inj:
+            X.append(self.step(i))
+        return np.array(X)
 
     def reset(self):
         self.state = self.init_state

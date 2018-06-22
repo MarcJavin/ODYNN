@@ -38,6 +38,11 @@ class Optimizer():
             for i in range(self.parallel):
                 #clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
+                # if(isinstance(self.optimized, Circuit.Circuit)):
+                #     #[synapse, model]
+                #     gi = [g[:,i] for g in grads]
+                # else:
+                #     gi = [g[i] for g in grads]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
             grads_normed = tf.stack(grads_normed)
@@ -58,7 +63,6 @@ class Optimizer():
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
         tf.reset_default_graph()
-        self.optimized.reset()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
         assert (neur is not None or circuit is not None)
         if(circuit is not None):
@@ -68,8 +72,8 @@ class Optimizer():
 
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
         assert (self.optimized.dt == self.T[1] - self.T[0])
+        self.n_batch = self.X.shape[1]
 
-        self.n_batch = self.X.shape[self.dim_batch]
 
         if (self.parallel > 1):
             # add dimension for neurons trained in parallel
@@ -77,23 +81,13 @@ class Optimizer():
             self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
             self.V = np.stack([self.V for _ in range(self.parallel)], axis=self.V.ndim)
             self.Ca = np.stack([self.Ca for _ in range(self.parallel)], axis=self.Ca.ndim)
-            xshape.append(self.parallel)
             yshape.append(self.parallel)
 
-        self.xs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
-        init_state = self.optimized.init_state
-        initshape = list(init_state.shape)
-        # reshape init state : [state, n_batch, n_neuron]
-        self.init_state = np.stack([init_state for _ in range(self.n_batch)], axis=self.dim_batch)
 
-        self.init_state_ = tf.placeholder(shape=self.init_state.shape, dtype=tf.float32, name='init_state')
-
-        print('i : ', self.X.shape, 'V : ', self.V.shape, 'init : ', self.init_state.shape)
-
-        self.res = tf.scan(self.optimized.step,
-                           self.xs_,
-                           initializer=self.init_state_)
+        print('i expected : ', self.xs_.shape)
+        print('i : ', self.X.shape, 'V : ', self.V.shape)
 
 
 
@@ -118,8 +112,7 @@ class Optimizer():
     def train_and_gather(self, sess, i, losses, rates, vars):
         results, _, train_loss = sess.run([self.res, self.train_op, self.loss], feed_dict={
             self.xs_: self.X,
-            self.ys_: np.array([self.V, self.Ca]),
-            self.init_state_: self.init_state
+            self.ys_: np.array([self.V, self.Ca])
         })
         _ = sess.run(self.optimized.constraints)
 

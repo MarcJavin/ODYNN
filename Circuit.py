@@ -131,11 +131,45 @@ class Circuit_tf(Circuit):
         self.constraints = []
         for var, val in self.init_p.items():
             self.param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
-            if(var in self.constraints_dic):
-                #add dimension for later
+            if (var in self.constraints_dic):
+                # add dimension for later
                 con = self.constraints_dic[var]
                 self.constraints.append(tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
         self.neurons.reset()
+
+    def build_graph(self, batch=None):
+        self.reset()
+        xshape = [None]
+        initializer = self.init_state
+        print(initializer.shape)
+        if (batch):
+            xshape.append(None)
+            initializer = np.stack([initializer for _ in range(batch)], axis=1)
+        xshape.append(self.neurons.num)
+        if (self.num > 1):
+            xshape.append(self.num)
+            # if(self.parallel is not None):
+            #     xshape.append(self.parallel)
+        curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+
+        print(curs_.shape)
+        print(initializer.shape)
+        res = tf.scan(self.step,
+                      curs_,
+                      initializer=initializer.astype(np.float32))
+
+        return curs_, res
+
+    def calculate(self, i):
+        if (i.ndim > 1 and self.num == 1 or i.ndim > 2 and self.num > 1):
+            input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
+        else:
+            input_cur, res_ = self.build_graph()
+        with tf.Session() as sess:
+            results = sess.run(res_, feed_dict={
+                input_cur: i
+            })
+        return results
 
 class Circuit_fix(Circuit):
 

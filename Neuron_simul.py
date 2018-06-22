@@ -16,13 +16,6 @@ class HH_simul():
         self.t = t
         self.i_inj = i_inj
 
-    """Simulate the neuron"""
-    def calculate(self):
-        X = []
-        self.neuron.reset()
-        for i in self.i_inj:
-            X.append(self.neuron.step(i))
-        return np.array(X)
 
     """Compare different parameter sets on the same experiment"""
     def comp(self, ps):
@@ -30,7 +23,7 @@ class HH_simul():
         Cacs = []
         for p in ps:
             self.neuron.param = p
-            X = self.calculate()
+            X = self.neuron.calculate(self.i_inj)
             Vs.append(X[:,V_pos])
             Cacs.append(X[:,Ca_pos])
         utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, show=False, save=True)
@@ -38,10 +31,10 @@ class HH_simul():
     """Compare 2 parameters sets"""
     def comp_targ(self, p, p_targ, suffix='', save=False, show=True):
         self.neuron.param = p
-        S = self.calculate()
+        S = self.neuron.calculate(self.i_inj)
 
         self.neuron.param = p_targ
-        S_targ = self.calculate()
+        S_targ = self.neuron.calculate(self.i_inj)
 
         utils.plots_output_double(self.t, self.i_inj, S[:,V_pos], S_targ[:,V_pos], S[:,Ca_pos], S_targ[:,Ca_pos], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
@@ -54,7 +47,7 @@ class HH_simul():
         start = time.time()
 
         #[t,s,batch]
-        X = self.calculate()
+        X = self.neuron.calculate(self.i_inj)
 
         print(time.time() - start)
 
