@@ -31,6 +31,7 @@ class TestCircuit(TestCase):
         self.assertIsInstance(self.circ.param, dict)
         self.assertEqual(self.circ.param.keys(), params.SYNAPSE.keys())
         self.assertEqual(self.circ.neurons.num, 5)
+        self.assertEqual(self.circ.neurons.init_state.all(), self.circ.init_state.all())
 
         self.assertEqual(self.circ2.num, 7)
         self.assertEqual(self.circ2.pres.all(), np.array([0, 1, 2, 3]).all())
@@ -39,6 +40,7 @@ class TestCircuit(TestCase):
         self.assertEqual(self.circ2.param.keys(), params.SYNAPSE.keys())
         self.assertEqual(self.circ2.neurons.num, 5)
         self.assertEqual(self.circ2.neurons.init_state.shape[-1], self.circ2.num)
+        self.assertEqual(self.circ2.neurons.init_state.all(), self.circ2.init_state.all())
 
         with self.assertRaises(AssertionError):
             cbad = Circuit(self.conns, neuron_bad)

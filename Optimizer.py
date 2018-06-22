@@ -38,11 +38,6 @@ class Optimizer():
             for i in range(self.parallel):
                 #clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
-                # if(isinstance(self.optimized, Circuit.Circuit)):
-                #     #[synapse, model]
-                #     gi = [g[:,i] for g in grads]
-                # else:
-                #     gi = [g[i] for g in grads]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
             grads_normed = tf.stack(grads_normed)

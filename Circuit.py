@@ -14,8 +14,6 @@ class Circuit():
     def __init__(self, conns, neurons, tensors=False):
         self.tensors = tensors
         self.neurons = neurons
-        self.init_state = self.neurons.init_state
-        self.dt = self.neurons.dt
         if (isinstance(conns, list)):
             self.num = len(conns)
             inits_p = []
@@ -34,6 +32,8 @@ class Circuit():
                 [(var, np.array([p[var] for p in conns.values()], dtype=np.float32)) for var in
                  list(conns.values())[0].keys()])
             self.connections = conns.keys()
+        self.init_state = self.neurons.init_state
+        self.dt = self.neurons.dt
         self.param = self.init_p
         syns = list(zip(*[k for k in self.connections]))
         self.pres = np.array(syns[0], dtype=np.int32)
@@ -58,7 +58,6 @@ class Circuit():
         if(self.tensors):
             # update synapses
             #curs : [batch, neuron(, model)]
-            print('curs : ',curs)
             #hprev : [state, batch, neuron(, model)] -> [state, neuron, batch(, model)]
             try:
                 hprev_swap = tf.transpose(hprev, [0,2,1])
@@ -81,23 +80,15 @@ class Circuit():
             except:
                 curs_syn = tf.transpose(curs_syn, perm=[1,0,2])
             curs_post = []
-            print('posts : ' ,self.posts)
-            print('curs_syn : ', curs_syn)
             for i in range(self.neurons.num):
                 if i not in self.posts:
                     #0 synaptic current if no synapse coming in
                     curs_post.append(tf.reduce_sum(tf.zeros(tf.shape(curs)), axis=1))
                     continue
-                print(i, tf.gather_nd(curs_syn, np.argwhere(self.posts == i)))
-                print(i, tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
                 #[batch(, model)]
                 curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self.posts == i)), axis=0))
-            print('postsyn cur : ', curs_post)
-            print('stack : ', tf.stack(curs_post, axis=1))
             final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
-            print(final_curs)
             h = self.neurons.step(hprev, final_curs)
-            print(h)
             return h
         else:
             # update neurons

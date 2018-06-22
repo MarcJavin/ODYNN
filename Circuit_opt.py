@@ -60,7 +60,7 @@ class Circuit_opt(Optimizer):
         out = tf.stack(out, axis=2)
         # out = self.res[:, 0, :, n_out]
         losses = tf.square(tf.subtract(out, self.ys_[V_pos]))
-        self.loss = tf.reduce_mean(losses, axis=[0,1])
+        self.loss = tf.reduce_mean(losses, axis=[0,1,2])
         self.build_train()
 
         with tf.Session() as sess:
@@ -68,7 +68,6 @@ class Circuit_opt(Optimizer):
             losses = np.zeros((epochs, self.parallel))
             rates = np.zeros(epochs)
             vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
-            print(vars)
 
             shapevars = [epochs, self.circuit.n_synapse]
             if(self.parallel>1):
@@ -90,4 +89,5 @@ class Circuit_opt(Optimizer):
 
                     self.plots_dump(sess, losses, rates, vars, i)
 
+        print(self.V.shape)
         return -1

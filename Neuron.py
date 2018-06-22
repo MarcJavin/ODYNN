@@ -266,7 +266,6 @@ class Neuron_tf(HodgkinHuxley):
         """Add a dimension of size n in the parameters"""
         self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
         self.init_state = np.stack([self.init_state for _ in range(n)], axis=self.init_state.ndim)
-        # print('init_p after parallelization : ', self.init_p)
 
 
 class Neuron_fix(HodgkinHuxley):
