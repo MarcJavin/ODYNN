@@ -28,7 +28,7 @@ def single_exp(xp, w_v, w_ca, suffix=None):
 
     opt = HH_opt(init_p=params.give_rand())
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
-    loop_func = HodgkinHuxley.integ_comp
+    base = HodgkinHuxley.step_model
 
     if (xp == 'ica'):
         name = 'Icafromv'
@@ -52,17 +52,18 @@ def single_exp(xp, w_v, w_ca, suffix=None):
 
     elif (xp == 'classic'):
         name = 'integcomp'
-        loop_func = HodgkinHuxley.integ_comp
+        loop_func = base
 
     print(name, w_v, w_ca, loop_func)
     dir = '%s_v=%s_ca=%s' % (name, w_v, w_ca)
     if (suffix is not None):
         dir = '%s_%s' % (dir, suffix)
     utils.set_dir(dir)
-    opt.loop_func = loop_func
-    sim.loop_func = loop_func
+    HodgkinHuxley.step_model = loop_func
+    HodgkinHuxley.step_model = loop_func
     file = sim.simul(show=True, dump=True)
     opt.optimize(dir, w=[w_v, w_ca], file=file)
+    HodgkinHuxley.step_model = base
     return dir
 
 
@@ -74,9 +75,6 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
     param = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=param, fixed=CA_VAR)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
-    loop_func = HodgkinHuxley.integ_comp
-    opt.loop_func = loop_func
-    sim.loop_func = loop_func
     file = sim.simul(dump=True, suffix='step2', show=False)
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9],suffix='step2', file=file)
 
@@ -90,9 +88,6 @@ def steps2_exp_k(w_v2, w_ca2):
     param = utils.get_dic_from_var(dir)
     opt = HH_opt(init_p=param, fixed=K_VAR)
     sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
-    loop_func = HodgkinHuxley.integ_comp
-    opt.loop_func = loop_func
-    sim.loop_func = loop_func
     file = sim.simul(dump=True, suffix='step2')
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9], suffix='step2', file=file)
 
@@ -123,8 +118,7 @@ def test_xp(dir, i=i_inj, default=params.DEFAULT, suffix='', show=False):
 def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
     utils.set_dir(dir)
-    loop_func = HodgkinHuxley.integ_comp
-    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj, loop_func=loop_func)
+    sim = HH_simul(init_p=params.DEFAULT, t=t, i_inj=i_inj)
     file = sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
@@ -146,9 +140,8 @@ def classic(name, wv, wca, default=params.DEFAULT_2):
     else:
         dir = 'Integcomp_both_%s' % name
     utils.set_dir(dir)
-    loop_func = HodgkinHuxley.integ_comp
     opt = HH_opt(init_p=pars, dt=dt)
-    sim = HH_simul(init_p=default, t=t, i_inj=i_inj, loop_func=loop_func)
+    sim = HH_simul(init_p=default, t=t, i_inj=i_inj)
     file = sim.simul(show=False, suffix='train', dump=True)
     n = opt.optimize(dir, w=[wv, wca], epochs=500, file=file)
     comp_pars(dir, n)

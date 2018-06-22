@@ -3,7 +3,7 @@ import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v
 import utils
 import data
-import params
+import neuron_params, params
 import numpy as np
 import pickle
 
@@ -11,9 +11,9 @@ import pickle
 class HH_simul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-    def __init__(self, init_p=params.DEFAULT, t=params.t, i_inj=params.i_inj, loop_func=None):
+    def __init__(self, init_p=neuron_params.DEFAULT, t=params.t, i_inj=params.i_inj):
         self.dt = t[1]-t[0]
-        self.neuron = Neuron_fix(init_p, loop_func=loop_func, dt=self.dt)
+        self.neuron = Neuron_fix(init_p, dt=self.dt)
         self.t = t
         self.i_inj = i_inj
 
@@ -48,11 +48,12 @@ class HH_simul():
 
         print(time.time() - start)
 
-        if (self.neuron.loop_func == self.neuron.ica_from_v):
-            plots_ica_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
-        elif (self.neuron.loop_func == self.neuron.ik_from_v):
-            plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
-        else:
+        # if (self.neuron.loop_func == self.neuron.ica_from_v):
+        #     plots_ica_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
+        # elif (self.neuron.loop_func == self.neuron.ik_from_v):
+        #     plots_ik_from_v(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
+        # else:
+        if(True):
             if (self.i_inj.ndim > 1):
                 for i in range(self.i_inj.shape[1]):
                     plots_results(self.neuron, self.t, self.i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
@@ -72,8 +73,8 @@ if __name__ == '__main__':
 
 
 
-    sim = HH_simul(init_p=params.DEFAULT,t=params.t, i_inj=params.i_inj)
-    sim.comp_targ(params.DEFAULT, params.DEFAULT_2, show=True, save=False)
+    sim = HH_simul(init_p=neuron_params.DEFAULT,t=neuron_params.t, i_inj=neuron_params.i_inj)
+    sim.comp_targ(neuron_params.DEFAULT, neuron_params.DEFAULT_2, show=True, save=False)
 
 
     TIME=['p__tau', 'q__tau', 'n__tau', 'e__tau', 'f__tau', 'decay_ca']
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     i10 = 2.*(t10==0) + 10. * ((t10 > 100) & (t10 < 200))
 
 
-    p = params.DEFAULT
+    p = neuron_params.DEFAULT
     p10 = dict([(var, val*10) if var in TIME else (var, val) for var, val in p.items()])
 
     for ti in TIME:

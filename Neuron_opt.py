@@ -7,7 +7,7 @@ import numpy as np
 from utils import  plots_output_double, plot_loss_rate, plot_vars
 from data import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH, FILE_NEUR
 import pickle
-import params
+import neuron_params
 from tqdm import tqdm
 import time
 
@@ -18,7 +18,7 @@ class HH_opt(Optimizer):
 
     dim_batch= 1
 
-    def __init__(self, neuron=None, init_p=params.give_rand(), fixed=[], constraints=params.CONSTRAINTS, loop_func=None, dt=0.1):
+    def __init__(self, neuron=None, init_p=neuron_params.give_rand(), fixed=[], constraints=neuron_params.CONSTRAINTS, loop_func=None, dt=0.1):
         if(neuron is not None):
             self.neuron = neuron
         else:
@@ -59,8 +59,8 @@ class HH_opt(Optimizer):
             self.V = np.full(self.Ca.shape, -50.)
             w[0] = 0
 
-        if (self.neuron.loop_func == self.neuron.ik_from_v):
-            self.Ca = self.V
+        # if (self.neuron.loop_func == self.neuron.ik_from_v):
+        #     self.Ca = self.V
 
         self.build_loss(w)
         self.build_train()

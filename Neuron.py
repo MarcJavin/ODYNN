@@ -1,25 +1,20 @@
 import tensorflow as tf
 import scipy as sp
-import params
+import neuron_params
 import numpy as np
-
+from abc import ABC, abstractmethod
 
 V_pos = 0
 Ca_pos = -1
 
-class HodgkinHuxley():
-    """Full Hodgkin-Huxley Model implemented in Python"""
+class Model(ABC):
 
+    default = None
+    constraints_dic = None
+    init_state = None
 
-    REST_CA = params.REST_CA
-
-    def __init__(self, init_p=params.DEFAULT, tensors=False, loop_func=None, dt=0.1, fixed=None, constraints=None):
+    def __init__(self, init_p=neuron_params.DEFAULT, tensors=False, dt=0.1):
         self.tensors = tensors
-        self.inits_p = {self.ik_from_v: params.INIT_STATE_ik,
-                   self.ica_from_v: params.INIT_STATE_ica}
-        if (loop_func is not None):
-            self.loop_func = loop_func
-        self.init_state = self.get_init_state()
         if (isinstance(init_p, list)):
             self.num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
@@ -28,6 +23,31 @@ class HodgkinHuxley():
             self.num = 1
         self.param = init_p
         self.dt = dt
+
+    @staticmethod
+    @abstractmethod
+    def step_model(X, i, self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_random():
+        pass
+
+    def get_init_state(self):
+        return self.init_state
+
+class HodgkinHuxley(Model):
+    """Full Hodgkin-Huxley Model implemented in Python"""
+
+
+    REST_CA = neuron_params.REST_CA
+    init_state = neuron_params.INIT_STATE
+    default = neuron_params.DEFAULT
+    constraints_dic = neuron_params.CONSTRAINTS
+
+    def __init__(self, init_p=neuron_params.DEFAULT, tensors=False, dt=0.1):
+        Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     """steady state value of a rate"""
     def inf(self, V, rate):
@@ -85,7 +105,7 @@ class HodgkinHuxley():
 
     """default model"""
     @staticmethod
-    def integ_comp(X, i_inj, self):
+    def step_model(X, i_inj, self):
         """
         Integrate
         """
@@ -120,6 +140,9 @@ class HodgkinHuxley():
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
             return [V, p, q, n, e, f, cac]
+
+    def get_random(self):
+        return neuron_params.give_rand()
 
     @staticmethod 
     def no_tau_ca(X, i_inj, self):
@@ -220,19 +243,15 @@ class HodgkinHuxley():
         else:
             return [ik, p, q, n]
 
-    loop_func = integ_comp
 
+MODEL = HodgkinHuxley
 
-    """give the init state associated to the loop function"""
-    def get_init_state(self):
-        return self.inits_p.get(self.loop_func, params.INIT_STATE)
-
-class Neuron_tf(HodgkinHuxley):
+class Neuron_tf(MODEL):
 
     nb=-1
 
-    def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=params.CONSTRAINTS):
-        HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, loop_func=loop_func, dt=dt)
+    def __init__(self, init_p=neuron_params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=neuron_params.CONSTRAINTS):
+        HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, dt=dt)
         self.init_p = self.param
         self.fixed = fixed
         self.constraints_dic = constraints
@@ -244,7 +263,7 @@ class Neuron_tf(HodgkinHuxley):
         return str(cls.nb)
 
     def step(self, hprev, x):
-        return self.loop_func(hprev, x, self)
+        return self.step_model(hprev, x, self)
 
     """rebuild tf variable graph"""
     def reset(self):
@@ -260,7 +279,7 @@ class Neuron_tf(HodgkinHuxley):
                         con = self.constraints_dic[var]
                         self.constraints.append(
                             tf.assign(self.param[var], tf.clip_by_value(self.param[var], con[0], con[1])))
-        # print('params after reset : ', self.param)
+        # print('neuron_params after reset : ', self.param)
 
     def parallelize(self, n):
         """Add a dimension of size n in the parameters"""
@@ -305,10 +324,10 @@ class Neuron_tf(HodgkinHuxley):
 
 
 
-class Neuron_fix(HodgkinHuxley):
+class Neuron_fix(MODEL):
 
-    def __init__(self, init_p=params.DEFAULT, loop_func=None, dt=0.1):
-        HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, loop_func=loop_func, dt=dt)
+    def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1):
+        HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, dt=dt)
         self.state = self.init_state
 
     def get_volt(self):
@@ -318,7 +337,7 @@ class Neuron_fix(HodgkinHuxley):
         self.init_state = np.stack([self.init_state for _ in range(n)], axis=1)
 
     def step(self, i):
-        self.state = np.array(self.loop_func(self.state, i, self))
+        self.state = np.array(self.step_model(self.state, i, self))
         return self.state
 
     def calculate(self, i_inj, currents=False):

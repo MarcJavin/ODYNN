@@ -103,7 +103,7 @@ class Optimizer():
                     'Fixed variables : %s' % [c for c in neur.fixed] + '\n'+
                     'Initial state : %s' % neur.init_state + '\n' +
                     'Constraints : %s' % neur.constraints_dic + '\n' +
-                    'Model solver : %s' % neur.loop_func + '\n' +
+                    # 'Model solver : %s' % neur.loop_func + '\n' +
                     'dt : %s' % neur.dt + '\n' +
                     'Weights (out, cac) : %s' % w + '\n' +
                     'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')

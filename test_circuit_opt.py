@@ -1,5 +1,5 @@
 from unittest import TestCase
-import params
+import params, neuron_params
 import numpy as np
 from Circuit_opt import Circuit_opt
 from Circuit_simul import Circuit_simul
@@ -22,7 +22,7 @@ class TestCircuit_opt(TestCase):
         i_1 = np.zeros(i.shape)
         i_injs = np.stack([i, i_1], axis=2)
 
-        p = params.give_rand()
+        p = neuron_params.give_rand()
         pars = [p for _ in range(n_neuron)]
 
         print('one target')

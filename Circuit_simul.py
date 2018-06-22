@@ -13,9 +13,9 @@ class Circuit_simul():
 
     """
 
-    def __init__(self, inits_p, conns, t, i_injs, loop_func=HodgkinHuxley.loop_func, dt=0.1):
+    def __init__(self, inits_p, conns, t, i_injs, dt=0.1):
         assert(dt == t[1] - t[0])
-        self.circuit = Circuit_fix(inits_p=inits_p, conns=conns, loop_func=loop_func, dt=dt)
+        self.circuit = Circuit_fix(inits_p=inits_p, conns=conns, dt=dt)
         self.batch = False
         if (i_injs.ndim > 2):
             self.batch = True

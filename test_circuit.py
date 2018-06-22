@@ -1,12 +1,12 @@
 from unittest import TestCase
-import params
+import neuron_params, params
 from Circuit import Circuit
 import numpy as np
 from Neuron import Neuron_tf
 
 
 class TestCircuit(TestCase):
-    neuron = Neuron_tf([params.DEFAULT for _ in range(5)])
+    neuron = Neuron_tf([neuron_params.DEFAULT for _ in range(5)])
     conns = {(0, 4): params.SYNAPSE,
              (1, 4): params.SYNAPSE,
              (2, 4): params.SYNAPSE,
@@ -22,7 +22,7 @@ class TestCircuit(TestCase):
     circ2 = Circuit(conns2, neuron)
 
     def test_init(self):
-        neuron_bad = Neuron_tf([params.DEFAULT for _ in range(3)])
+        neuron_bad = Neuron_tf([neuron_params.DEFAULT for _ in range(3)])
 
         self.circ = Circuit(self.conns, self.neuron)
         self.assertEqual(self.circ.num, 1)

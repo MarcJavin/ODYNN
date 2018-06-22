@@ -1,16 +1,16 @@
 from unittest import TestCase
 from Neuron import HodgkinHuxley, Neuron_tf, Neuron_fix
-import params
+import neuron_params
 import numpy as np
 import tensorflow as tf
 
-p = params.DEFAULT
+p = neuron_params.DEFAULT
 
 class TestHodgkinHuxley(TestCase):
 
     def test_init(self):
-        p = params.DEFAULT
-        hh = HodgkinHuxley(init_p=[p for _ in range(10)], loop_func=HodgkinHuxley.integ_comp)
+        p = neuron_params.DEFAULT
+        hh = HodgkinHuxley(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -18,7 +18,7 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = HodgkinHuxley(init_p=[params.give_rand() for _ in range(13)], loop_func=HodgkinHuxley.no_tau)
+        hh = HodgkinHuxley(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -36,7 +36,7 @@ class TestHodgkinHuxley(TestCase):
 class TestNeuron_tf(TestCase):
 
     def test_init(self):
-        hh = Neuron_tf(init_p=[p for _ in range(10)], loop_func=HodgkinHuxley.integ_comp)
+        hh = Neuron_tf(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -44,7 +44,7 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_tf(init_p=[params.give_rand() for _ in range(13)], loop_func=HodgkinHuxley.no_tau)
+        hh = Neuron_tf(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -124,7 +124,7 @@ class TestNeuron_tf(TestCase):
 class TestNeuron_fix(TestCase):
 
     def test_init(self):
-        hh = Neuron_fix(init_p=[p for _ in range(10)], loop_func=HodgkinHuxley.integ_comp)
+        hh = Neuron_fix(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -132,7 +132,7 @@ class TestNeuron_fix(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_fix(init_p=[params.give_rand() for _ in range(13)], loop_func=HodgkinHuxley.no_tau)
+        hh = Neuron_fix(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -151,7 +151,7 @@ class TestNeuron_fix(TestCase):
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 
-        hh = Neuron_fix(init_p=[params.give_rand() for _ in range(13)])
+        hh = Neuron_fix(init_p=[neuron_params.give_rand() for _ in range(13)])
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 

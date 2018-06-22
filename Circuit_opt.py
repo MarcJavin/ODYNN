@@ -2,7 +2,7 @@ import numpy as np
 from Neuron import HodgkinHuxley, V_pos, Ca_pos
 from Circuit import Circuit_tf
 from Neuron_opt import HH_opt
-import params
+import neuron_params
 from Optimizer import Optimizer
 from utils import plots_output_mult, plot_loss_rate, plots_output_double, plot_vars_syn
 from data import DUMP_FILE, get_data_dump, FILE_CIRC
@@ -18,8 +18,8 @@ class Circuit_opt(Optimizer):
     """
     dim_batch = 1
 
-    def __init__(self, inits_p, conns, loop_func=HodgkinHuxley.loop_func, fixed=params.ALL, dt=0.1):
-        self.circuit = Circuit_tf(inits_p, conns=conns, loop_func=loop_func, fixed=fixed, dt=dt)
+    def __init__(self, inits_p, conns, fixed=neuron_params.ALL, dt=0.1):
+        self.circuit = Circuit_tf(inits_p, conns=conns, fixed=fixed, dt=dt)
         Optimizer.__init__(self, self.circuit)
         self.plot_vars = plot_vars_syn
 
@@ -89,5 +89,4 @@ class Circuit_opt(Optimizer):
 
                     self.plots_dump(sess, losses, rates, vars, i)
 
-        print(self.V.shape)
         return -1
