@@ -1,4 +1,4 @@
-import Neuron_simul
+import NeuronSimul
 import pygmo as pg
 import params
 
@@ -8,7 +8,7 @@ import params
 
 
 if __name__ == '__main__':
-    runner = Neuron_simul.HodgkinHuxley()
+    runner = NeuronSimul.HodgkinHuxley()
 
     prob = pg.problem(runner)
     print(prob)

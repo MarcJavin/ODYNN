@@ -1,5 +1,5 @@
-from Circuit_simul import Circuit_simul
-from Circuit_opt import Circuit_opt
+from CircuitSimul import CircuitSimul
+from CircuitOpt import CircuitOpt
 import utils
 import numpy as np
 import scipy as sp
@@ -16,7 +16,7 @@ def inhibit():
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
-    c = Circuit_simul(p, connections, t, i_injs)
+    c = CircuitSimul(p, connections, t, i_injs)
     c.simul()
 
 
@@ -27,9 +27,9 @@ def opt_neurons():
     i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1]).transpose()
-    c = Circuit_simul([p, p], connections, t, i_injs)
+    c = CircuitSimul([p, p], connections, t, i_injs)
     f = c.simul(dump=True)
-    c = Circuit_opt([p, p], connections)
+    c = CircuitOpt([p, p], connections)
     c.opt_neurons(f)
 
 def comp_pars(dir):
@@ -43,9 +43,9 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     pars = [p for _ in range(nb_neuron)]
     utils.set_dir(dir)
 
-    c = Circuit_simul(pars, conns, t, i_injs)
+    c = CircuitSimul(pars, conns, t, i_injs)
     file = c.simul(n_out=n_out, dump=True, show=False)
-    c = Circuit_opt(pars, conns_opt)
+    c = CircuitOpt(pars, conns_opt)
     c.opt_circuits(dir, n_out=n_out, file=file)
     comp_pars(dir)
 

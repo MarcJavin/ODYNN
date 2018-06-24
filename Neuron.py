@@ -246,7 +246,7 @@ class HodgkinHuxley(Model):
 
 MODEL = HodgkinHuxley
 
-class Neuron_tf(MODEL):
+class NeuronTf(MODEL):
 
     nb=-1
 
@@ -324,7 +324,7 @@ class Neuron_tf(MODEL):
 
 
 
-class Neuron_fix(MODEL):
+class NeuronFix(MODEL):
 
     def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, dt=dt)

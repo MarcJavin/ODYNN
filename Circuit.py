@@ -1,5 +1,5 @@
 import numpy as np
-from Neuron import Neuron_tf, HodgkinHuxley, Neuron_fix
+from Neuron import NeuronTf, HodgkinHuxley, NeuronFix
 import neuron_params, params
 import scipy as sp
 import tensorflow as tf
@@ -109,7 +109,7 @@ class Circuit():
 class Circuit_tf(Circuit):
 
     def __init__(self, inits_p, conns, fixed=neuron_params.ALL, constraints_n=neuron_params.CONSTRAINTS, dt=0.1):
-        neurons = Neuron_tf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
+        neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
         if(self.num > 1):
             constraints_dic = params.give_constraints_syn(conns[0])
@@ -174,6 +174,6 @@ class Circuit_tf(Circuit):
 class Circuit_fix(Circuit):
 
     def __init__(self, inits_p, conns, dt=0.1):
-        neurons = Neuron_fix(inits_p, dt=dt)
+        neurons = NeuronFix(inits_p, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=False, neurons=neurons)
         self.param = self.init_p

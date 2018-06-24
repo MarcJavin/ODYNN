@@ -1,5 +1,5 @@
 from unittest import TestCase
-from Neuron import HodgkinHuxley, Neuron_tf, Neuron_fix
+from Neuron import HodgkinHuxley, NeuronTf, NeuronFix
 import neuron_params
 import numpy as np
 import tensorflow as tf
@@ -33,10 +33,10 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(hh.param, p)
 
 
-class TestNeuron_tf(TestCase):
+class TestNeuronTf(TestCase):
 
     def test_init(self):
-        hh = Neuron_tf(init_p=[p for _ in range(10)])
+        hh = NeuronTf(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -44,7 +44,7 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_tf(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronTf(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -52,7 +52,7 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (13,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_tf(p)
+        hh = NeuronTf(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh.init_state.shape, (7,))
         self.assertIsInstance(hh.param, dict)
@@ -60,7 +60,7 @@ class TestNeuron_tf(TestCase):
 
 
     def test_parallelize(self):
-        n = Neuron_tf(init_p=p)
+        n = NeuronTf(init_p=p)
         sh = list(n.init_state.shape)
         n.parallelize(10)
         sh.append(10)
@@ -68,7 +68,7 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(n.init_state.shape, tuple(sh))
         self.assertEqual(list(n.init_p.values())[0].shape, tuple(shp))
 
-        n = Neuron_tf(init_p=[p for _ in range(8)])
+        n = NeuronTf(init_p=[p for _ in range(8)])
         sh = list(n.init_state.shape)
         shp = list(list(n.init_p.values())[0].shape)
         n.parallelize(11)
@@ -78,8 +78,8 @@ class TestNeuron_tf(TestCase):
         self.assertEqual(list(n.init_p.values())[0].shape, tuple(shp))
 
     def test_build_graph(self):
-        n = Neuron_tf(init_p=p)
-        nn = Neuron_tf(init_p=[p for _ in range(8)])
+        n = NeuronTf(init_p=p)
+        nn = NeuronTf(init_p=[p for _ in range(8)])
         i,res = n.build_graph()
         self.assertEqual(i.get_shape().as_list(), [None])
         i, res = n.build_graph(batch=3)
@@ -91,8 +91,8 @@ class TestNeuron_tf(TestCase):
 
 
     def test_calculate(self):
-        n = Neuron_tf(init_p=p)
-        nn = Neuron_tf(init_p=[p for _ in range(8)])
+        n = NeuronTf(init_p=p)
+        nn = NeuronTf(init_p=[p for _ in range(8)])
         i = np.array([2., 3., 0.])
         ii = np.array([[2., 2.], [3., 3.], [0., 0.]])
 
@@ -121,10 +121,10 @@ class TestNeuron_tf(TestCase):
 
 
 
-class TestNeuron_fix(TestCase):
+class TestNeuronFix(TestCase):
 
     def test_init(self):
-        hh = Neuron_fix(init_p=[p for _ in range(10)])
+        hh = NeuronFix(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -132,7 +132,7 @@ class TestNeuron_fix(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_fix(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronFix(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -140,23 +140,23 @@ class TestNeuron_fix(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (13,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = Neuron_fix(p)
+        hh = NeuronFix(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh.init_state.shape, (7,))
         self.assertIsInstance(hh.param, dict)
         self.assertEqual(hh.param, p)
 
     def test_step(self):
-        hh = Neuron_fix(p)
+        hh = NeuronFix(p)
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 
-        hh = Neuron_fix(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronFix(init_p=[neuron_params.give_rand() for _ in range(13)])
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 
     def test_calculate(self):
-        hh = Neuron_fix(p)
+        hh = NeuronFix(p)
         i = [2., 3., 0.]
         x = hh.calculate(i)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
