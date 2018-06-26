@@ -1,12 +1,15 @@
-from NeuronOpt import NeuronOpt
-from NeuronSimul import NeuronSimul
-from Neuron import HodgkinHuxley, NeuronLSTM
-import neuron_params, params, data
-import utils
 import sys
+
 import numpy as np
 import scipy as sp
 
+import data
+import neuron_params
+import params
+import utils
+from Neuron import HodgkinHuxley, NeuronLSTM
+from NeuronOpt import NeuronOpt
+from NeuronSimul import NeuronSimul
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca', 'rho_ca', 'decay_ca'}
 K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau', 'n__mdp', 'n__scale', 'g_Kf', 'g_Ks', 'E_K'}
@@ -19,6 +22,7 @@ pars = data.get_vars('Init_settings_100_2', 0)
 pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt=1
 t,i_inj = params.give_train(dt)
+i_inj = i_inj[:,2][:,None]
 
 
 

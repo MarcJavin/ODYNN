@@ -1,13 +1,15 @@
 # from statsmodels.nonparametric.smoothers_lowess import lowess
-from scipy.interpolate import interp1d, splrep, splev
-from scipy.signal import savgol_filter
-import scipy as sp
+import math
+import pickle
+import time
+
 import numpy as np
 import pandas as pd
 import pylab as plt
-import time
-import pickle
-import math
+import scipy as sp
+from scipy.interpolate import splrep, splev
+from scipy.signal import savgol_filter
+
 import utils
 
 DUMP_FILE = 'data/dump'

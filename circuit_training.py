@@ -1,11 +1,13 @@
-from CircuitSimul import CircuitSimul
-from CircuitOpt import CircuitOpt
-import utils
+import sys
+
 import numpy as np
 import scipy as sp
-import params
+
 import data
-import sys
+import params
+import utils
+from CircuitOpt import CircuitOpt
+from CircuitSimul import CircuitSimul
 
 p = params.DEFAULT
 

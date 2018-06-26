@@ -1,9 +1,12 @@
 from unittest import TestCase
-from NeuronSimul import NeuronSimul
-from NeuronOpt import NeuronOpt
-import neuron_params, params
+
+import neuron_params
+import params
 import utils
 from Neuron import NeuronLSTM
+from NeuronOpt import NeuronOpt
+from NeuronSimul import NeuronSimul
+
 
 class TestNeuronOpt(TestCase):
 

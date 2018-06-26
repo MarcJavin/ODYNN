@@ -1,10 +1,9 @@
-import scipy as sp
-import numpy as np
 import random
 
+import numpy as np
+import scipy as sp
+
 # '[k|c]a?_[^_]*__(.*)': ['"](.*) .*["']
-
-
 
 
 SYNAPSE1 = {
@@ -35,6 +34,7 @@ SYNAPSE_inhib = {
     'E': 20.
 }
 
+
 def give_constraints_syn(conns):
     """constraints for synapse parameters"""
     scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
@@ -43,11 +43,10 @@ def give_constraints_syn(conns):
 
 
 def const_scale(exc=True):
-    if (exc):
+    if exc:
         return [1e-3, np.infty]
     else:
         return [-np.infty, -1e-3]
-
 
 
 MAX_TAU = 200.
@@ -57,10 +56,11 @@ MIN_MDP = -40.
 MAX_MDP = 30.
 MAX_G = 10.
 
+
 def get_syn_rand(exc=True):
     """Random parameters for a synapse"""
     # scale is negative if inhibitory
-    if (exc):
+    if exc:
         scale = random.uniform(MIN_SCALE, MAX_SCALE)
     else:
         scale = random.uniform(-MAX_SCALE, -MIN_SCALE)
@@ -72,18 +72,16 @@ def get_syn_rand(exc=True):
     }
 
 
-
-
-
 DT = 0.1
 t_train = np.array(sp.arange(0.0, 1200., DT))
 i_inj_train = 10. * ((t_train > 100) & (t_train < 300)) + 20. * ((t_train > 400) & (t_train < 600)) + 40. * (
-            (t_train > 800) & (t_train < 950))
+        (t_train > 800) & (t_train < 950))
 i_inj_train = np.array(i_inj_train, dtype=np.float32)
 i_inj_train2 = 30. * ((t_train > 100) & (t_train < 500)) + 25. * ((t_train > 800) & (t_train < 900))
 i_inj_train3 = np.sum([(10. + (n * 2 / 100)) * ((t_train > n) & (t_train < n + 50)) for n in range(100, 1100, 100)],
                       axis=0)
 i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
+
 
 def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     """time and currents for optimization"""
@@ -93,9 +91,9 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
     i4 = 15. * ((t > 400) & (t < 800))
     i_fin = np.stack([i, i2, i3, i4], axis=1)
-    if(nb_neuron_zero is not None):
+    if nb_neuron_zero is not None:
         i_zeros = np.zeros(i_fin.shape)
-        i_fin= np.stack([i_fin, i_zeros], axis=2)
+        i_fin = np.stack([i_fin, i_zeros], axis=2)
     return t, i_fin
 
 
@@ -113,12 +111,10 @@ def full4(dt=DT, nb_neuron_zero=None):
     i4 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 20)) for n in range(100, 1100, 80)], axis=0)
     is_3 = np.stack([i1, i2, i3, i4], axis=1)
     i_fin = np.stack([is_, is_3], axis=1)
-    if(nb_neuron_zero is not None):
+    if nb_neuron_zero is not None:
         i_zeros = np.zeros((len(t), i_fin.shape[1], 6))
         i_fin = np.append(i_fin, i_zeros, axis=2)
     return t, i_fin
-
-
 
 
 if __name__ == '__main__':
@@ -138,5 +134,5 @@ i_inj = np.array(i_inj, dtype=np.float32)
 
 t_test = np.array(sp.arange(0.0, 2000, DT))
 i_test = 10. * ((t_test > 100) & (t_test < 300)) + 20. * ((t_test > 400) & (t_test < 600)) + 40. * (
-            (t_test > 800) & (t_test < 950)) + \
+        (t_test > 800) & (t_test < 950)) + \
          (t_test - 1200) * (50. / 500) * ((t_test > 1200) & (t_test < 1700))

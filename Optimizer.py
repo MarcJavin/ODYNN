@@ -1,11 +1,12 @@
-import tensorflow as tf
-from utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
-from data import FILE_LV, SAVE_PATH, get_data_dump
 import pickle
-import numpy as np
 import time
 from abc import ABC, abstractmethod
 
+import numpy as np
+import tensorflow as tf
+
+from data import FILE_LV, SAVE_PATH, get_data_dump
+from utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 
 
 class Optimized(ABC):
@@ -41,7 +42,7 @@ class Optimizer(ABC):
         self.optimized = optimized
         self.parallel = self.optimized.num
 
-    def build_train(self):
+    def _build_train(self):
         """learning rate and optimization"""
         self.global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
@@ -59,12 +60,12 @@ class Optimizer(ABC):
         grads, vars = zip(*gvs)
         print(grads)
 
-        if(self.parallel > 1):
+        if self.parallel > 1:
             grads_normed = []
             for i in range(self.parallel):
                 #clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
-                # if(isinstance(self.optimized, Circuit.Circuit)):
+                # if isinstance(self.optimized, Circuit.Circuit):
                 #     #[synapse, model]
                 #     gi = [g[:,i] for g in grads]
                 # else:
@@ -84,7 +85,7 @@ class Optimizer(ABC):
 
         self.saver = tf.train.Saver()
 
-    def init(self, subdir, suffix, file, l_rate, w, yshape):
+    def _init(self, subdir, suffix, file, l_rate, w, yshape):
         """initialize objects to be optimized and write setting in the directory"""
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
@@ -94,10 +95,12 @@ class Optimizer(ABC):
 
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
         assert (self.optimized.dt == self.T[1] - self.T[0])
+
         self.n_batch = self.X.shape[1]
 
 
-        if (self.parallel > 1):
+
+        if self.parallel > 1:
             # add dimension for neurons trained in parallel
             # [time, n_batch, neuron]
             self.X = np.stack([self.X for _ in range(self.parallel)], axis=self.X.ndim)
@@ -119,7 +122,7 @@ class Optimizer(ABC):
                 self.start_rate, self.decay_step, self.decay_rate) + '\n' +
                     self.optimized.settings())
 
-    def train_and_gather(self, sess, i, losses, rates, vars):
+    def _train_and_gather(self, sess, i, losses, rates, vars):
         """train the model and collect loss, learn_rate and variables"""
         summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
             self.xs_: self.X,
@@ -138,12 +141,12 @@ class Optimizer(ABC):
 
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
-        if(self.parallel > 1):
+        if self.parallel > 1:
             train_loss = np.nanmean(train_loss)
         print('[{}] loss : {}'.format(i, train_loss))
         return results
 
-    def plots_dump(self, sess, losses, rates, vars, i):
+    def _plots_dump(self, sess, losses, rates, vars, i):
         with (open(self.dir + FILE_LV, 'wb')) as f:
             pickle.dump([losses, rates, vars], f)
         plot_loss_rate(losses[:i + 1], rates[:i + 1], suffix=self.suffix, show=False, save=True)
