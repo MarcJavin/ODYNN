@@ -6,11 +6,17 @@ import tensorflow as tf
 
 p = neuron_params.DEFAULT
 
+class HodgkinHuxley2(HodgkinHuxley):
+
+    def calculate(self, i):
+        pass
+
 class TestHodgkinHuxley(TestCase):
+
 
     def test_init(self):
         p = neuron_params.DEFAULT
-        hh = HodgkinHuxley(init_p=[p for _ in range(10)])
+        hh = HodgkinHuxley2(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh.init_state.shape, (7,hh.num))
@@ -18,7 +24,7 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (10,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = HodgkinHuxley(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = HodgkinHuxley2(init_p=[neuron_params.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -26,7 +32,7 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(list(hh.param.values())[0].shape, (13,))
         self.assertEqual(hh.param.keys(), p.keys())
 
-        hh = HodgkinHuxley(p)
+        hh = HodgkinHuxley2(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh.init_state.shape, (7,))
         self.assertIsInstance(hh.param, dict)

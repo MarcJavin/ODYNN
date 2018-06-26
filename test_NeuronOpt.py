@@ -3,6 +3,7 @@ from NeuronSimul import NeuronSimul
 from NeuronOpt import NeuronOpt
 import neuron_params, params
 import utils
+from Neuron import NeuronLSTM
 
 class TestNeuronOpt(TestCase):
 
@@ -12,12 +13,16 @@ class TestNeuronOpt(TestCase):
         t,i = params.give_train(dt=dt, max_t=5.)
         default = neuron_params.DEFAULT
         pars = neuron_params.give_rand()
+        sim = NeuronSimul(init_p=default, t=t, i_inj=i)
+        file = sim.simul(show=False, suffix='train', dump=True)
+
+        n = NeuronLSTM(dt=dt)
+        opt = NeuronOpt(neuron=n)
+        n = opt.optimize('unittest', w=[1, 1], epochs=1, file=file)
 
         #one neuron
         opt = NeuronOpt(init_p=pars, dt=dt)
         self.assertEqual(opt.parallel, 1)
-        sim = NeuronSimul(init_p=default, t=t, i_inj=i)
-        file = sim.simul(show=False, suffix='train', dump=True)
         n = opt.optimize('unittest', w=[1,1], epochs=1, file=file)
 
         #parallel
@@ -26,3 +31,4 @@ class TestNeuronOpt(TestCase):
         self.assertEqual(opt.parallel, 2)
         n = opt.optimize('unittest', w=[1, 1], epochs=1, file=file)
         self.assertEqual(opt.loss.shape[0], opt.parallel)
+

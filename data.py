@@ -131,15 +131,12 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
 
 
 if __name__ == '__main__':
-    df = pd.read_csv('data/AVAL1.csv')
-    # df = df.head(510)
-    trace = np.array(df['trace'])
-    i = np.array(df['inputCurrent']) * 10
-    tinit = np.array(df['timeVector']) * 1000
+    df = pd.read_csv('data/SMDBoxes.csv')
+    df = df.head(1510)
+    trace = np.array(df['Calcium_bc'])
+    i = np.array(df['Input']) * 100
+    tinit = np.array(df['time [s]']) * 1000
     t = np.arange(0, tinit[-1], step=2)
-
-    dump_data()
-    exit(0)
 
 
     t1 = time.time()

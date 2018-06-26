@@ -3,6 +3,8 @@ import scipy as sp
 import neuron_params
 import numpy as np
 from abc import ABC, abstractmethod
+import utils
+from Optimizer import Optimized
 
 V_pos = 0
 Ca_pos = -1
@@ -32,6 +34,10 @@ class Model(ABC):
     @staticmethod
     @abstractmethod
     def get_random():
+        pass
+
+    @abstractmethod
+    def calculate(self, i):
         pass
 
     def get_init_state(self):
@@ -144,6 +150,11 @@ class HodgkinHuxley(Model):
     def get_random(self):
         return neuron_params.give_rand()
 
+    @staticmethod
+    def plot_vars(*args, **kwargs):
+        return utils.plot_vars(*args, **kwargs)
+
+
     @staticmethod 
     def no_tau_ca(X, i_inj, self):
         """
@@ -250,7 +261,7 @@ class NeuronTf(MODEL):
 
     nb=-1
 
-    def __init__(self, init_p=neuron_params.DEFAULT, loop_func=None, dt=0.1, fixed=[], constraints=neuron_params.CONSTRAINTS):
+    def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1, fixed=[], constraints=neuron_params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, dt=dt)
         self.init_p = self.param
         self.fixed = fixed
@@ -321,7 +332,76 @@ class NeuronTf(MODEL):
                 input_cur: i
             })
         return results
+    
+    def settings(self):
+        return ('Neuron optimization'.center(20, '.') + '\n' +
+                'Nb of neurons : %s' % self.num + '\n' +
+                'Initial neuron params : %s' % self.init_p + '\n' +
+                'Fixed variables : %s' % [c for c in self.fixed] + '\n' +
+                'Initial state : %s' % self.init_state + '\n' +
+                'Constraints : %s' % self.constraints_dic + '\n' +
+                'dt : %s' % self.dt + '\n')
 
+    def apply_constraints(self, session):
+        session.run(self.constraints)
+
+    def get_params(self):
+        return self.param.items()
+
+
+
+class NeuronLSTM(Optimized):
+
+    num = 1
+    cell_size = 2
+    init_p = {}
+    constraints = tf.constant(0)
+
+    max_cur = 60
+    min_v = -60
+    scale_v = 100
+    scale_ca = 1000
+
+    def __init__(self, dt=0.1):
+        Optimized.__init__(self)
+        self.dt = dt
+
+
+    def build_graph(self, batch=None):
+        tf.reset_default_graph()
+        xshape = [None]
+        if (batch is not None):
+            xshape.append(None)
+
+        curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        self.input = tf.expand_dims(curs_/self.max_cur, axis=len(xshape))
+
+        rnn_outputs, rnn_states = self._lstm_cell(self.cell_size, self.input, batch, 'main')
+        res_ = tf.transpose(rnn_outputs, perm=[0,2,1])
+        V = res_[:,V_pos]*self.scale_v + self.min_v
+        Ca = res_[:,Ca_pos]*self.scale_ca
+
+        # v_in = tf.expand_dims(rnn_outputs[:,:,V_pos], axis=len(xshape))
+        #
+        # for i in range(3):
+        #     out, st = self.lstm_cell(1, v_in, batch, str(i))
+        #     self.input += out
+
+        return curs_, tf.stack([V, Ca], axis=1)
+
+    @staticmethod
+    def _lstm_cell(size, input, batch, scope):
+        with tf.variable_scope(scope):
+            cell = tf.nn.rnn_cell.BasicLSTMCell(size, state_is_tuple=True)
+            initializer = cell.zero_state(batch, dtype=tf.float32)
+            return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
+
+    def settings(self):
+        return ('Cell size : %s ' % self.cell_size + '\n' +
+                'dt : %s' % self.dt + '\n' +
+                'max current : %s, min voltage : %s, scale voltage : %s, scale calcium : %s'
+                % (self.max_cur, self.min_v, self.scale_v, self.scale_ca)
+                )
 
 
 class NeuronFix(MODEL):
@@ -329,9 +409,6 @@ class NeuronFix(MODEL):
     def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, dt=dt)
         self.state = self.init_state
-
-    def get_volt(self):
-        return self.state[V_pos]
 
     def init_batch(self, n):
         self.init_state = np.stack([self.init_state for _ in range(n)], axis=1)
@@ -347,5 +424,6 @@ class NeuronFix(MODEL):
             X.append(self.step(i))
         return np.array(X)
 
-    def reset(self, init_p=None):
+    def reset(self):
         self.state = self.init_state
+

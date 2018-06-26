@@ -4,7 +4,7 @@ from Circuit import Circuit_tf
 from NeuronOpt import NeuronOpt
 import neuron_params
 from Optimizer import Optimizer
-from utils import plots_output_mult, plot_loss_rate, plots_output_double, plot_vars_syn
+from utils import plots_output_mult, OUT_SETTINGS, plots_output_double, plot_vars_syn
 from data import DUMP_FILE, get_data_dump, FILE_CIRC
 import tensorflow as tf
 from tqdm import tqdm
@@ -21,7 +21,7 @@ class CircuitOpt(Optimizer):
     def __init__(self, inits_p, conns, fixed=neuron_params.ALL, dt=0.1):
         self.circuit = Circuit_tf(inits_p, conns=conns, fixed=fixed, dt=dt)
         Optimizer.__init__(self, self.circuit)
-        self.plot_vars = plot_vars_syn
+
 
 
     """train 1 neuron"""
@@ -39,19 +39,16 @@ class CircuitOpt(Optimizer):
     """optimize only neurons 1 by 1"""
     def opt_neurons(self, file):
         for i in range(self.circuit.neurons.num):
-            self.train_neuron('Circuit_0', NeuronOpt(loop_func=self.circuit.neurons.loop_func, dt=self.circuit.neurons.dt), i, file)
+            self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit.neurons.dt), i, file)
 
 
     """optimize synapses"""
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1,0], l_rate=[0.9,9,0.95]):
         T, X, V, Ca = get_data_dump(file)
 
-
-        xshape = [None, None, self.circuit.neurons.num]
         yshape = [2, None, None, len(n_out)]
 
-
-        self.init(subdir, suffix, file, l_rate, w, xshape, yshape, circuit=self.circuit)
+        self.init(subdir, suffix, file, l_rate, w, yshape)
 
 
         out = []
@@ -63,7 +60,12 @@ class CircuitOpt(Optimizer):
         self.loss = tf.reduce_mean(losses, axis=[0,1,2])
         self.build_train()
 
+        self.summary = tf.summary.merge_all()
+
         with tf.Session() as sess:
+
+            self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
+                                                 sess.graph)
             sess.run(tf.global_variables_initializer())
             losses = np.zeros((epochs, self.parallel))
             rates = np.zeros(epochs)

@@ -6,7 +6,6 @@ if (socket.gethostname()=='1080'):
     mpl.use("Agg")
 import pylab as plt
 import numpy as np
-import pandas as pd
 import os
 import re
 

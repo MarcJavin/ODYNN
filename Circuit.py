@@ -1,9 +1,9 @@
 import numpy as np
-from Neuron import NeuronTf, HodgkinHuxley, NeuronFix
+from Neuron import NeuronTf, NeuronFix
 import neuron_params, params
 import scipy as sp
 import tensorflow as tf
-import copy
+import utils
 
 class Circuit():
 
@@ -105,6 +105,10 @@ class Circuit():
                 curs_post[i] = np.sum(curs_syn[self.posts == i])
             return curs_post
 
+    @staticmethod
+    def plot_vars(*args, **kwargs):
+        return utils.plot_vars_syn(*args, **kwargs)
+
 
 class Circuit_tf(Circuit):
 
@@ -170,6 +174,20 @@ class Circuit_tf(Circuit):
                 input_cur: i
             })
         return results
+    
+    def settings(self):
+        return ('Circuit optimization'.center(20, '.') + '\n' +
+                'Connections : \n %s \n %s' % (self.pres, self.posts) + '\n' +
+                'Initial synaptic params : %s' % self.connections + '\n' +
+                self.neurons.settings())
+
+    def apply_constraints(self, session):
+        session.run(self.constraints)
+        self.neurons.apply_constraints(session)
+
+    def get_params(self):
+        return self.param.items()
+    
 
 class Circuit_fix(Circuit):
 

@@ -4,9 +4,35 @@ from data import FILE_LV, SAVE_PATH, get_data_dump
 import pickle
 import numpy as np
 import time
-import Circuit
+from abc import ABC, abstractmethod
 
-class Optimizer():
+
+
+class Optimized(ABC):
+
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def build_graph(self):
+        pass
+
+    @abstractmethod
+    def settings(self):
+        pass
+
+    @staticmethod
+    def plot_vars(var_dic, suffix, show, save):
+        pass
+
+    def apply_constraints(self, session):
+        pass
+
+    def get_params(self):
+        return []
+
+
+class Optimizer(ABC):
 
     min_loss = 1.
 
@@ -47,10 +73,10 @@ class Optimizer():
                 grads_normed.append(gi_norm)
             grads_normed = tf.stack(grads_normed)
             #resize to tf format
-            if (isinstance(self.optimized, Circuit.Circuit)):
+            try: #for circuits
                 grads_normed = tf.transpose(grads_normed, perm=[1,2,0])
                 grads_normed = tf.unstack(grads_normed, axis=0)
-            else:
+            except:
                 grads_normed = tf.unstack(grads_normed, axis=1)
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
@@ -59,16 +85,12 @@ class Optimizer():
         self.saver = tf.train.Saver()
 
     """initialize objects to be optimized and write setting in the directory"""
-    def init(self, subdir, suffix, file, l_rate, w, xshape, yshape, neur=None, circuit=None):
+    def init(self, subdir, suffix, file, l_rate, w, yshape):
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
-        assert (neur is not None or circuit is not None)
-        if(circuit is not None):
-            self.write_settings(subdir, circuit.neurons, w, circuit)
-        else:
-            self.write_settings(subdir, neur, w)
+        self.write_settings(w)
 
         self.T, self.X, self.V, self.Ca = get_data_dump(file)
         assert (self.optimized.dt == self.T[1] - self.T[0])
@@ -90,34 +112,26 @@ class Optimizer():
         print('i : ', self.X.shape, 'V : ', self.V.shape)
 
 
-
-    def write_settings(self, dir, neur, w, circuit=None):
-        with open('%s%s_%s.txt' % (self.dir, OUT_SETTINGS, self.suffix), 'w') as f:
-            if(circuit is not None):
-                f.write('Circuit optimization'.center(20, '.') + '\n')
-                f.write('Connections : \n %s \n %s' % (circuit.pres, circuit.posts) + '\n' +
-                        'Initial synaptic params : %s' % circuit.connections + '\n')
-            f.write('Neuron optimization'.center(20, '.') + '\n')
-            f.write('Nb of neurons : %s' % neur.num + '\n' +
-                    'Initial neuron params : %s' % neur.init_p + '\n'+
-                    'Fixed variables : %s' % [c for c in neur.fixed] + '\n'+
-                    'Initial state : %s' % neur.init_state + '\n' +
-                    'Constraints : %s' % neur.constraints_dic + '\n' +
-                    # 'Model solver : %s' % neur.loop_func + '\n' +
-                    'dt : %s' % neur.dt + '\n' +
-                    'Weights (out, cac) : %s' % w + '\n' +
-                    'Start rate : %s, decay_step : %s, decay_rate : %s' % (self.start_rate, self.decay_step, self.decay_rate) + '\n')
+    def write_settings(self, w):
+        with open(self.dir + OUT_SETTINGS, 'w') as f:
+            f.write('Weights (out, cac) : %s' % w + '\n' +
+                'Start rate : %s, decay_step : %s, decay_rate : %s' % (
+                self.start_rate, self.decay_step, self.decay_rate) + '\n' +
+                    self.optimized.settings())
 
     """train the model and collect loss, learn_rate and variables"""
     def train_and_gather(self, sess, i, losses, rates, vars):
-        results, _, train_loss = sess.run([self.res, self.train_op, self.loss], feed_dict={
+        summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
             self.xs_: self.X,
             self.ys_: np.array([self.V, self.Ca])
         })
-        _ = sess.run(self.optimized.constraints)
+
+        self.tdb.add_summary(summ, i)
+
+        self.optimized.apply_constraints(sess)
 
         with open('%s%s_%s.txt' % (self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-            for name, v in self.optimized.param.items():
+            for name, v in self.optimized.get_params():
                 v_ = sess.run(v)
                 f.write('%s : %s\n' % (name, v_))
                 vars[name][i + 1] = v_
@@ -134,5 +148,5 @@ class Optimizer():
             pickle.dump([losses, rates, vars], f)
         plot_loss_rate(losses[:i + 1], rates[:i + 1], suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, '%s%s' % (self.dir, SAVE_PATH))
-        self.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=self.suffix+'evolution', show=False,
+        self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]), suffix=self.suffix+'evolution', show=False,
                   save=True)
