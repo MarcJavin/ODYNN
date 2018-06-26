@@ -43,8 +43,8 @@ class Circuit():
         self.n_synapse = len(self.pres)
         assert(len(np.unique(np.hstack((self.pres,self.posts)))) == self.neurons.num), "Invalid number of neurons"
 
-    """synaptic current"""
     def syn_curr(self, vprev, vpost):
+        """synaptic current"""
         G = self.param['G']
         mdp = self.param['mdp']
         scale = self.param['scale']
@@ -54,8 +54,8 @@ class Circuit():
             g = G / (1 + sp.exp((mdp - vprev) / scale))
         return g * (self.param['E'] - vpost)
 
-    """run one time step"""
     def step(self, hprev, curs):
+        """run one time step"""
         if(self.tensors):
             # update synapses
             #curs : [batch, neuron(, model)]
@@ -131,8 +131,8 @@ class Circuit_tf(Circuit, Optimized):
         self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
         self.neurons.parallelize(n)
 
-    """build tf graph"""
     def reset(self):
+        """build tf graph"""
         self.param = {}
         self.constraints = []
         for var, val in self.init_p.items():

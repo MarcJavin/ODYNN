@@ -35,10 +35,8 @@ SYNAPSE_inhib = {
     'E': 20.
 }
 
-"""constraints for synapse parameters"""
-
-
 def give_constraints_syn(conns):
+    """constraints for synapse parameters"""
     scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
     return {'G': np.array([1e-5, np.infty]),
             'scale': scale_con.transpose()}
@@ -59,10 +57,8 @@ MIN_MDP = -40.
 MAX_MDP = 30.
 MAX_G = 10.
 
-"""Random parameters for a synapse"""
-
-
 def get_syn_rand(exc=True):
+    """Random parameters for a synapse"""
     # scale is negative if inhibitory
     if (exc):
         scale = random.uniform(MIN_SCALE, MAX_SCALE)
@@ -89,10 +85,8 @@ i_inj_train3 = np.sum([(10. + (n * 2 / 100)) * ((t_train > n) & (t_train < n + 5
                       axis=0)
 i_inj_trains = np.stack([i_inj_train, i_inj_train2, i_inj_train3], axis=1)
 
-"""time and currents for optimization"""
-
-
 def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
+    """time and currents for optimization"""
     t = np.array(sp.arange(0.0, max_t, dt))
     i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950))
     i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))

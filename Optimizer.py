@@ -41,8 +41,8 @@ class Optimizer(ABC):
         self.optimized = optimized
         self.parallel = self.optimized.num
 
-    """learning rate and optimization"""
     def build_train(self):
+        """learning rate and optimization"""
         self.global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
         self.learning_rate = tf.train.exponential_decay(
@@ -84,8 +84,8 @@ class Optimizer(ABC):
 
         self.saver = tf.train.Saver()
 
-    """initialize objects to be optimized and write setting in the directory"""
     def init(self, subdir, suffix, file, l_rate, w, yshape):
+        """initialize objects to be optimized and write setting in the directory"""
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
         tf.reset_default_graph()
@@ -119,8 +119,8 @@ class Optimizer(ABC):
                 self.start_rate, self.decay_step, self.decay_rate) + '\n' +
                     self.optimized.settings())
 
-    """train the model and collect loss, learn_rate and variables"""
     def train_and_gather(self, sess, i, losses, rates, vars):
+        """train the model and collect loss, learn_rate and variables"""
         summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
             self.xs_: self.X,
             self.ys_: np.array([self.V, self.Ca])

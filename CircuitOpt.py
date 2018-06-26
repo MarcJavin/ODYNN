@@ -35,8 +35,8 @@ class CircuitOpt(Optimizer):
         self.loss = tf.reduce_mean(losses, axis=[0, 1, 2])
 
 
-    """train 1 neuron"""
     def train_neuron(self, dir, opt, num, file):
+        """train 1 neuron"""
         wv = 0.2
         wca = 0.8
         suffix = 'neuron%s'%num
@@ -47,14 +47,14 @@ class CircuitOpt(Optimizer):
             wca = 1 - wca
             opt.optimize(dir, [wv, wca], reload=True, epochs=20, suffix=suffix, step=i+1, file=file)
 
-    """optimize only neurons 1 by 1"""
     def opt_neurons(self, file):
+        """optimize only neurons 1 by 1"""
         for i in range(self.circuit.neurons.num):
             self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit.neurons.dt), i, file)
 
 
-    """optimize synapses"""
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1,0], l_rate=[0.9,9,0.95]):
+        """optimize synapses"""
         print(suffix)
         T, X, V, Ca = get_data_dump(file)
 

@@ -133,8 +133,8 @@ MIN_MDP = -40.
 MAX_MDP = 30.
 MAX_G = 10.
 
-"""Random parameters for a neuron"""
 def give_rand():
+    """Random parameters for a neuron"""
     return {
         'decay_ca': 110.,
         'rho_ca': 0.23e-2,

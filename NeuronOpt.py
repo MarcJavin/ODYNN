@@ -29,8 +29,8 @@ class NeuronOpt(Optimizer):
         Optimizer.__init__(self, self.neuron)
 
 
-    """Define how the loss is computed"""
     def build_loss(self, w):
+        """Define how the loss is computed"""
         cac = self.res[:, Ca_pos]
         out = self.res[:, V_pos]
         losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
@@ -60,6 +60,7 @@ class NeuronOpt(Optimizer):
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
 
+            sess.run(tf.global_variables_initializer())
             losses = np.zeros((epochs, self.parallel))
             rates = np.zeros(epochs)
 
@@ -72,7 +73,6 @@ class NeuronOpt(Optimizer):
                 rates = np.concatenate((r, rates))
                 len_prev = len(l)
             else:
-                sess.run(tf.global_variables_initializer())
                 vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
                 len_prev = 0
 

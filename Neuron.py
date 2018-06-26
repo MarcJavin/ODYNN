@@ -55,8 +55,8 @@ class HodgkinHuxley(Model):
     def __init__(self, init_p=neuron_params.DEFAULT, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
-    """steady state value of a rate"""
     def inf(self, V, rate):
+        """steady state value of a rate"""
         mdp = self.param['%s__mdp' % rate]
         scale = self.param['%s__scale' % rate]
         if(self.tensors):
@@ -277,8 +277,8 @@ class NeuronTf(MODEL, Optimized):
     def step(self, hprev, x):
         return self.step_model(hprev, x, self)
 
-    """rebuild tf variable graph"""
     def reset(self):
+        """rebuild tf variable graph"""
         with(tf.variable_scope(self.id)):
             self.param = {}
             self.constraints = []
@@ -375,20 +375,25 @@ class NeuronLSTM(Optimized):
             xshape.append(None)
 
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        self.input = tf.expand_dims(curs_/self.max_cur, axis=len(xshape))
+        input = tf.expand_dims(curs_/self.max_cur, axis=len(xshape))
 
-        rnn_outputs, rnn_states = self._lstm_cell(self.cell_size, self.input, batch, 'main')
-        res_ = tf.transpose(rnn_outputs, perm=[0,2,1])
-        V = res_[:,V_pos]*self.scale_v + self.min_v
-        Ca = res_[:,Ca_pos]*self.scale_ca
+        out_pre, st_pre = self._lstm_cell(1, input, batch, 'pre_V')
 
-        # v_in = tf.expand_dims(rnn_outputs[:,:,V_pos], axis=len(xshape))
-        #
-        # for i in range(3):
-        #     out, st = self.lstm_cell(1, v_in, batch, str(i))
-        #     self.input += out
+        v_in = tf.expand_dims(out_pre[:,:,V_pos], axis=len(xshape))
 
-        return curs_, tf.stack([V, Ca], axis=1)
+        curs = tf.zeros(tf.shape(input))
+        for i in range(3):
+            out, st = self._lstm_cell(1, v_in, batch, str(i))
+            curs += out
+
+        rnn_outputs, rnn_states = self._lstm_cell(self.cell_size, curs, batch, 'post_V_Ca')
+        with tf.name_scope('Scale'):
+            res_ = tf.transpose(rnn_outputs, perm=[0, 2, 1])
+            V = res_[:, V_pos] * self.scale_v + self.min_v
+            Ca = res_[:, Ca_pos] * self.scale_ca
+            results = tf.stack([V, Ca], axis=1)
+
+        return curs_, results
 
     @staticmethod
     def _lstm_cell(size, input, batch, scope):

@@ -34,7 +34,7 @@ GATES = ['e', 'f', 'n', 'p', 'q']
 CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
 MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
-COLORS = [ 'c', 'k', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
+COLORS = [ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 
 
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     plt.bar(x=range(len(COLORS)), height=[1 for _ in range(len(COLORS))], color=COLORS)
     plt.show()
 
-"""Set directory to save files"""
 def set_dir(subdir):
+    """Set directory to save files"""
     global DIR
     DIR = RES_DIR + subdir + '/'
     if not os.path.exists(DIR):
@@ -55,8 +55,8 @@ def set_dir(subdir):
     return DIR
 
 
-"""Get variables values into a dictionnary"""
 def get_dic_from_var(dir, suffix=""):
+    """Get variables values into a dictionnary"""
     file = '%s%s/%s_%s.txt' % (RES_DIR, dir, OUT_PARAMS, suffix)
     dic = {}
     with open(file, 'r') as f:
@@ -129,8 +129,8 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-"""plot variation/comparison/boxplots of synaptic variables"""
 def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
+    """plot variation/comparison/boxplots of synaptic variables"""
     plt.figure()
     if(list(var_dic.values())[0].ndim > 2):
         var_dic = dict([(var, np.reshape(val, (val.shape[0], -1))) for var, val in var_dic.items()])
@@ -147,8 +147,8 @@ def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
 
 
 
-"""plot variation/comparison/boxplots of all variables organized by categories"""
 def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
+    """plot variation/comparison/boxplots of all variables organized by categories"""
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
@@ -202,8 +202,8 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
 
     plt.close('all')
 
-"""plot the gates variables"""
 def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
+    """plot the gates variables"""
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
     vars = [('Midpoint',mdp), ('Scale',scale), ('Tau',tau)]
     for i, var in enumerate(vars):
@@ -218,8 +218,8 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
         fig.add_subplot(ax)
 
 
-"""plot loss (log10) and learning rate"""
 def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
+    """plot loss (log10) and learning rate"""
     plt.figure()
 
     plt.subplot(2,1,1)
@@ -240,8 +240,8 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-"""plot multiple voltages and Ca2+ concentration"""
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
+    """plot multiple voltages and Ca2+ concentration"""
     plt.figure()
 
     if (Vs.ndim > 2):
@@ -283,8 +283,8 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         plt.show()
     plt.close()
 
-"""plot voltage and Ca2+ conc compared to the target model"""
 def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1, targstyle='-'):
+    """plot voltage and Ca2+ conc compared to the target model"""
     plt.figure()
 
     if(v.ndim > 2):
@@ -314,8 +314,8 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
         plt.show()
     plt.close()
 
-"""plot i_ca and Ca conc depending on the voltage"""
 def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
+    """plot i_ca and Ca conc depending on the voltage"""
     ica = results[:, 0]
     e = results[:, 1]
     f = results[:, 2]
@@ -351,8 +351,8 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-"""plot i_k depending on the voltage"""
 def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
+    """plot i_k depending on the voltage"""
     ik = results[:, 0]
     p = results[:, 1]
     q = results[:, 2]
@@ -384,8 +384,8 @@ def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.close()
 
 
-"""plot all dynamics"""
 def plots_results(model, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
+    """plot all dynamics"""
     V = results[:, 0]
     p = results[:, 1]
     q = results[:, 2]

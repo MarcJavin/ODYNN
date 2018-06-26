@@ -19,16 +19,16 @@ FILE_NEUR = 'tmp/neuron'
 FILE_CIRC = 'tmp/circuit'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
-"""get dic of vars from dumped file"""
 def get_vars(dir, i=-1):
+    """get dic of vars from dumped file"""
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 
-"""get dic of vars from dumped file"""
 def get_vars_all(dir, i=-1):
+    """get dic of vars from dumped file"""
     file = utils.RES_DIR+dir+'/'+FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
@@ -61,8 +61,8 @@ def get_data(file='AVAL_test.csv'):
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
 
-"""study the hill equation"""
 def check_alpha(tinit, i, trace):
+    """study the hill equation"""
     vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
     idx=0
     plt.subplot(211)
@@ -86,8 +86,8 @@ def check_alpha(tinit, i, trace):
         plt.legend()
     plt.show()
 
-"""dump real data into our format"""
 def dump_data(delta=500, final_time=4000., dt=0.2):
+    """dump real data into our format"""
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
