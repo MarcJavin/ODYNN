@@ -257,12 +257,13 @@ class HodgkinHuxley(Model):
 
 MODEL = HodgkinHuxley
 
-class NeuronTf(MODEL):
+class NeuronTf(MODEL, Optimized):
 
     nb=-1
 
     def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1, fixed=[], constraints=neuron_params.CONSTRAINTS):
         HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, dt=dt)
+        Optimized.__init__(self)
         self.init_p = self.param
         self.fixed = fixed
         self.constraints_dic = constraints

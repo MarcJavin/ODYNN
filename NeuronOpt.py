@@ -15,7 +15,9 @@ import time
 
 
 class NeuronOpt(Optimizer):
-    """Full Hodgkin-Huxley Model implemented in Python"""
+    """
+    Optimization of a neuron
+    """
 
     dim_batch= 1
 
@@ -37,7 +39,6 @@ class NeuronOpt(Optimizer):
         self.loss = tf.reduce_mean(losses, axis=[0,1])
 
 
-
     def optimize(self, subdir, w=[1,0], epochs=500, l_rate=[0.1,9,0.92], suffix='', step=None, file=DUMP_FILE, reload=False):
         print(suffix, step)
         T, X, V, Ca = get_data_dump(file)
@@ -50,12 +51,8 @@ class NeuronOpt(Optimizer):
             self.V = np.full(self.Ca.shape, -50.)
             w[0] = 0
 
-        # if (self.neuron.loop_func == self.neuron.ik_from_v):
-        #     self.Ca = self.V
-
         self.build_loss(w)
         self.build_train()
-
         self.summary = tf.summary.merge_all()
 
         with tf.Session() as sess:
@@ -63,29 +60,25 @@ class NeuronOpt(Optimizer):
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
 
-            if(self.parallel==1):
-                add_l = np.zeros((epochs))
-            else:
-                add_l = np.zeros((epochs, self.parallel))
+            losses = np.zeros((epochs, self.parallel))
+            rates = np.zeros(epochs)
+
             if(reload):
                 """Get variables and measurements from previous steps"""
                 self.saver.restore(sess, '%s%s'%(self.dir, SAVE_PATH))
                 with open(self.dir+FILE_LV, 'rb') as f:
                     l,r,vars = pickle.load(f)
-                losses = np.concatenate((l, add_l))
-                rates = np.concatenate((r, np.zeros(epochs)))
+                losses = np.concatenate((l, losses))
+                rates = np.concatenate((r, rates))
                 len_prev = len(l)
             else:
                 sess.run(tf.global_variables_initializer())
                 vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
-                losses = add_l
-                rates = np.zeros(epochs)
                 len_prev = 0
 
             vars = dict([(var, np.vstack((val, np.zeros((epochs, self.parallel))))) for var, val in vars.items()])
 
             for i in tqdm(range(epochs)):
-
                 results = self.train_and_gather(sess, len_prev+i, losses, rates, vars)
 
                 # if(losses[len_prev+i]<self.min_loss):
@@ -96,6 +89,7 @@ class NeuronOpt(Optimizer):
                     plots_output_double(self.T, X[:,b], results[:,V_pos,b], V[:,b], results[:,Ca_pos,b],
                                         self.Ca[:,b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
+
                 if(i%10==0 or i==epochs-1):
                     self.plots_dump(sess, losses, rates, vars, len_prev+i)
 

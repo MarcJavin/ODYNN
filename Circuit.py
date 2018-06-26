@@ -4,6 +4,7 @@ import neuron_params, params
 import scipy as sp
 import tensorflow as tf
 import utils
+from Optimizer import Optimized
 
 class Circuit():
 
@@ -110,11 +111,12 @@ class Circuit():
         return utils.plot_vars_syn(*args, **kwargs)
 
 
-class Circuit_tf(Circuit):
+class Circuit_tf(Circuit, Optimized):
 
     def __init__(self, inits_p, conns, fixed=neuron_params.ALL, constraints_n=neuron_params.CONSTRAINTS, dt=0.1):
         neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
+        Optimized.__init__(self)
         if(self.num > 1):
             constraints_dic = params.give_constraints_syn(conns[0])
             #update constraint size for parallelization
