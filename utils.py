@@ -1,3 +1,10 @@
+"""
+.. module:: utils
+    :synopsis: Module for plots, paths and saving files
+
+.. moduleauthor:: Marc Javin
+"""
+
 import socket
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
@@ -57,7 +64,7 @@ def set_dir(subdir):
 
 def get_dic_from_var(dir, suffix=""):
     """Get variables values into a dictionnary"""
-    file = '%s%s/%s_%s.txt' % (RES_DIR, dir, OUT_PARAMS, suffix)
+    file = '{}{}/{}_{}.txt'.format(RES_DIR, dir, OUT_PARAMS, suffix)
     dic = {}
     with open(file, 'r') as f:
         for line in f:
@@ -97,7 +104,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     box(var_dic, cols, labels)
     plt.title('Membrane')
     if (save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'Membrane', suffix), dpi=300)
     if (show):
         plt.show()
 
@@ -110,7 +117,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     plt.title('Decay_ca')
     plt.tight_layout()
     if (save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'CalciumPump', suffix), dpi=300)
     if (show):
         plt.show()
 
@@ -118,13 +125,13 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     for i, type in enumerate(['mdp', 'scale', 'tau']):
         plt.subplot(3,1,i+1)
         plt.title(type)
-        labels = ['%s__%s'%(rate,type) for rate in RATE_COLORS.keys()]
+        labels = ['{}__{}'.format(rate, type) for rate in RATE_COLORS.keys()]
         cols = RATE_COLORS.values()
         if(type=='tau'):
             labels = ['h__alpha' if x=='h__tau' else x for x in labels]
         box(var_dic, cols, labels)
     if (save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'Rates', suffix), dpi=300)
     if (show):
         plt.show()
     plt.close()
@@ -140,7 +147,7 @@ def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
         plt.ylabel(var)
     plt.tight_layout()
     if (save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Synapses', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'Synapses', suffix), dpi=300)
     if (show):
         plt.show()
     plt.close()
@@ -153,13 +160,13 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
         gate = GATES[nb]
-        plot_vars_gate(gate, var_dic['%s__mdp' % gate], var_dic['%s__scale' % gate],
-                       var_dic['%s__tau' % gate], fig, grid[nb], (nb%3==0), func=func)
+        plot_vars_gate(gate, var_dic['{}__mdp'.format(gate)], var_dic['{}__scale'.format(gate)],
+                       var_dic['{}__tau'.format(gate)], fig, grid[nb], (nb % 3 == 0), func=func)
     plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
                    var_dic['h__alpha'], fig, grid[5], False, func=func)
     plt.tight_layout()
     if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Rates', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'Rates', suffix), dpi=300)
     if(show):
         plt.show()
 
@@ -184,7 +191,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
         fig.add_subplot(ax)
     plt.tight_layout()
     if(save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'Membrane', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'Membrane', suffix), dpi=300)
     if(show):
         plt.show()
 
@@ -196,7 +203,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     func(ax, var_dic['decay_ca'])#, 'b')
     plt.ylabel('Decay_ca')
     if (save):
-        plt.savefig('%svar_%s_%s.png' % (DIR, 'CalciumPump', suffix), dpi=300)
+        plt.savefig('{}var_{}_{}.png'.format(DIR, 'CalciumPump', suffix), dpi=300)
     if (show):
         plt.show()
 
@@ -235,7 +242,7 @@ def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
     plt.ylabel('Learning rate')
 
     if(save):
-        plt.savefig('%slosses_%s.png' % (DIR,suffix), dpi=300)
+        plt.savefig('{}losses_{}.png'.format(DIR, suffix), dpi=300)
     if(show):
         plt.show()
     plt.close()
@@ -278,7 +285,7 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
     if (save):
-        plt.savefig('%s%soutput_%s.png' % (DIR, IMG_DIR, suffix))
+        plt.savefig('{}{}output_{}.png'.format(DIR, IMG_DIR, suffix))
     if (show):
         plt.show()
     plt.close()
@@ -309,7 +316,7 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
     if(save):
-        plt.savefig('%s%soutput_%s.png' % (DIR,IMG_DIR,suffix))
+        plt.savefig('{}{}output_{}.png'.format(DIR, IMG_DIR, suffix))
     if(show):
         plt.show()
     plt.close()
@@ -346,7 +353,7 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.xlabel('t (ms)')
 
     if(save):
-        plt.savefig('%sresults_ica_%s.png' % (DIR, suffix))
+        plt.savefig('{}results_ica_{}.png'.format(DIR, suffix))
     if(show):
         plt.show()
     plt.close()
@@ -378,7 +385,7 @@ def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.xlabel('t (ms)')
 
     if (save):
-        plt.savefig('%sresults_ik_%s.png' % (DIR, suffix))
+        plt.savefig('{}results_ik_{}.png'.format(DIR, suffix))
     if (show):
         plt.show()
     plt.close()
@@ -443,7 +450,7 @@ def plots_results(model, ts, i_inj_values, results, ca_true=None, suffix="", sho
     # plt.ylim(-1, 40)
 
     if(save):
-        plt.savefig('%sresults_%s.png' % (DIR,suffix), dpi=300)
+        plt.savefig('{}results_{}.png'.format(DIR, suffix), dpi=300)
     if(show):
         plt.show()
     plt.close()

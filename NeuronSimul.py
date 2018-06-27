@@ -1,3 +1,10 @@
+"""
+.. module:: NeuronSimul
+    :synopsis: Module for simulation of neurons
+
+.. moduleauthor:: Marc Javin
+"""
+
 from Neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
 import time
 from utils import plots_results, plots_ik_from_v, plots_ica_from_v

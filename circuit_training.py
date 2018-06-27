@@ -1,15 +1,22 @@
+"""
+.. module:: circuit_training
+    :synopsis: Module containing functions to organize the training of circuits
+
+.. moduleauthor:: Marc Javin
+"""
+
 import sys
 
 import numpy as np
 import scipy as sp
 
 import data
-import params
+import params, neuron_params
 import utils
 from CircuitOpt import CircuitOpt
 from CircuitSimul import CircuitSimul
 
-p = params.DEFAULT
+p = neuron_params.DEFAULT
 
 def inhibit():
     inhib = params.SYNAPSE_inhib

@@ -1,3 +1,10 @@
+"""
+.. module:: CircuitSimul
+    :synopsis: Module for simulation of neural circuits
+
+.. moduleauthor:: Marc Javin
+"""
+
 import numpy as np
 from Neuron import HodgkinHuxley, V_pos, Ca_pos
 from Circuit import CircuitFix

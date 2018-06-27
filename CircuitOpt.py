@@ -1,3 +1,10 @@
+"""
+.. module:: CircuitOpt
+    :synopsis: Module for optimizing neural circuits
+
+.. moduleauthor:: Marc Javin
+"""
+
 import time
 
 import numpy as np
@@ -62,8 +69,8 @@ class CircuitOpt(Optimizer):
 
         self._init(subdir, suffix, file, l_rate, w, yshape)
 
-        if self.V is None:
-            self.V = np.full(self.Ca.shape, -50.)
+        if self._V is None:
+            self._V = np.full(self._Ca.shape, -50.)
             w[0] = 0
 
         self._build_loss(w, n_out)
@@ -89,14 +96,14 @@ class CircuitOpt(Optimizer):
                 results = self._train_and_gather(sess, i, losses, rates, vars)
 
                 for b in range(self.n_batch):
-                    plots_output_double(self.T, X[:, b, 0], results[:, V_pos, b, n_out], V[:, b, 0],
+                    plots_output_double(self._T, X[:, b, 0], results[:, V_pos, b, n_out], V[:, b, 0],
                                         results[:, Ca_pos, b, n_out],
                                         Ca[:, b, 0], suffix='trace%s_%s' % (b, i), show=False, save=True)
-                    # plots_output_mult(self.T, self.X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
+                    # plots_output_mult(self._T, self._X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if i % 10 == 0 or i == epochs - 1:
                     for b in range(self.n_batch):
-                        plots_output_mult(self.T, X[:, b, 0], results[:, V_pos, b, :], results[:, Ca_pos, b, :],
+                        plots_output_mult(self._T, X[:, b, 0], results[:, V_pos, b, :], results[:, Ca_pos, b, :],
                                           suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)
 
                     self._plots_dump(sess, losses, rates, vars, i)

@@ -1,3 +1,10 @@
+"""
+.. module:: Circuit
+    :synopsis: Module containing implementation of neural circuits objects
+
+.. moduleauthor:: Marc Javin
+"""
+
 import numpy as np
 import scipy as sp
 import tensorflow as tf
@@ -9,7 +16,7 @@ from Neuron import NeuronTf, NeuronFix
 from Optimizer import Optimized
 
 
-class Circuit():
+class Circuit:
 
     """
     Circuit of neurons with synapses

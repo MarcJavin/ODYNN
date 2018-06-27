@@ -1,3 +1,10 @@
+"""
+.. module:: neuron_training
+    :synopsis: Module containing functions to organize the training of neurons
+
+.. moduleauthor:: Marc Javin
+"""
+
 import sys
 
 import numpy as np
@@ -136,19 +143,23 @@ def alternate(name=''):
     test_xp(dir)
 
 
-def classic(name, wv, wca, default=neuron_params.DEFAULT_2):
+def classic(name, wv, wca, default=neuron_params.DEFAULT_2, lstm=True):
     if(wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif(wca == 0):
         dir = 'Integcomp_volt_%s' % name
     else:
         dir = 'Integcomp_both_%s' % name
+    if (lstm):
+        dir += '_lstm'
+        neur = NeuronLSTM(dt=dt)
+        opt = NeuronOpt(neur)
+    else:
+        opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
-    neur = NeuronLSTM(dt=dt)
-    opt = NeuronOpt(neur)
     sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
     file = sim.simul(show=False, suffix='train', dump=True)
-    n = opt.optimize(dir, w=[wv, wca], epochs=500, file=file)
+    n = opt.optimize(dir, w=[wv, wca], epochs=700, file=file)
     comp_pars(dir, n)
     test_xp(dir, default=default)
 

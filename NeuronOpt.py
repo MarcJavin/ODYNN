@@ -1,3 +1,10 @@
+"""
+.. module:: NeuronOpt
+    :synopsis: Module for optimizing neurons
+
+.. moduleauthor:: Marc Javin
+"""
+
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -46,8 +53,8 @@ class NeuronOpt(Optimizer):
 
         self._init(subdir, suffix, file, l_rate, w, yshape)
 
-        if self.V is None:
-            self.V = np.full(self.Ca.shape, -50.)
+        if self._V is None:
+            self._V = np.full(self._Ca.shape, -50.)
             w[0] = 0
 
         self._build_loss(w)
@@ -85,8 +92,8 @@ class NeuronOpt(Optimizer):
                 #     return i+len_prev
 
                 for b in range(self.n_batch):
-                    plots_output_double(self.T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
-                                        self.Ca[:, b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                    plots_output_double(self._T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
+                                        self._Ca[:, b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
 
                 if i % 10 == 0 or i == epochs - 1:

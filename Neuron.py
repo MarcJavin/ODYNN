@@ -1,3 +1,11 @@
+"""
+.. module:: Neuron
+    :synopsis: Module containing classes for different neuron models
+
+.. moduleauthor:: Marc Javin
+"""
+
+
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -13,6 +21,7 @@ Ca_pos = -1
 
 
 class Model(ABC):
+    """Abstract class to implement for using a new model"""
     default = None
     _constraints_dic = None
     _init_state = None
@@ -357,12 +366,12 @@ class NeuronTf(MODEL, Optimized):
 
     def settings(self):
         return ('Neuron optimization'.center(20, '.') + '\n' +
-                'Nb of neurons : %s' % self.num + '\n' +
-                'Initial neuron params : %s' % self.init_p + '\n' +
-                'Fixed variables : %s' % [c for c in self._fixed] + '\n' +
-                'Initial state : %s' % self.init_state + '\n' +
-                'Constraints : %s' % self._constraints_dic + '\n' +
-                'dt : %s' % self.dt + '\n')
+                'Nb of neurons : {}'.format(self.num) + '\n' +
+                'Initial neuron params : {}'.format(self.init_p) + '\n' +
+                'Fixed variables : {}'.format([c for c in self._fixed]) + '\n' +
+                'Initial state : {}'.format(self.init_state) + '\n' +
+                'Constraints : {}'.format(self._constraints_dic) + '\n' +
+                'dt : {}'.format(self.dt) + '\n')
 
     def apply_constraints(self, session):
         session.run(self._constraints)
@@ -374,7 +383,8 @@ class NeuronTf(MODEL, Optimized):
 class NeuronLSTM(Optimized):
     num = 1
     _cell_size = 2
-    _hidden_layer_nb = 3
+    _hidden_layer_nb = 2
+    _hidden_layer_cells = 5
     _hidden_layer_size = 10
     init_p = {}
 
@@ -396,13 +406,15 @@ class NeuronLSTM(Optimized):
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
-        hidden = []
-        for i in range(self._hidden_layer_nb):
-            out, st = self._lstm_cell(self._hidden_layer_size, input, batch, str(i))
-            hidden.append(out)
-        hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
+        for layer in range(self._hidden_layer_nb):
+            hidden = []
+            for cell in range(self._hidden_layer_cells):
+                out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(layer, cell))
+                hidden.append(out)
+            hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
+            input = hidden
 
-        rnn_outputs, rnn_states = self._lstm_cell(self._cell_size, hidden, batch, 'post_V_Ca')
+        rnn_outputs, rnn_states = self._lstm_cell(self._cell_size, input, batch, 'post_V_Ca')
         with tf.name_scope('Scale'):
             res_ = tf.transpose(rnn_outputs, perm=[0, 2, 1])
             V = res_[:, V_pos] * self._scale_v + self._min_v
@@ -410,6 +422,9 @@ class NeuronLSTM(Optimized):
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
+
+    def calculate(self, i):
+        pass
 
     @staticmethod
     def _lstm_cell(size, input, batch, scope):
@@ -419,12 +434,13 @@ class NeuronLSTM(Optimized):
             return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
 
     def settings(self):
-        return ('Cell size : %s ' % self._cell_size + '\n' +
-                'Number of hidden cells : %s' % self._hidden_layer_nb + '\n' +
-                'State size in hidden layer : %s' % self._hidden_layer_size + '\n' +
-                'dt : %s' % self.dt + '\n' +
-                'max current : %s, min voltage : %s, scale voltage : %s, scale calcium : %s'
-                % (self._max_cur, self._min_v, self._scale_v, self._scale_ca)
+        return ('Cell size : {} '.format(self._cell_size) + '\n' +
+                'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
+                'Number of hidden cells : {}'.format(self._hidden_layer_cells) + '\n' +
+                'State size in hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
+                'dt : {}'.format(self.dt) + '\n' +
+                'max current : {}, min voltage : {}, scale voltage : {}, scale calcium : {}'
+                .format(self._max_cur, self._min_v, self._scale_v, self._scale_ca)
                 )
 
 

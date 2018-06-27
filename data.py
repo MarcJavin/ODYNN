@@ -1,4 +1,10 @@
-# from statsmodels.nonparametric.smoothers_lowess import lowess
+"""
+.. module:: data
+    :synopsis: Module for data extraction and preparation
+
+.. moduleauthor:: Marc Javin
+"""
+
 import math
 import pickle
 import time
