@@ -1,6 +1,0 @@
-nohup python3 neuron_training.py $10 &
-nohup python3 neuron_training.py $11 &
-nohup python3 neuron_training.py $12 &
-nohup python3 neuron_training.py $13 &
-nohup python3 neuron_training.py $14 &
-nohup python3 neuron_training.py $15 &

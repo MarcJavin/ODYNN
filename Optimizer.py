@@ -120,6 +120,7 @@ class Optimizer(ABC):
             f.write('Weights (out, cac) : %s' % w + '\n' +
                 'Start rate : %s, decay_step : %s, decay_rate : %s' % (
                 self.start_rate, self.decay_step, self.decay_rate) + '\n' +
+                'Number of batches : %s' % self.n_batch + '\n' +
                     self.optimized.settings())
 
     def _train_and_gather(self, sess, i, losses, rates, vars):

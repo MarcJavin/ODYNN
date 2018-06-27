@@ -374,6 +374,8 @@ class NeuronTf(MODEL, Optimized):
 class NeuronLSTM(Optimized):
     num = 1
     _cell_size = 2
+    _hidden_layer_nb = 3
+    _hidden_layer_size = 10
     init_p = {}
 
     _max_cur = 60
@@ -394,16 +396,13 @@ class NeuronLSTM(Optimized):
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
-        out_pre, st_pre = self._lstm_cell(1, input, batch, 'pre_V')
+        hidden = []
+        for i in range(self._hidden_layer_nb):
+            out, st = self._lstm_cell(self._hidden_layer_size, input, batch, str(i))
+            hidden.append(out)
+        hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
 
-        v_in = tf.expand_dims(out_pre[:, :, V_pos], axis=len(xshape))
-
-        curs = tf.zeros(tf.shape(input))
-        for i in range(3):
-            out, st = self._lstm_cell(1, v_in, batch, str(i))
-            curs += out
-
-        rnn_outputs, rnn_states = self._lstm_cell(self._cell_size, curs, batch, 'post_V_Ca')
+        rnn_outputs, rnn_states = self._lstm_cell(self._cell_size, hidden, batch, 'post_V_Ca')
         with tf.name_scope('Scale'):
             res_ = tf.transpose(rnn_outputs, perm=[0, 2, 1])
             V = res_[:, V_pos] * self._scale_v + self._min_v
@@ -421,6 +420,8 @@ class NeuronLSTM(Optimized):
 
     def settings(self):
         return ('Cell size : %s ' % self._cell_size + '\n' +
+                'Number of hidden cells : %s' % self._hidden_layer_nb + '\n' +
+                'State size in hidden layer : %s' % self._hidden_layer_size + '\n' +
                 'dt : %s' % self.dt + '\n' +
                 'max current : %s, min voltage : %s, scale voltage : %s, scale calcium : %s'
                 % (self._max_cur, self._min_v, self._scale_v, self._scale_ca)
