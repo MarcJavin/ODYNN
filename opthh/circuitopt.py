@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from opthh import neuron_params
+from opthh import hhmodel
 from opthh.circuit import CircuitTf
 from opthh.neuron import V_pos, Ca_pos
 from opthh.neuronopt import NeuronOpt
@@ -26,7 +26,7 @@ class CircuitOpt(Optimizer):
     """
     dim_batch = 1
 
-    def __init__(self, inits_p, conns, fixed=neuron_params.ALL, dt=0.1):
+    def __init__(self, inits_p, conns, fixed=hhmodel.ALL, dt=0.1):
         self.circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
         Optimizer.__init__(self, self.circuit)
 

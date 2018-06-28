@@ -1,9 +1,9 @@
 from unittest import TestCase
 from opthh.neuron import HodgkinHuxley, NeuronTf, NeuronFix
-from opthh import neuron_params
+from opthh import hhmodel
 import numpy as np
 
-p = neuron_params.DEFAULT
+p = hhmodel.DEFAULT
 
 
 class HodgkinHuxley2(HodgkinHuxley):
@@ -15,7 +15,7 @@ class HodgkinHuxley2(HodgkinHuxley):
 class TestHodgkinHuxley(TestCase):
 
     def test_init(self):
-        p = neuron_params.DEFAULT
+        p = hhmodel.DEFAULT
         hh = HodgkinHuxley2(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 10)
@@ -24,7 +24,7 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = HodgkinHuxley2(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = HodgkinHuxley2(init_p=[hhmodel.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -50,7 +50,7 @@ class TestNeuronTf(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = NeuronTf(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronTf(init_p=[hhmodel.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -135,7 +135,7 @@ class TestNeuronFix(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = NeuronFix(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronFix(init_p=[hhmodel.give_rand() for _ in range(13)])
         self.assertEqual(len(hh.get_init_state()), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh.init_state.shape, (7, hh.num))
@@ -154,7 +154,7 @@ class TestNeuronFix(TestCase):
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 
-        hh = NeuronFix(init_p=[neuron_params.give_rand() for _ in range(13)])
+        hh = NeuronFix(init_p=[hhmodel.give_rand() for _ in range(13)])
         hh.step(2.)
         self.assertEqual(hh.init_state.shape, hh.state.shape)
 

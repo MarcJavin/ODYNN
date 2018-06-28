@@ -82,9 +82,9 @@ class CircuitSimul():
 
 
 if __name__ == '__main__':
-    from opthh import neuron_params, params
+    from opthh import hhmodel, params
 
-    p = neuron_params.DEFAULT
+    p = hhmodel.DEFAULT
     pars = [p, p]
     t,i = params.give_train()
     connections = {(0, 1): params.SYNAPSE,

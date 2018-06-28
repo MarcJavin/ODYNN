@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 import tensorflow as tf
 
-from opthh import neuron_params, params, utils
+from opthh import params, utils
 from opthh.neuron import NeuronTf, NeuronFix
 from opthh.optimize import Optimized
 
@@ -121,7 +121,7 @@ class Circuit:
 
 class CircuitTf(Circuit, Optimized):
 
-    def __init__(self, inits_p, conns, fixed=neuron_params.ALL, constraints_n=neuron_params.CONSTRAINTS, dt=0.1):
+    def __init__(self, inits_p, conns, fixed='all', constraints_n=None, dt=0.1):
         neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
         Optimized.__init__(self)

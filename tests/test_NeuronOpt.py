@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from opthh import neuron_params, params, utils
+from opthh import hhmodel, params, utils
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul
@@ -12,8 +12,8 @@ class TestNeuronOpt(TestCase):
         utils.set_dir('unittest')
         dt = 0.5
         t,i = params.give_train(dt=dt, max_t=5.)
-        default = neuron_params.DEFAULT
-        pars = neuron_params.give_rand()
+        default = hhmodel.DEFAULT
+        pars = hhmodel.give_rand()
         sim = NeuronSimul(init_p=default, t=t, i_inj=i)
         file = sim.simul(show=False, suffix='train', dump=True)
 
@@ -30,7 +30,7 @@ class TestNeuronOpt(TestCase):
         n = opt.optimize('unittest', w=[1, 1], epochs=1, reload=True, file=file)
 
         #parallel
-        pars = [neuron_params.give_rand() for _ in range(2)]
+        pars = [hhmodel.give_rand() for _ in range(2)]
         opt = NeuronOpt(init_p=pars, dt=dt)
         self.assertEqual(opt.parallel, 2)
         n = opt.optimize('unittest', w=[1, 1], epochs=1, file=file)

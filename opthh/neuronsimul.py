@@ -9,7 +9,7 @@ from opthh.neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
 import time
 from opthh.utils import plots_results
 import data
-from opthh import neuron_params, params, utils
+from opthh import hhmodel, params, utils
 import numpy as np
 import pickle
 
@@ -17,7 +17,7 @@ import pickle
 class NeuronSimul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-    def __init__(self, init_p=neuron_params.DEFAULT, t=params.t, i_inj=params.i_inj):
+    def __init__(self, init_p=None, t=params.t, i_inj=params.i_inj):
         self.dt = t[1]-t[0]
         self.neuron = NeuronFix(init_p, dt=self.dt)
         self.t = t
@@ -79,8 +79,8 @@ if __name__ == '__main__':
 
 
 
-    sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=neuron_params.t, i_inj=neuron_params.i_inj)
-    sim.comp_targ(neuron_params.DEFAULT, neuron_params.DEFAULT_2, show=True, save=False)
+    sim = NeuronSimul(init_p=hhmodel.DEFAULT, t=hhmodel.t, i_inj=hhmodel.i_inj)
+    sim.comp_targ(hhmodel.DEFAULT, hhmodel.DEFAULT_2, show=True, save=False)
 
 
     TIME=['p__tau', 'q__tau', 'n__tau', 'e__tau', 'f__tau', 'decay_ca']
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     i10 = 2.*(t10==0) + 10. * ((t10 > 100) & (t10 < 200))
 
 
-    p = neuron_params.DEFAULT
+    p = hhmodel.DEFAULT
     p10 = dict([(var, val*10) if var in TIME else (var, val) for var, val in p.items()])
 
     for ti in TIME:

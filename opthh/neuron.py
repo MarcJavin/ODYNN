@@ -1,302 +1,34 @@
 """
 .. module:: Neuron
-    :synopsis: Module containing classes for different neuron models
+    :synopsis: Module containing classes for neuron models
 
 .. moduleauthor:: Marc Javin
 """
 
 
-from abc import ABC, abstractmethod
-
 import numpy as np
-import scipy as sp
 import tensorflow as tf
 
-from opthh import neuron_params, utils
+from opthh import config
+from opthh.model import V_pos, Ca_pos
 from opthh.optimize import Optimized
 
-V_pos = 0
-Ca_pos = -1
 
-
-class Model(ABC):
-    """Abstract class to implement for using a new model"""
-    default = None
-    _constraints_dic = None
-    _init_state = None
-
-    def __init__(self, init_p=neuron_params.DEFAULT, tensors=False, dt=0.1):
-        self._tensors = tensors
-        if isinstance(init_p, list):
-            self.num = len(init_p)
-            init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self.init_state = np.stack([self.init_state for _ in range(self.num)], axis=1)
-        else:
-            self.num = 1
-        self._param = init_p
-        self.dt = dt
-
-    @staticmethod
-    @abstractmethod
-    def step_model(X, i, self):
-        """
-        Integrate and update voltage after one time step
-
-        Parameters
-        ----------
-        X : vector
-            State variables
-        i : float
-            Input current
-
-        Returns
-        ----------
-        Vector with the same size as X containing the updated state variables
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def get_random():
-        """Return a dictionnary with random parameters"""
-        pass
-
-    @abstractmethod
-    def calculate(self, i):
-        """Iterate over i (current) and return the state variables obtained after each step"""
-        pass
-
-    def get_init_state(self):
-        """Returns a vector containing the initial values of the state variables"""
-        return self.init_state
-
-
-class HodgkinHuxley(Model):
-    """Full Hodgkin-Huxley Model implemented in Python"""
-
-    REST_CA = neuron_params.REST_CA
-    init_state = neuron_params.INIT_STATE
-    default = neuron_params.DEFAULT
-    _constraints_dic = neuron_params.CONSTRAINTS
-
-    def __init__(self, init_p=neuron_params.DEFAULT, tensors=False, dt=0.1):
-        Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
-
-    def inf(self, V, rate):
-        """steady state value of a rate"""
-        mdp = self._param['%s__mdp' % rate]
-        scale = self._param['%s__scale' % rate]
-        if self._tensors:
-            # print('V : ', V)
-            # print('mdp : ', mdp)
-            return tf.sigmoid((V - mdp) / scale)
-        else:
-            return 1 / (1 + sp.exp((mdp - V) / scale))
-
-    def h(self, cac):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        q = self.inf(cac, 'h')
-        return 1 + (q - 1) * self._param['h__alpha']
-
-    def g_Ca(self, e, f, h):
-        return self._param['g_Ca'] * e ** 2 * f * h
-
-    def I_Ca(self, V, e, f, h):
-        """
-        Membrane current (in uA/cm^2)
-        Calcium (Ca = element name)
-        """
-        return self._param['g_Ca'] * e ** 2 * f * h * (V - self._param['E_Ca'])
-
-    def g_Kf(self, p, q):
-        return self._param['g_Kf'] * p ** 4 * q
-
-    def I_Kf(self, V, p, q):
-        """
-        Membrane current (in uA/cm^2)
-        Potassium (K = element name)
-        """
-        return self._param['g_Kf'] * p ** 4 * q * (V - self._param['E_K'])
-
-    def g_Ks(self, n):
-        return self._param['g_Ks'] * n
-
-    def I_Ks(self, V, n):
-        """
-        Membrane current (in uA/cm^2)
-        Potassium (K = element name)
-        """
-        return self._param['g_Ks'] * n * (V - self._param['E_K'])
-
-    #  Leak
-    def I_L(self, V):
-        """
-        Membrane current (in uA/cm^2)
-        Leak
-        """
-        return self._param['g_L'] * (V - self._param['E_L'])
-
-    """default model"""
-
-    @staticmethod
-    def step_model(X, i_inj, self):
-        """
-        Integrate and update voltage after one time step
-        Parameters
-        ----------
-        X :
-        """
-        V = X[V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[Ca_pos]
-
-        h = self.h(cac)
-        # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
-        #     ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self._param[
-            'C_m']) * self.dt
-
-        cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
-                    (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
-        tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(V, 'e') / tau))
-        tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(V, 'f') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
-
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return [V, p, q, n, e, f, cac]
-
-    def get_random(self):
-        return neuron_params.give_rand()
-
-    @staticmethod
-    def plot_vars(*args, **kwargs):
-        return utils.plot_vars(*args, **kwargs)
-
-    @staticmethod
-    def no_tau_ca(X, i_inj, self):
-        """
-        Integrate
-        """
-        V = X[V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[Ca_pos]
-        h = self.h(cac)
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self._param['C_m']) * self.dt
-        cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
-                (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
-        e = self.inf(V, 'e')
-        f = self.inf(V, 'f')
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return [V, p, q, n, e, f, cac]
-
-    @staticmethod
-    def no_tau(X, i_inj, self):
-        """
-        Integrate
-        """
-        V = X[V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[Ca_pos]
-        h = self.h(cac)
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self._param['C_m']) * self.dt
-        # cac = (self._param['decay_ca'] / (self.dt + self._param['decay_ca'])) * (
-        #             cac - self.I_Ca(V, e, f, h) * self._param['rho_ca'] * self.dt + self.REST_CA * self._param['decay_ca'] / self.dt)
-        # 
-        # cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
-        #             (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        p = self.inf(V, 'p')
-        q = self.inf(V, 'q')
-        e = self.inf(V, 'e')
-        f = self.inf(V, 'f')
-        n = self.inf(V, 'n')
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return [V, p, q, n, e, f, cac]
-
-    @staticmethod
-    def ica_from_v(X, v_fix, self):
-        e = X[1]
-        f = X[2]
-        cac = X[Ca_pos]
-
-        h = self.h(cac)
-        tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(v_fix, 'e') / tau))
-        tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(v_fix, 'f') / tau))
-        ica = self.I_Ca(v_fix, e, f, h)
-        cac += (-self.I_Ca(v_fix, e, f, h) * self._param['rho_ca'] - (
-                (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-
-        if self._tensors:
-            return tf.stack([ica, e, f, h, cac], 0)
-        else:
-            return [ica, e, f, h, cac]
-
-    @staticmethod
-    def ik_from_v(X, v_fix, self):
-        p = X[1]
-        q = X[2]
-        n = X[3]
-
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(v_fix, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(v_fix, 'q') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(v_fix, 'n') / tau))
-        ik = self.I_Kf(v_fix, p, q) + self.I_Ks(v_fix, n)
-
-        if self._tensors:
-            return tf.stack([ik, p, q, n], 0)
-        else:
-            return [ik, p, q, n]
-
-
-MODEL = HodgkinHuxley
+MODEL = config.NEURON_MODEL
 
 
 class NeuronTf(MODEL, Optimized):
     nb = -1
 
-    def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1, fixed=[], constraints=neuron_params.CONSTRAINTS):
-        HodgkinHuxley.__init__(self, init_p=init_p, tensors=True, dt=dt)
+    def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
+        MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
         Optimized.__init__(self)
         self.init_p = self._param
         self._fixed = fixed
-        self._constraints_dic = constraints
+        if(fixed == 'all'):
+            self._fixed = set(self.init_p.keys())
+        if(constraints is None):
+            self._constraints_dic = constraints
         self.id = self.give_id()
 
     @classmethod
@@ -382,7 +114,7 @@ class NeuronTf(MODEL, Optimized):
 class NeuronLSTM(Optimized):
     num = 1
     _cell_size = 2
-    _hidden_layer_nb = 2
+    _hidden_layer_nb = 3
     _hidden_layer_cells = 5
     _hidden_layer_size = 10
     init_p = {}
@@ -445,8 +177,8 @@ class NeuronLSTM(Optimized):
 
 class NeuronFix(MODEL):
 
-    def __init__(self, init_p=neuron_params.DEFAULT, dt=0.1):
-        HodgkinHuxley.__init__(self, init_p=init_p, tensors=False, dt=dt)
+    def __init__(self, init_p=MODEL.default, dt=0.1):
+        MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
         self.state = self.init_state
 
     def init_batch(self, n):

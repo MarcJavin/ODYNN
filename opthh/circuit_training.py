@@ -11,11 +11,11 @@ import numpy as np
 import scipy as sp
 
 import data
-from opthh import neuron_params, params, utils
+from opthh import config, params, utils
 from opthh.circuitopt import CircuitOpt
 from opthh.circuitsimul import CircuitSimul
 
-p = neuron_params.DEFAULT
+p = config.NEURON_MODEL.default
 
 def inhibit():
     inhib = params.SYNAPSE_inhib

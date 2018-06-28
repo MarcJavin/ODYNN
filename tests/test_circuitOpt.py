@@ -1,5 +1,5 @@
 from unittest import TestCase
-from opthh import neuron_params, params, utils
+from opthh import hhmodel, params, utils
 import numpy as np
 from opthh.circuitopt import CircuitOpt
 from opthh.circuitsimul import CircuitSimul
@@ -22,7 +22,7 @@ class TestCircuitOpt(TestCase):
         i_1 = np.zeros(i.shape)
         i_injs = np.stack([i, i_1], axis=2)
 
-        p = neuron_params.give_rand()
+        p = hhmodel.give_rand()
         pars = [p for _ in range(n_neuron)]
 
         print('one target')

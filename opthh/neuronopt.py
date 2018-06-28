@@ -15,7 +15,7 @@ import numpy as np
 from opthh.utils import plots_output_double
 from data import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH
 import pickle
-from opthh import neuron_params
+from opthh import hhmodel
 from tqdm import tqdm
 import time
 
@@ -27,7 +27,7 @@ class NeuronOpt(Optimizer):
 
     dim_batch = 1
 
-    def __init__(self, neuron=None, init_p=neuron_params.give_rand(), fixed=[], constraints=neuron_params.CONSTRAINTS,
+    def __init__(self, neuron=None, init_p=hhmodel.give_rand(), fixed=[], constraints=hhmodel.CONSTRAINTS,
                  dt=0.1):
         if neuron is not None:
             self.neuron = neuron

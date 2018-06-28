@@ -11,53 +11,53 @@ import numpy as np
 import scipy as sp
 
 import data
-from opthh import neuron_params, params, utils
-from opthh.neuron import HodgkinHuxley, NeuronLSTM
+from opthh import params, utils, config, hhmodel
+from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca', 'E_Ca', 'rho_ca', 'decay_ca'}
 K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau', 'n__mdp', 'n__scale', 'g_Kf', 'g_Ks', 'E_K'}
 
-CA_CONST = neuron_params.ALL - CA_VAR
-K_CONST = neuron_params.ALL - K_VAR
+CA_CONST = hhmodel.ALL - CA_VAR
+K_CONST = hhmodel.ALL - K_VAR
 
-pars = [neuron_params.give_rand() for i in range(100)]
+MODEL = config.NEURON_MODEL
+
+pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt=1
 t,i_inj = params.give_train(dt)
 # i_inj = i_inj[:,2][:,None]
 
-
-
 """Single optimisation"""
 def single_exp(xp, w_v, w_ca, suffix=None):
     name = 'Classic'
 
-    opt = NeuronOpt(init_p=neuron_params.give_rand())
-    sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
-    base = HodgkinHuxley.step_model
+    opt = NeuronOpt()
+    sim = NeuronSimul(t=t, i_inj=i_inj)
+    base = MODEL.step_model
 
     if (xp == 'ica'):
         name = 'Icafromv'
-        opt = NeuronOpt(init_p=neuron_params.give_rand(), fixed=CA_CONST)
-        sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
-        loop_func = HodgkinHuxley.ica_from_v
+        opt = NeuronOpt(fixed=CA_CONST)
+        sim = NeuronSimul(t=t, i_inj=i_inj)
+        loop_func = MODEL.ica_from_v
 
     elif(xp == 'ik'):
         name = 'Ikfromv'
-        opt = NeuronOpt(init_p=neuron_params.give_rand(), fixed=K_CONST)
-        sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
-        loop_func = HodgkinHuxley.ik_from_v
+        opt = NeuronOpt(fixed=K_CONST)
+        sim = NeuronSimul(t=t, i_inj=i_inj)
+        loop_func = MODEL.ik_from_v
 
     elif (xp == 'notauca'):
         name = 'Notauca'
-        loop_func = HodgkinHuxley.no_tau_ca
+        loop_func = MODEL.no_tau_ca
 
     elif (xp == 'notau'):
         name = 'Notau'
-        loop_func = HodgkinHuxley.no_tau
+        loop_func = MODEL.no_tau
 
     elif (xp == 'classic'):
         name = 'integcomp'
@@ -68,11 +68,11 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     if (suffix is not None):
         dir = '%s_%s' % (dir, suffix)
     utils.set_dir(dir)
-    HodgkinHuxley.step_model = loop_func
-    HodgkinHuxley.step_model = loop_func
+    MODEL.step_model = loop_func
+    MODEL.step_model = loop_func
     file = sim.simul(show=True, dump=True)
     opt.optimize(dir, w=[w_v, w_ca], file=file)
-    HodgkinHuxley.step_model = base
+    MODEL.step_model = base
     return dir
 
 
@@ -83,7 +83,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=CA_VAR)
-    sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
+    sim = NeuronSimul(init_p=MODEL.default_params, t=t, i_inj=i_inj)
     file = sim.simul(dump=True, suffix='step2', show=False)
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9],suffix='step2', file=file)
 
@@ -96,7 +96,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=K_VAR)
-    sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
+    sim = NeuronSimul(t=t, i_inj=i_inj)
     file = sim.simul(dump=True, suffix='step2')
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1,9,0.9], suffix='step2', file=file)
 
@@ -104,7 +104,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 
-def test_xp(dir, i=i_inj, default=neuron_params.DEFAULT, suffix='', show=False):
+def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
 
     utils.set_dir(dir)
     param = data.get_best_result(dir)
@@ -127,7 +127,7 @@ def test_xp(dir, i=i_inj, default=neuron_params.DEFAULT, suffix='', show=False):
 def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
     utils.set_dir(dir)
-    sim = NeuronSimul(init_p=neuron_params.DEFAULT, t=t, i_inj=i_inj)
+    sim = NeuronSimul(t=t, i_inj=i_inj)
     file = sim.simul(show=False, suffix='train', dump=True)
     wv = 0.2
     wca = 0.8
@@ -141,7 +141,7 @@ def alternate(name=''):
     test_xp(dir)
 
 
-def classic(name, wv, wca, default=neuron_params.DEFAULT_2, lstm=True):
+def classic(name, wv, wca, default=hhmodel.DEFAULT_2, lstm=True):
     if(wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif(wca == 0):
