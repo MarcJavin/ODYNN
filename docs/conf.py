@@ -12,6 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+print('yo')
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../opthh'))
@@ -156,6 +157,7 @@ texinfo_documents = [
      author, 'opt_HH', 'One line description of project.',
      'Miscellaneous'),
 ]
+print('yo')
 
 
 # -- Extension configuration -------------------------------------------------
