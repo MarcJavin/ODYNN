@@ -4,14 +4,19 @@
 
 .. moduleauthor:: Marc Javin
 """
-
+print('yo')
 import numpy as np
+print('yo')
 import scipy as sp
+print('yo')
 import tensorflow as tf
-
+print('yo')
 from opthh import neuron_params, params, utils
+print('yo')
 from opthh.neuron import NeuronTf, NeuronFix
+print('yo')
 from opthh.optimize import Optimized
+print('yo')
 
 
 class Circuit:
