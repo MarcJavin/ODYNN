@@ -86,10 +86,10 @@ if __name__ == '__main__':
 
     p = neuron_params.DEFAULT
     pars = [p, p]
-    t,i = neuron_params.give_train()
+    t,i = params.give_train()
     connections = {(0, 1): params.SYNAPSE,
                    (1, 0): params.SYNAPSE}
-    t, i = neuron_params.give_train(nb_neuron_zero=1)
+    t, i = params.give_train(nb_neuron_zero=1)
     print("i_inj : ", i.shape)
     c = CircuitSimul(pars, connections, t, i)
-    c.run_sim(dump=False, n_out=1, show=True, save=False)
+    c.simul(dump=False, n_out=1, show=True, save=False)
