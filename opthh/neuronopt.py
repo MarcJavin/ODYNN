@@ -6,23 +6,29 @@
 """
 
 import os
+import pickle
+import time
+
+import numpy as np
+import tensorflow as tf
+from tqdm import tqdm
+
+from opthh import hhmodel
+from opthh.datas import DUMP_FILE, get_data_dump, SAVE_PATH, FILE_LV
+from opthh.model import Ca_pos, V_pos
+from opthh.neuron import NeuronTf
+from opthh.optimize import Optimizer
+from opthh.utils import plots_output_double
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-from opthh.neuron import NeuronTf, V_pos, Ca_pos
-from opthh.optimize import Optimizer
-import tensorflow as tf
-import numpy as np
-from opthh.utils import plots_output_double
-from datas import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH
-import pickle
-from opthh import hhmodel
-from tqdm import tqdm
-import time
+
+if __name__ == '__main__':
+    pass
 
 
 class NeuronOpt(Optimizer):
     """
-    Optimization of a neuron
+    Class for optimization of a neuron
     """
 
     dim_batch = 1
@@ -46,6 +52,7 @@ class NeuronOpt(Optimizer):
 
     def optimize(self, subdir, w=[1, 0], epochs=500, l_rate=[0.1, 9, 0.92], suffix='', step=None, file=DUMP_FILE,
                  reload=False):
+        """Optimize the neuron parameters"""
         print(suffix, step)
         T, X, V, Ca = get_data_dump(file)
 
@@ -103,7 +110,3 @@ class NeuronOpt(Optimizer):
                 f.write(str(time.time() - self.start_time))
 
         return -1
-
-
-if __name__ == '__main__':
-    pass

@@ -1,7 +1,7 @@
-data module
-===========
+model module
+============
 
-.. automodule:: data
+.. automodule:: model
     :members:
     :undoc-members:
     :show-inheritance:

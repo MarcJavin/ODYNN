@@ -14,15 +14,15 @@ from tqdm import tqdm
 from opthh import hhmodel
 from opthh.circuit import CircuitTf
 from opthh.neuron import V_pos, Ca_pos
-from opthh.neuronopt import NeuronOpt
 from opthh.optimize import Optimizer
+from opthh.neuronopt import NeuronOpt
 from opthh.datas import DUMP_FILE, get_data_dump
 from opthh.utils import plots_output_mult, plots_output_double
 
 
 class CircuitOpt(Optimizer):
     """
-    Optimization of a neuron circuit
+    Class for ptimization of a neuron circuit
     """
     dim_batch = 1
 
@@ -31,6 +31,7 @@ class CircuitOpt(Optimizer):
         Optimizer.__init__(self, self.circuit)
 
     def _build_loss(self, w, n_out):
+        """Define how to compute the loss"""
         out, ca = [], []
         for n in n_out:
             out.append(self.res[:, V_pos, :, n])
@@ -61,7 +62,7 @@ class CircuitOpt(Optimizer):
             self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit._neurons.dt), i, file)
 
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1, 0], l_rate=[0.9, 9, 0.95]):
-        """optimize synapses"""
+        """optimize circuit parameters"""
         print(suffix)
         T, X, V, Ca = get_data_dump(file)
 

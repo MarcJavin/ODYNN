@@ -44,6 +44,7 @@ def get_vars_all(dir, i=-1):
     return dic
 
 def get_best_result(dir, i=-1):
+    """Return parameters of the best optimized model"""
     file = utils.RES_DIR + dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l, r, dic = pickle.load(f)

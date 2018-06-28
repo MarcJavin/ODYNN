@@ -18,6 +18,10 @@ MODEL = config.NEURON_MODEL
 
 
 class NeuronTf(MODEL, Optimized):
+    """
+    Class representing a neuron, implemented using Tensorflow.
+    This class allows simulation and optimization
+    """
     nb = -1
 
     def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
@@ -176,6 +180,10 @@ class NeuronLSTM(Optimized):
 
 
 class NeuronFix(MODEL):
+    """
+    Class representing a neuron, implemented only in Python
+    This class allows simulation but not optimization
+    """
 
     def __init__(self, init_p=MODEL.default_params, dt=0.1):
         MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)

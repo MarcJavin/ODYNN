@@ -14,29 +14,47 @@ import tensorflow as tf
 
 from opthh.datas import FILE_LV, SAVE_PATH, get_data_dump
 from opthh.utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class Optimized(ABC):
+    """
+    Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit.
+    """
 
     def __init__(self):
         pass
 
     @abstractmethod
     def build_graph(self):
+        """
+        Build the tensorflow graph. Take care of the loop and the initial state.
+        Returns
+        -------
+        tf.placeholder, for input current.
+        """
         pass
 
     @abstractmethod
     def settings(self):
+        """
+        Return a string describing the parameters of the object
+        """
         pass
 
     @staticmethod
     def plot_vars(var_dic, suffix, show, save):
+        """A function to plot the variables of the optimized object"""
         pass
 
     def apply_constraints(self, session):
+        """Return a tensorflow operation applying constraints to the variables"""
         pass
 
     def get_params(self):
+        """Return the variables parameters names of the optimized object"""
         return []
 
 
@@ -92,7 +110,10 @@ class Optimizer(ABC):
         self.saver = tf.train.Saver()
 
     def _init(self, subdir, suffix, file, l_rate, w, yshape):
-        """initialize objects to be optimized and write setting in the directory"""
+        """
+        Initialize directory and the object to be optimized, get the dataset, write settings in the directory
+        and initialize placeholders for target output and results.
+        """
         self.suffix = suffix
         self.dir = set_dir(subdir + '/')
         tf.reset_default_graph()
@@ -163,3 +184,5 @@ class Optimizer(ABC):
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + 'evolution', show=False,
                                  save=True)
+
+

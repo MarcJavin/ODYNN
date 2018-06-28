@@ -26,7 +26,6 @@ INITS = {
     'h': 0.,
     'cac': 1.e-7
 }
-"""init states for neurons : current, voltage, rates and [Ca2+]"""
 INIT_STATE = np.array([INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']])
 INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
@@ -54,7 +53,6 @@ CONSTRAINTS = {
     'q__scale': [-np.infty, 1e-3],
     'q__tau': [1e-3, np.infty]
 }
-"""constraints for neuron parameters"""
 
 DEFAULT_2 = {
     'decay_ca': 110.,
@@ -147,7 +145,6 @@ MAX_MDP = 30.
 MAX_G = 10.
 
 def give_rand():
-    """Random parameters for a neuron"""
     return {
         'decay_ca': 110.,
         'rho_ca': 0.23e-2,
@@ -190,14 +187,28 @@ class HodgkinHuxley(Model):
 
     REST_CA = REST_CA
     _init_state = INIT_STATE
+    """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
+    """default parameters as a dictionnary"""
     _constraints_dic = CONSTRAINTS
+    """constraints to be applied when optimizing"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def inf(self, V, rate):
-        """steady state value of a rate"""
+        """
+        Compute the steady state value of a gate activation rate
+        Parameters
+        ----------
+        V : float
+            voltage
+        rate : string
+            name of the rate
+        Returns
+        ----------
+        float, value of the rate steady state
+        """
         mdp = self._param['%s__mdp' % rate]
         scale = self._param['%s__scale' % rate]
         if self._tensors:
@@ -258,7 +269,14 @@ class HodgkinHuxley(Model):
         Integrate and update voltage after one time step
         Parameters
         ----------
-        X :
+        X : array
+            state vector
+        i_inj : array
+            input current
+        self : neuron object
+        Returns
+        ----------
+        An updated state vector
         """
         V = X[V_pos]
         p = X[1]
@@ -294,71 +312,14 @@ class HodgkinHuxley(Model):
 
     @staticmethod
     def get_random():
+        """Returns a dictionnary of random parameters"""
         return give_rand()
 
     @staticmethod
     def plot_vars(*args, **kwargs):
+        """Plot functions for the parameters"""
         return utils.plot_vars(*args, **kwargs)
 
-    @staticmethod
-    def no_tau_ca(X, i_inj, self):
-        """
-        Integrate
-        """
-        V = X[V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[Ca_pos]
-        h = self.h(cac)
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self._param['C_m']) * self.dt
-        cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
-                (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
-        e = self.inf(V, 'e')
-        f = self.inf(V, 'f')
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return [V, p, q, n, e, f, cac]
-
-    @staticmethod
-    def no_tau(X, i_inj, self):
-        """
-        Integrate
-        """
-        V = X[V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[Ca_pos]
-        h = self.h(cac)
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(
-            V)) / self._param['C_m']) * self.dt
-        # cac = (self._param['decay_ca'] / (self.dt + self._param['decay_ca'])) * (
-        #             cac - self.I_Ca(V, e, f, h) * self._param['rho_ca'] * self.dt + self.REST_CA * self._param['decay_ca'] / self.dt)
-        # 
-        # cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
-        #             (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        p = self.inf(V, 'p')
-        q = self.inf(V, 'q')
-        e = self.inf(V, 'e')
-        f = self.inf(V, 'f')
-        n = self.inf(V, 'n')
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return [V, p, q, n, e, f, cac]
 
     @staticmethod
     def ica_from_v(X, v_fix, self):

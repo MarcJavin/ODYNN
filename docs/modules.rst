@@ -8,12 +8,13 @@ opthh
    circuit_training
    circuitopt
    circuitsimul
-   data
+   config
+   datas
+   hhmodel
+   model
    neuron
-   neuron_params
    neuron_training
    neuronopt
    neuronsimul
    optimize
-   params
    utils

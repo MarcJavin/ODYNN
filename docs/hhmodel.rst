@@ -1,7 +1,7 @@
-params module
-=============
+hhmodel module
+==============
 
-.. automodule:: params
+.. automodule:: hhmodel
     :members:
     :undoc-members:
     :show-inheritance:
