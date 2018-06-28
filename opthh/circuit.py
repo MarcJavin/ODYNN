@@ -1,3 +1,4 @@
+print('yo')
 """
 .. module:: circuit
     :synopsis: Module containing implementation of neural circuits objects
