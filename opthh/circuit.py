@@ -9,9 +9,9 @@ import numpy as np
 import scipy as sp
 import tensorflow as tf
 
-from opthh import neuron_params, params, utils
-from opthh.neuron import NeuronTf, NeuronFix
-from opthh.optimize import Optimized
+import neuron_params, params, utils
+from Neuron import NeuronTf, NeuronFix
+from optimize import Optimized
 
 
 class Circuit:
