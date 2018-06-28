@@ -9,8 +9,8 @@ import socket
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
-if (socket.gethostname()=='1080'):
-    mpl.use("Agg")
+# if (socket.gethostname()=='1080'):
+#     mpl.use("Agg")
 import pylab as plt
 import numpy as np
 import os
