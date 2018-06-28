@@ -1,2 +1,6 @@
 *.pyc
-results/*
+opthh/results/*
+opthh/data/*
+docs_build/*
+.idea/*
+other/*

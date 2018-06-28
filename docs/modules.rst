@@ -1,20 +1,19 @@
-opt_HH
-======
+opthh
+=====
 
 .. toctree::
    :maxdepth: 4
 
-   Circuit
-   CircuitOpt
-   CircuitSimul
-   Neuron
-   NeuronOpt
-   NeuronSimul
-   Optimizer
+   circuit
    circuit_training
+   circuitopt
+   circuitsimul
    data
+   neuron
    neuron_params
    neuron_training
+   neuronopt
+   neuronsimul
+   optimize
    params
-   pso_HH
    utils

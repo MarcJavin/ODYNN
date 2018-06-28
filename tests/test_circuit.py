@@ -1,8 +1,8 @@
 from unittest import TestCase
-import neuron_params, params
-from Circuit import Circuit
+from opthh import neuron_params, params
+from opthh.circuit import Circuit
 import numpy as np
-from Neuron import NeuronTf
+from opthh.neuron import NeuronTf
 
 
 class TestCircuit(TestCase):

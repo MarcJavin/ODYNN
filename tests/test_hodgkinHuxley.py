@@ -1,8 +1,7 @@
 from unittest import TestCase
-from Neuron import HodgkinHuxley, NeuronTf, NeuronFix
-import neuron_params
+from opthh.neuron import HodgkinHuxley, NeuronTf, NeuronFix
+from opthh import neuron_params
 import numpy as np
-import tensorflow as tf
 
 p = neuron_params.DEFAULT
 
