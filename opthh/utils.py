@@ -5,8 +5,8 @@
 .. moduleauthor:: Marc Javin
 """
 
-import socket
-import matplotlib as mpl
+# import socket
+# import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 # if (socket.gethostname()=='1080'):
@@ -20,8 +20,8 @@ SMALL_SIZE = 8
 MEDIUM_SIZE = 10
 BIGGER_SIZE = 12
 
-plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+# plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+# plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
@@ -42,7 +42,7 @@ CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
 MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
 COLORS = [ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
+# mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 
 
 if __name__ == '__main__':
