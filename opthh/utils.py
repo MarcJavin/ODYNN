@@ -70,7 +70,7 @@ def get_dic_from_var(dir, suffix=""):
         for line in f:
             m = re.search(REGEX_VARS, line)
             if(m.group(2)[0]=='['):
-                #several params
+                # several params
                 l = re.findall('[-]?[\d]*[\.]?[\d]+[e]?[+-]?[\d]+', m.group(2))
                 l = map(float, l)
                 dic[m.group(1)] = l
