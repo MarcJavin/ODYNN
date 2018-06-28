@@ -10,14 +10,14 @@ Optimization of biological models of neurons (Integrate and Fire, Hodgkin-Huxley
     :width: 800px
     :align: center
     :height: 500px
-    :scale: 25
+    :scale: 10
     :alt: alternate text
 
 .. image:: img/inhexc.png
     :width: 800px
     :align: center
     :height: 500px
-    :scale: 50
+    :scale: 10
     :alt: alternate text
 
 Commands
