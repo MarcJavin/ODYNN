@@ -44,13 +44,13 @@ class Model(ABC):
         dt : float
             timestep of the system
         """
-        self._tensors = tensors
         if(init_p is None):
             init_p = self.default_params
+        self._tensors = tensors
         if isinstance(init_p, list):
             self.num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self.init_state = np.stack([self.init_state for _ in range(self.num)], axis=1)
+            self._init_state = np.stack([self._init_state for _ in range(self.num)], axis=1)
         else:
             self.num = 1
         self._param = init_p
@@ -94,8 +94,3 @@ class Model(ABC):
         Array of dimension [len(i), len(init_state)]
         """
         pass
-
-    @staticmethod
-    def get_init_state():
-        """Returns a vector containing the initial values of the state variables"""
-        return Model._init_state

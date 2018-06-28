@@ -189,11 +189,11 @@ class HodgkinHuxley(Model):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
     REST_CA = REST_CA
-    init_state = INIT_STATE
+    _init_state = INIT_STATE
     default_params = DEFAULT
     _constraints_dic = CONSTRAINTS
 
-    def __init__(self, init_p=DEFAULT, tensors=False, dt=0.1):
+    def __init__(self, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def inf(self, V, rate):

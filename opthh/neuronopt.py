@@ -13,7 +13,7 @@ from opthh.optimize import Optimizer
 import tensorflow as tf
 import numpy as np
 from opthh.utils import plots_output_double
-from data import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH
+from datas import get_data_dump, FILE_LV, DUMP_FILE, SAVE_PATH
 import pickle
 from opthh import hhmodel
 from tqdm import tqdm

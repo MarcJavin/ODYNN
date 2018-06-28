@@ -4,12 +4,13 @@
 
 .. moduleauthor:: Marc Javin
 """
+import random
 
 import numpy as np
 import scipy as sp
 import tensorflow as tf
 
-from opthh import params, utils
+from opthh import utils
 from opthh.neuron import NeuronTf, NeuronFix
 from opthh.optimize import Optimized
 
@@ -41,7 +42,7 @@ class Circuit:
                 [(var, np.array([p[var] for p in conns.values()], dtype=np.float32)) for var in
                  list(conns.values())[0].keys()])
             self._connections = conns.keys()
-        self.init_state = self._neurons.init_state
+        self.init_state = self._neurons._init_state
         self.dt = self._neurons.dt
         self._param = self.init_p
         syns = list(zip(*[k for k in self._connections]))
@@ -126,13 +127,13 @@ class CircuitTf(Circuit, Optimized):
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
         Optimized.__init__(self)
         if self.num > 1:
-            constraints_dic = params.give_constraints_syn(conns[0])
+            constraints_dic = give_constraints_syn(conns[0])
             #update constraint size for parallelization
             self.constraints_dic = dict(
                 [(var, np.stack([val for _ in range(self.num)], axis=val.ndim)) if val.ndim > 1 else (var, val) for var, val in
                  constraints_dic.items()])
         else:
-            self.constraints_dic = params.give_constraints_syn(conns)
+            self.constraints_dic = give_constraints_syn(conns)
 
     def parallelize(self, n):
         """Add a dimension of size n in the parameters"""
@@ -205,3 +206,66 @@ class CircuitFix(Circuit):
         neurons = NeuronFix(inits_p, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=False, neurons=neurons)
         self._param = self.init_p
+
+
+SYNAPSE1 = {
+    'G': 1.,
+    'mdp': -30.,
+    'scale': 2.,
+    'E': 20.
+}
+SYNAPSE2 = {
+    'G': 10.,
+    'mdp': 0.,
+    'scale': 5.,
+    'E': -10.
+}
+SYNAPSE = {
+    'G': 5.,
+    'mdp': -25.,
+    'scale': 2.,
+    'E': 0.
+}
+SYNAPSE_inhib = {
+    'G': 1.,
+    'mdp': -35.,
+    'scale': -2.,
+    'E': 20.
+}
+
+
+def give_constraints_syn(conns):
+    """constraints for synapse parameters"""
+    scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
+    return {'G': np.array([1e-5, np.infty]),
+            'scale': scale_con.transpose()}
+
+
+def const_scale(exc=True):
+    if exc:
+        return [1e-3, np.infty]
+    else:
+        return [-np.infty, -1e-3]
+
+
+MAX_TAU = 200.
+MIN_SCALE = 1.
+MAX_SCALE = 50.
+MIN_MDP = -40.
+MAX_MDP = 30.
+MAX_G = 10.
+
+
+def get_syn_rand(exc=True):
+    """Random parameters for a synapse"""
+    # scale is negative if inhibitory
+    if exc:
+        scale = random.uniform(MIN_SCALE, MAX_SCALE)
+    else:
+        scale = random.uniform(-MAX_SCALE, -MIN_SCALE)
+    return {
+        'G': random.uniform(0.01, MAX_G),
+        'mdp': random.uniform(MIN_MDP, MAX_MDP),
+        'scale': scale,
+        'E': random.uniform(-20., 50.),
+    }

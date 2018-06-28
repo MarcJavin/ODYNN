@@ -6,10 +6,12 @@
 """
 
 import numpy as np
+
+import opthh.datas
 from opthh.neuron import V_pos, Ca_pos
 from opthh.circuit import CircuitFix
 from opthh.utils import plots_output_mult
-from data import DUMP_FILE
+from datas import DUMP_FILE
 import pickle
 import time
 
@@ -40,7 +42,7 @@ class CircuitSimul():
 
     def calculate(self, i_inj):
         self.circuit._neurons.reset()
-        states = np.zeros((np.hstack((len(self.t), self.circuit._neurons.init_state.shape))))
+        states = np.zeros((np.hstack((len(self.t), self.circuit._neurons._init_state.shape))))
         curs = np.zeros(i_inj.shape)
 
         for t in range(len(self.t)):
@@ -82,14 +84,14 @@ class CircuitSimul():
 
 
 if __name__ == '__main__':
-    from opthh import hhmodel, params
+    from opthh import hhmodel
 
     p = hhmodel.DEFAULT
     pars = [p, p]
-    t,i = params.give_train()
-    connections = {(0, 1): params.SYNAPSE,
-                   (1, 0): params.SYNAPSE}
-    t, i = params.give_train(nb_neuron_zero=1)
+    t,i = opthh.datas.give_train()
+    connections = {(0, 1): opthh.circuit.SYNAPSE,
+                   (1, 0): opthh.circuit.SYNAPSE}
+    t, i = opthh.datas.give_train(nb_neuron_zero=1)
     print("i_inj : ", i.shape)
     c = CircuitSimul(pars, connections, t, i)
     c.simul(dump=False, n_out=1, show=True, save=False)

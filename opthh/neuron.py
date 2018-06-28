@@ -27,7 +27,7 @@ class NeuronTf(MODEL, Optimized):
         self._fixed = fixed
         if(fixed == 'all'):
             self._fixed = set(self.init_p.keys())
-        if(constraints is None):
+        if(constraints is not None):
             self._constraints_dic = constraints
         self.id = self.give_id()
 
@@ -63,13 +63,13 @@ class NeuronTf(MODEL, Optimized):
         else:
             self.init_p = dict(
                 [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self.init_p.items()])
-        self.init_state = np.stack([self.init_state for _ in range(n)], axis=self.init_state.ndim)
+        self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
 
     def build_graph(self, batch=None):
         tf.reset_default_graph()
         self._reset()
         xshape = [None]
-        initializer = self.init_state
+        initializer = self._init_state
         if batch is not None:
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
@@ -100,7 +100,7 @@ class NeuronTf(MODEL, Optimized):
                 'Nb of neurons : {}'.format(self.num) + '\n' +
                 'Initial neuron params : {}'.format(self.init_p) + '\n' +
                 'Fixed variables : {}'.format([c for c in self._fixed]) + '\n' +
-                'Initial state : {}'.format(self.init_state) + '\n' +
+                'Initial state : {}'.format(self._init_state) + '\n' +
                 'Constraints : {}'.format(self._constraints_dic) + '\n' +
                 'dt : {}'.format(self.dt) + '\n')
 
@@ -177,12 +177,12 @@ class NeuronLSTM(Optimized):
 
 class NeuronFix(MODEL):
 
-    def __init__(self, init_p=MODEL.default, dt=0.1):
+    def __init__(self, init_p=MODEL.default_params, dt=0.1):
         MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
-        self.state = self.init_state
+        self.state = self._init_state
 
     def init_batch(self, n):
-        self.init_state = np.stack([self.init_state for _ in range(n)], axis=1)
+        self._init_state = np.stack([self._init_state for _ in range(n)], axis=1)
 
     def step(self, i):
         self.state = np.array(self.step_model(self.state, i, self))
@@ -196,4 +196,4 @@ class NeuronFix(MODEL):
         return np.array(X)
 
     def reset(self):
-        self.state = self.init_state
+        self.state = self._init_state

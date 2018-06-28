@@ -1,5 +1,8 @@
 from unittest import TestCase
-from opthh import hhmodel, params, utils
+
+import opthh.circuit
+import opthh.datas
+from opthh import hhmodel, utils
 import numpy as np
 from opthh.circuitopt import CircuitOpt
 from opthh.circuitsimul import CircuitSimul
@@ -9,15 +12,15 @@ class TestCircuitOpt(TestCase):
 
     def test_opt_circuits(self):
         n_neuron = 2
-        conns = {(0, 1): params.SYNAPSE_inhib,
-                 (1, 0): params.SYNAPSE_inhib}
-        conns_opt = {(0, 1): params.get_syn_rand(False),
-                     (1, 0): params.get_syn_rand(False)}
+        conns = {(0, 1): opthh.circuit.SYNAPSE_inhib,
+                 (1, 0): opthh.circuit.SYNAPSE_inhib}
+        conns_opt = {(0, 1): opthh.circuit.get_syn_rand(False),
+                     (1, 0): opthh.circuit.get_syn_rand(False)}
         conns_opt_parallel = [conns_opt for _ in range(10)]
         dir = 'unittest'
         utils.set_dir(dir)
 
-        t, i = params.give_train(dt=0.5, max_t=5.)
+        t, i = opthh.datas.give_train(dt=0.5, max_t=5.)
         length = int(5./0.5)
         i_1 = np.zeros(i.shape)
         i_injs = np.stack([i, i_1], axis=2)

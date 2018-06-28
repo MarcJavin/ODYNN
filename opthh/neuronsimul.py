@@ -8,8 +8,7 @@
 from opthh.neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
 import time
 from opthh.utils import plots_results
-import data
-from opthh import hhmodel, params, utils
+from opthh import hhmodel, datas, utils
 import numpy as np
 import pickle
 
@@ -17,7 +16,7 @@ import pickle
 class NeuronSimul():
     """Full Hodgkin-Huxley Model implemented in Python"""
 
-    def __init__(self, init_p=None, t=params.t, i_inj=params.i_inj):
+    def __init__(self, init_p=None, t=datas.t, i_inj=datas.i_inj):
         self.dt = t[1]-t[0]
         self.neuron = NeuronFix(init_p, dt=self.dt)
         self.t = t
@@ -69,9 +68,9 @@ class NeuronSimul():
 
         if dump:
             todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
-            with open(data.DUMP_FILE, 'wb') as f:
+            with open(datas.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
-            return data.DUMP_FILE
+            return datas.DUMP_FILE
 
 
 
@@ -79,7 +78,7 @@ if __name__ == '__main__':
 
 
 
-    sim = NeuronSimul(init_p=hhmodel.DEFAULT, t=hhmodel.t, i_inj=hhmodel.i_inj)
+    sim = NeuronSimul(init_p=hhmodel.DEFAULT, t=datas.t, i_inj=datas.i_inj)
     sim.comp_targ(hhmodel.DEFAULT, hhmodel.DEFAULT_2, show=True, save=False)
 
 

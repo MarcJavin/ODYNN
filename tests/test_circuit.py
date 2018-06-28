@@ -1,5 +1,7 @@
 from unittest import TestCase
-from opthh import hhmodel, params
+
+import opthh.circuit
+from opthh import hhmodel
 from opthh.circuit import Circuit
 import numpy as np
 from opthh.neuron import NeuronTf
@@ -7,17 +9,17 @@ from opthh.neuron import NeuronTf
 
 class TestCircuit(TestCase):
     neuron = NeuronTf([hhmodel.DEFAULT for _ in range(5)])
-    conns = {(0, 4): params.SYNAPSE,
-             (1, 4): params.SYNAPSE,
-             (2, 4): params.SYNAPSE,
-             (3, 2): params.SYNAPSE,
+    conns = {(0, 4): opthh.circuit.SYNAPSE,
+             (1, 4): opthh.circuit.SYNAPSE,
+             (2, 4): opthh.circuit.SYNAPSE,
+             (3, 2): opthh.circuit.SYNAPSE,
              }
     circ = Circuit(conns, neuron)
 
-    conns2 = [{(0, 4): params.SYNAPSE,
-             (1, 4): params.SYNAPSE,
-             (2, 4): params.SYNAPSE,
-             (3, 2): params.SYNAPSE,
+    conns2 = [{(0, 4): opthh.circuit.SYNAPSE,
+             (1, 4): opthh.circuit.SYNAPSE,
+             (2, 4): opthh.circuit.SYNAPSE,
+             (3, 2): opthh.circuit.SYNAPSE,
              } for _ in range(7)]
     circ2 = Circuit(conns2, neuron)
 
@@ -29,18 +31,18 @@ class TestCircuit(TestCase):
         self.assertEqual(self.circ._pres.all(), np.array([0, 1, 2, 3]).all())
         self.assertEqual(self.circ._posts.all(), np.array([4, 4, 4, 2]).all())
         self.assertIsInstance(self.circ._param, dict)
-        self.assertEqual(self.circ._param.keys(), params.SYNAPSE.keys())
+        self.assertEqual(self.circ._param.keys(), opthh.circuit.SYNAPSE.keys())
         self.assertEqual(self.circ._neurons.num, 5)
-        self.assertEqual(self.circ._neurons.init_state.all(), self.circ.init_state.all())
+        self.assertEqual(self.circ._neurons._init_state.all(), self.circ.init_state.all())
 
         self.assertEqual(self.circ2.num, 7)
         self.assertEqual(self.circ2._pres.all(), np.array([0, 1, 2, 3]).all())
         self.assertEqual(self.circ2._posts.all(), np.array([4, 4, 4, 2]).all())
         self.assertIsInstance(self.circ2._param, dict)
-        self.assertEqual(self.circ2._param.keys(), params.SYNAPSE.keys())
+        self.assertEqual(self.circ2._param.keys(), opthh.circuit.SYNAPSE.keys())
         self.assertEqual(self.circ2._neurons.num, 5)
-        self.assertEqual(self.circ2._neurons.init_state.shape[-1], self.circ2.num)
-        self.assertEqual(self.circ2._neurons.init_state.all(), self.circ2.init_state.all())
+        self.assertEqual(self.circ2._neurons._init_state.shape[-1], self.circ2.num)
+        self.assertEqual(self.circ2._neurons._init_state.all(), self.circ2.init_state.all())
 
         with self.assertRaises(AssertionError):
             cbad = Circuit(self.conns, neuron_bad)

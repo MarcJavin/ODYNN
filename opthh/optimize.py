@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from opthh.data import FILE_LV, SAVE_PATH, get_data_dump
+from opthh.datas import FILE_LV, SAVE_PATH, get_data_dump
 from opthh.utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 
 

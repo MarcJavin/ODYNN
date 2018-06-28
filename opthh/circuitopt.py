@@ -16,7 +16,7 @@ from opthh.circuit import CircuitTf
 from opthh.neuron import V_pos, Ca_pos
 from opthh.neuronopt import NeuronOpt
 from opthh.optimize import Optimizer
-from data import DUMP_FILE, get_data_dump
+from opthh.datas import DUMP_FILE, get_data_dump
 from opthh.utils import plots_output_mult, plots_output_double
 
 
@@ -57,8 +57,8 @@ class CircuitOpt(Optimizer):
 
     def opt_neurons(self, file):
         """optimize only neurons 1 by 1"""
-        for i in range(self.circuit.neurons.num):
-            self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit.neurons.dt), i, file)
+        for i in range(self.circuit._neurons.num):
+            self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit._neurons.dt), i, file)
 
     def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1, 0], l_rate=[0.9, 9, 0.95]):
         """optimize synapses"""
