@@ -7,10 +7,6 @@ Motivation
 Optimization of biological models of neurons (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
 
 .. image:: img/final_goal.png
-   :height: 100
-   :width: 200
-   :scale: 50
-   :alt: alternate text
 
 .. image:: img/inhexc.png
 
