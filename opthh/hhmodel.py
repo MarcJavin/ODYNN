@@ -10,8 +10,8 @@ import numpy as np
 import random
 import tensorflow as tf
 import scipy as sp
-from model import Model, V_pos, Ca_pos
-import utils
+from opthh.model import Model, V_pos, Ca_pos
+from opthh import utils
 
 
 REST_CA = 0.
@@ -54,7 +54,7 @@ CONSTRAINTS = {
     'q__tau': [1e-3, np.infty]
 }
 
-DEFAULT = {
+DEFAULT_2 = {
     'decay_ca': 110.,
     'rho_ca': 0.23,
     'p__tau': 100.,  # ms
@@ -84,7 +84,7 @@ DEFAULT = {
     'E_K': -60.0,
     'E_L': -60.0
 }
-DEFAULT_2 = {
+DEFAULT = {
     'decay_ca': 110.,
     'rho_ca': 0.23,
 

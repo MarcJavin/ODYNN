@@ -16,7 +16,7 @@ import scipy as sp
 from scipy.interpolate import splrep, splev
 from scipy.signal import savgol_filter
 
-import utils
+from opthh import utils
 
 DUMP_FILE = 'data/dump'
 DUMP_real = 'data/real'

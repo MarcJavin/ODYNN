@@ -7,10 +7,10 @@
 
 import numpy as np
 
-import datas
-from neuron import V_pos, Ca_pos
-from circuit import CircuitFix
-from utils import plots_output_mult
+import opthh.datas
+from opthh.neuron import V_pos, Ca_pos
+from opthh.circuit import CircuitFix
+from opthh.utils import plots_output_mult
 from datas import DUMP_FILE
 import pickle
 import time
@@ -87,14 +87,14 @@ class CircuitSimul():
 
 
 if __name__ == '__main__':
-    import hhmodel
+    from opthh import hhmodel
 
     p = hhmodel.DEFAULT
     pars = [p, p]
-    t,i = datas.give_train()
-    connections = {(0, 1): circuit.SYNAPSE,
-                   (1, 0): circuit.SYNAPSE}
-    t, i = datas.give_train(nb_neuron_zero=1)
+    t,i = opthh.datas.give_train()
+    connections = {(0, 1): opthh.circuit.SYNAPSE,
+                   (1, 0): opthh.circuit.SYNAPSE}
+    t, i = opthh.datas.give_train(nb_neuron_zero=1)
     print("i_inj : ", i.shape)
     c = CircuitSimul(pars, connections, t, i)
     c.simul(dump=False, n_out=1, show=True, save=False)

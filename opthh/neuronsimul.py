@@ -5,10 +5,10 @@
 .. moduleauthor:: Marc Javin
 """
 
-from neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
+from opthh.neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
 import time
-from utils import plots_results
-import hhmodel, datas, utils
+from opthh.utils import plots_results
+from opthh import hhmodel, datas, utils
 import numpy as np
 import pickle
 

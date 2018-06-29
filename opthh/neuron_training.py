@@ -10,10 +10,10 @@ import sys
 import numpy as np
 import scipy as sp
 
-import utils, config, hhmodel, datas
-from neuron import NeuronLSTM
-from neuronopt import NeuronOpt
-from neuronsimul import NeuronSimul
+from opthh import utils, config, hhmodel, datas
+from opthh.neuron import NeuronLSTM
+from opthh.neuronopt import NeuronOpt
+from opthh.neuronsimul import NeuronSimul
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}

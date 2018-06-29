@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from hhmodel import HodgkinHuxley
+from opthh.hhmodel import HodgkinHuxley
 
 NEURON_MODEL = HodgkinHuxley
 """Class used for neuron models"""
