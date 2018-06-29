@@ -185,6 +185,10 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
     i4 = 15. * ((t > 400) & (t < 800))
     i_fin = np.stack([i, i2, i3, i4], axis=1)
+    i_noise = 0.1*(np.random.rand(i_fin.shape[0], i_fin.shape[1]) - 0.5)
+    i_fin += i_noise
+    # plt.plot(i_noise[:,0])
+    # plt.show()
     if nb_neuron_zero is not None:
         i_zeros = np.zeros(i_fin.shape)
         i_fin = np.stack([i_fin, i_zeros], axis=2)

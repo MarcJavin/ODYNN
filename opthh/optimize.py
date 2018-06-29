@@ -187,8 +187,9 @@ class Optimizer(ABC):
 
     def _plots_dump(self, sess, losses, rates, vars, i):
         """Plot the variables evolution, the loss and saves it in a file"""
+        results = None
         if self._test:
-            test_loss = sess.run(self.loss, feed_dict={
+            test_loss, results = sess.run(self.loss, self.res, feed_dict={
                 self.xs_: self._X_test,
                 self.ys_: np.array([self._V_test, self._Ca_test])
             })
@@ -203,5 +204,6 @@ class Optimizer(ABC):
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + 'evolution', show=False,
                                  save=True)
+        return results
 
 

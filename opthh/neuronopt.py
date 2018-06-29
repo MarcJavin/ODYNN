@@ -49,6 +49,8 @@ class NeuronOpt(Optimizer):
         print(suffix, step)
 
         T, X, V, Ca = train
+        if test is not None:
+            T_test, X_test, V_test, Ca_test = test
 
         yshape = [2, None, None]
 
@@ -94,11 +96,17 @@ class NeuronOpt(Optimizer):
 
                 for b in range(self.n_batch):
                     plots_output_double(self._T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
-                                        self._Ca[:, b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                                        Ca[:, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
-                    self._plots_dump(sess, losses, rates, vars, len_prev + i)
+                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
+                    if res_test is not None:
+                        for b in range(self.n_batch):
+                            plots_output_double(self._T, X_test[:, b], res_test[:, V_pos, b], V_test[:, b], res_test[:, Ca_pos, b],
+                                                Ca_test[:, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
+                                                show=False,
+                                                save=True, l=0.7, lt=2)
 
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))

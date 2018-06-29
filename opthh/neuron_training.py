@@ -10,6 +10,7 @@ import sys
 import numpy as np
 import scipy as sp
 
+import opthh
 from opthh import utils, config, hhmodel, datas
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
@@ -41,7 +42,7 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     opt = NeuronOpt()
     sim = NeuronSimul(t=t, i_inj=i_inj)
     base = MODEL.step_model
-c
+
     if (xp == 'ica'):
         name = 'Icafromv'
         opt = NeuronOpt(fixed=CA_CONST)
