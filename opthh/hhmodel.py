@@ -54,7 +54,7 @@ CONSTRAINTS = {
     'q__tau': [1e-3, np.infty]
 }
 
-DEFAULT_2 = {
+DEFAULT = {
     'decay_ca': 110.,
     'rho_ca': 0.23,
     'p__tau': 100.,  # ms
@@ -84,7 +84,7 @@ DEFAULT_2 = {
     'E_K': -60.0,
     'E_L': -60.0
 }
-DEFAULT = {
+DEFAULT_2 = {
     'decay_ca': 110.,
     'rho_ca': 0.23,
 
