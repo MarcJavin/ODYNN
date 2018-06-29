@@ -1,7 +1,6 @@
 from unittest import TestCase
-
-import opthh.datas
-from opthh import hhmodel, utils
+from context import opthh
+from opthh import hhmodel, utils, datas
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul
@@ -12,7 +11,7 @@ class TestNeuronOpt(TestCase):
     def test_optimize(self):
         utils.set_dir('unittest')
         dt = 0.5
-        t,i = opthh.datas.give_train(dt=dt, max_t=5.)
+        t,i = datas.give_train(dt=dt, max_t=5.)
         default = hhmodel.DEFAULT
         pars = hhmodel.give_rand()
         sim = NeuronSimul(init_p=default, t=t, i_inj=i)

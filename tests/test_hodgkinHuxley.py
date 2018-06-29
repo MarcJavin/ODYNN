@@ -1,5 +1,5 @@
 from unittest import TestCase
-
+from context import opthh
 from opthh.neuron import NeuronTf, NeuronFix
 from opthh.hhmodel import HodgkinHuxley
 from opthh import hhmodel

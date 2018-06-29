@@ -11,7 +11,7 @@ import opthh.datas
 from opthh.neuron import V_pos, Ca_pos
 from opthh.circuit import CircuitFix
 from opthh.utils import plots_output_mult
-from datas import DUMP_FILE
+from opthh.datas import DUMP_FILE
 import pickle
 import time
 

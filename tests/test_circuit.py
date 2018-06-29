@@ -1,5 +1,5 @@
 from unittest import TestCase
-
+from context import opthh
 import opthh.circuit
 from opthh import hhmodel
 from opthh.circuit import Circuit
