@@ -12,8 +12,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from opthh.datas import FILE_LV, SAVE_PATH
-from opthh.utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
+from datas import FILE_LV, SAVE_PATH
+from utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

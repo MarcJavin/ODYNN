@@ -9,9 +9,9 @@
 import numpy as np
 import tensorflow as tf
 
-from opthh import config
-from opthh.model import V_pos, Ca_pos
-from opthh.optimize import Optimized
+import config
+from model import V_pos, Ca_pos
+from optimize import Optimized
 
 
 MODEL = config.NEURON_MODEL

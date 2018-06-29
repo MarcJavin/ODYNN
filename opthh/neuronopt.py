@@ -11,12 +11,12 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from opthh import hhmodel
-from opthh.datas import SAVE_PATH, FILE_LV
-from opthh.model import Ca_pos, V_pos
-from opthh.neuron import NeuronTf
-from opthh.optimize import Optimizer
-from opthh.utils import plots_output_double
+import hhmodel
+from datas import SAVE_PATH, FILE_LV
+from model import Ca_pos, V_pos
+from neuron import NeuronTf
+from optimize import Optimizer
+from utils import plots_output_double
 
 
 class NeuronOpt(Optimizer):
