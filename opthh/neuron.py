@@ -116,11 +116,11 @@ class NeuronTf(MODEL, Optimized):
 
 
 class NeuronLSTM(Optimized):
+    """
+    Behavior model of a neuron using an LSTM network
+    """
     num = 1
     _cell_size = 2
-    _hidden_layer_nb = 3
-    _hidden_layer_cells = 5
-    _hidden_layer_size = 10
     init_p = {}
 
     _max_cur = 60
@@ -128,7 +128,10 @@ class NeuronLSTM(Optimized):
     _scale_v = 100
     _scale_ca = 1000
 
-    def __init__(self, dt=0.1):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10):
+        self._hidden_layer_nb = nb_layer
+        self._hidden_layer_cells = nb_cells
+        self._hidden_layer_size = layer_size
         Optimized.__init__(self)
         self.dt = dt
 
@@ -149,11 +152,11 @@ class NeuronLSTM(Optimized):
             hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
             input = hidden
 
-        rnn_outputs, rnn_states = self._lstm_cell(self._cell_size, input, batch, 'post_V_Ca')
+        v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
+        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
         with tf.name_scope('Scale'):
-            res_ = tf.transpose(rnn_outputs, perm=[0, 2, 1])
-            V = res_[:, V_pos] * self._scale_v + self._min_v
-            Ca = res_[:, Ca_pos] * self._scale_ca
+            V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
+            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results

@@ -4,7 +4,6 @@
 
 .. moduleauthor:: Marc Javin
 """
-
 import time
 
 import numpy as np
@@ -13,11 +12,10 @@ from tqdm import tqdm
 
 from opthh import hhmodel
 from opthh.circuit import CircuitTf
-from opthh.neuron import V_pos, Ca_pos
+from opthh.model import V_pos, Ca_pos
 from opthh.optimize import Optimizer
 from opthh.neuronopt import NeuronOpt
-from opthh.datas import DUMP_FILE, get_data_dump
-from opthh.utils import plots_output_mult, plots_output_double
+from opthh.utils import plots_output_double, plots_output_mult
 
 
 class CircuitOpt(Optimizer):
@@ -26,9 +24,9 @@ class CircuitOpt(Optimizer):
     """
     dim_batch = 1
 
-    def __init__(self, inits_p, conns, fixed=hhmodel.ALL, dt=0.1):
+    def __init__(self, inits_p, conns, epochs=500, fixed=hhmodel.ALL, dt=0.1):
         self.circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
-        Optimizer.__init__(self, self.circuit)
+        Optimizer.__init__(self, self.circuit, epochs)
 
     def _build_loss(self, w, n_out):
         """Define how to compute the loss"""
@@ -61,14 +59,14 @@ class CircuitOpt(Optimizer):
         for i in range(self.circuit._neurons.num):
             self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit._neurons.dt), i, file)
 
-    def opt_circuits(self, subdir, file=DUMP_FILE, suffix='', epochs=400, n_out=[1], w=[1, 0], l_rate=[0.9, 9, 0.95]):
+    def opt_circuits(self, subdir, train=None, test=None, suffix='', n_out=[1], w=[1, 0], l_rate=[0.9, 9, 0.95]):
         """optimize circuit parameters"""
         print(suffix)
-        T, X, V, Ca = get_data_dump(file)
+        T, X, V, Ca = train
 
         yshape = [2, None, None, len(n_out)]
 
-        self._init(subdir, suffix, file, l_rate, w, yshape)
+        self._init(subdir, suffix, train, test, l_rate, w, yshape)
 
         if self._V is None:
             self._V = np.full(self._Ca.shape, -50.)
@@ -84,16 +82,16 @@ class CircuitOpt(Optimizer):
                                              sess.graph)
 
             sess.run(tf.global_variables_initializer())
-            losses = np.zeros((epochs, self.parallel))
-            rates = np.zeros(epochs)
+            losses = np.zeros((self._epochs, self.parallel))
+            rates = np.zeros(self._epochs)
             vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
 
-            shapevars = [epochs, self.circuit.n_synapse]
+            shapevars = [self._epochs, self.circuit.n_synapse]
             if self.parallel > 1:
                 shapevars.append(self.parallel)
             vars = dict([(var, np.vstack((val, np.zeros(shapevars)))) for var, val in vars.items()])
 
-            for i in tqdm(range(epochs)):
+            for i in tqdm(range(self._epochs)):
                 results = self._train_and_gather(sess, i, losses, rates, vars)
 
                 for b in range(self.n_batch):
@@ -102,7 +100,7 @@ class CircuitOpt(Optimizer):
                                         Ca[:, b, 0], suffix='trace%s_%s' % (b, i), show=False, save=True)
                     # plots_output_mult(self._T, self._X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
-                if i % 10 == 0 or i == epochs - 1:
+                if i % self._frequency == 0 or i == self._epochs - 1:
                     for b in range(self.n_batch):
                         plots_output_mult(self._T, X[:, b, 0], results[:, V_pos, b, :], results[:, Ca_pos, b, :],
                                           suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)

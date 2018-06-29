@@ -66,11 +66,13 @@ class NeuronSimul():
             else:
                 plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
+        todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
         if dump:
-            todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
             with open(datas.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return datas.DUMP_FILE
+        else:
+            return todump
 
 
 

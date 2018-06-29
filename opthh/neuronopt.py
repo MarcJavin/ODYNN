@@ -4,8 +4,6 @@
 
 .. moduleauthor:: Marc Javin
 """
-
-import os
 import pickle
 import time
 
@@ -14,16 +12,11 @@ import tensorflow as tf
 from tqdm import tqdm
 
 from opthh import hhmodel
-from opthh.datas import DUMP_FILE, get_data_dump, SAVE_PATH, FILE_LV
+from opthh.datas import SAVE_PATH, FILE_LV
 from opthh.model import Ca_pos, V_pos
 from opthh.neuron import NeuronTf
 from opthh.optimize import Optimizer
 from opthh.utils import plots_output_double
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-if __name__ == '__main__':
-    pass
 
 
 class NeuronOpt(Optimizer):
@@ -33,13 +26,13 @@ class NeuronOpt(Optimizer):
 
     dim_batch = 1
 
-    def __init__(self, neuron=None, init_p=hhmodel.give_rand(), fixed=[], constraints=hhmodel.CONSTRAINTS,
+    def __init__(self, neuron=None, epochs=500, init_p=hhmodel.give_rand(), fixed=[], constraints=hhmodel.CONSTRAINTS,
                  dt=0.1):
         if neuron is not None:
             self.neuron = neuron
         else:
             self.neuron = NeuronTf(init_p, dt=dt, fixed=fixed, constraints=constraints)
-        Optimizer.__init__(self, self.neuron)
+        Optimizer.__init__(self, self.neuron, epochs)
 
     def _build_loss(self, w):
         """Define how the loss is computed"""
@@ -50,15 +43,16 @@ class NeuronOpt(Optimizer):
         losses = losses_v + losses_ca
         self.loss = tf.reduce_mean(losses, axis=[0, 1])
 
-    def optimize(self, subdir, w=[1, 0], epochs=500, l_rate=[0.1, 9, 0.92], suffix='', step=None, file=DUMP_FILE,
+    def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
                  reload=False):
         """Optimize the neuron parameters"""
         print(suffix, step)
-        T, X, V, Ca = get_data_dump(file)
+
+        T, X, V, Ca = train
 
         yshape = [2, None, None]
 
-        self._init(subdir, suffix, file, l_rate, w, yshape)
+        self._init(subdir, suffix, train, test, l_rate, w, yshape)
 
         if self._V is None:
             self._V = np.full(self._Ca.shape, -50.)
@@ -74,8 +68,8 @@ class NeuronOpt(Optimizer):
                                              sess.graph)
 
             sess.run(tf.global_variables_initializer())
-            losses = np.zeros((epochs, self.parallel))
-            rates = np.zeros(epochs)
+            losses = np.zeros((self._epochs, self.parallel))
+            rates = np.zeros(self._epochs)
 
             if reload:
                 """Get variables and measurements from previous steps"""
@@ -89,9 +83,9 @@ class NeuronOpt(Optimizer):
                 vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
                 len_prev = 0
 
-            vars = dict([(var, np.vstack((val, np.zeros((epochs, self.parallel))))) for var, val in vars.items()])
+            vars = dict([(var, np.vstack((val, np.zeros((self._epochs, self.parallel))))) for var, val in vars.items()])
 
-            for i in tqdm(range(epochs)):
+            for i in tqdm(range(self._epochs)):
                 results = self._train_and_gather(sess, len_prev + i, losses, rates, vars)
 
                 # if losses[len_prev+i]<self.min_loss:
@@ -103,7 +97,7 @@ class NeuronOpt(Optimizer):
                                         self._Ca[:, b], suffix='%s_trace%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
 
-                if i % 10 == 0 or i == epochs - 1:
+                if i % self._frequency == 0 or i == self._epochs - 1:
                     self._plots_dump(sess, losses, rates, vars, len_prev + i)
 
             with open(self.dir + 'time', 'w') as f:

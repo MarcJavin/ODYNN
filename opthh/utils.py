@@ -165,9 +165,9 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
                    var_dic['h__alpha'], fig, grid[5], False, func=func)
     plt.tight_layout()
-    if(save):
+    if save:
         plt.savefig('{}var_{}_{}.png'.format(DIR, 'Rates', suffix), dpi=300)
-    if(show):
+    if show:
         plt.show()
 
     fig = plt.figure()
@@ -190,9 +190,9 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
         ax.yaxis.tick_right()
         fig.add_subplot(ax)
     plt.tight_layout()
-    if(save):
+    if save:
         plt.savefig('{}var_{}_{}.png'.format(DIR, 'Membrane', suffix), dpi=300)
-    if(show):
+    if show:
         plt.show()
 
     plt.figure()
@@ -225,25 +225,44 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
         fig.add_subplot(ax)
 
 
-def plot_loss_rate(losses, rates, suffix="", show=True, save=False):
+def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=True, save=False):
     """plot loss (log10) and learning rate"""
     plt.figure()
 
-    plt.subplot(2,1,1)
-    if(losses.ndim == 1):
-        plt.plot(losses, 'r')
-    else:
-        plt.plot(losses, linewidth=0.6)
-    plt.ylabel('Loss')
+    n_p = 2
+
+    plt.ylabel('Test Loss')
     plt.yscale('log')
 
-    plt.subplot(2,1,2)
+    plt.subplot(n_p,1,1)
+    if parallel == 1:
+        plt.plot(losses, 'r', linewidth=0.6, label='Train')
+    else:
+        plt.plot(losses, linewidth=0.6, label='Train')
+    if losses_test is not None:
+        losses_test = np.array(losses_test)
+        pts = np.linspace(0, losses.shape[0]-1, num=losses_test.shape[0], endpoint=True)
+        if parallel == 1:
+            plt.plot(pts, losses_test, 'Navy', linewidth=0.6, label='Test')
+        else:
+            # add another subplot for readability
+            n_p = 3
+            plt.ylabel('Loss')
+            plt.yscale('log')
+            plt.legend()
+            plt.subplot(n_p,1,2)
+            plt.plot(pts, losses_test, linewidth=0.6, label='Test')
+    plt.ylabel('Loss')
+    plt.yscale('log')
+    plt.legend()
+
+    plt.subplot(n_p,1,n_p)
     plt.plot(rates)
     plt.ylabel('Learning rate')
 
-    if(save):
+    if save:
         plt.savefig('{}losses_{}.png'.format(DIR, suffix), dpi=300)
-    if(show):
+    if show:
         plt.show()
     plt.close()
 
@@ -315,9 +334,9 @@ def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, sav
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
-    if(save):
+    if save:
         plt.savefig('{}{}output_{}.png'.format(DIR, IMG_DIR, suffix))
-    if(show):
+    if show:
         plt.show()
     plt.close()
 
@@ -352,9 +371,9 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    if(save):
+    if save:
         plt.savefig('{}results_ica_{}.png'.format(DIR, suffix))
-    if(show):
+    if show:
         plt.show()
     plt.close()
 
@@ -449,8 +468,8 @@ def plots_results(model, ts, i_inj_values, results, ca_true=None, suffix="", sho
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
     # plt.ylim(-1, 40)
 
-    if(save):
+    if save:
         plt.savefig('{}results_{}.png'.format(DIR, suffix), dpi=300)
-    if(show):
+    if show:
         plt.show()
     plt.close()

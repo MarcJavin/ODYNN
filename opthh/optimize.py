@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from opthh.datas import FILE_LV, SAVE_PATH, get_data_dump
+from opthh.datas import FILE_LV, SAVE_PATH
 from opthh.utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 import os
 
@@ -61,10 +61,14 @@ class Optimized(ABC):
 class Optimizer(ABC):
     min_loss = 1.
 
-    def __init__(self, optimized):
+    def __init__(self, optimized, epochs=500, frequency=10):
         self.start_time = time.time()
         self.optimized = optimized
         self.parallel = self.optimized.num
+        self._epochs = epochs
+        self._frequency = frequency
+        self._test_losses = None
+        self._test = False
 
     def _build_train(self):
         """learning rate and optimization"""
@@ -109,7 +113,7 @@ class Optimizer(ABC):
 
         self.saver = tf.train.Saver()
 
-    def _init(self, subdir, suffix, file, l_rate, w, yshape):
+    def _init(self, subdir, suffix, train, test, l_rate, w, yshape):
         """
         Initialize directory and the object to be optimized, get the dataset, write settings in the directory
         and initialize placeholders for target output and results.
@@ -119,7 +123,13 @@ class Optimizer(ABC):
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
 
-        self._T, self._X, self._V, self._Ca = get_data_dump(file)
+        self._T, self._X, self._V, self._Ca = train
+        if test is not None:
+            self._test = True
+            nb_test = np.ceil(self._epochs / self._frequency) + 1
+            self._test_losses = []#np.zeros((nb_test, self.parallel))
+            self._T_test, self._X_test, self._V_test, self._Ca_test = test
+            assert (self.optimized.dt == self._T_test[1] - self._T_test[0])
         assert (self.optimized.dt == self._T[1] - self._T[0])
 
         self.n_batch = self._X.shape[1]
@@ -177,9 +187,18 @@ class Optimizer(ABC):
 
     def _plots_dump(self, sess, losses, rates, vars, i):
         """Plot the variables evolution, the loss and saves it in a file"""
+        if self._test:
+            test_loss = sess.run(self.loss, feed_dict={
+                self.xs_: self._X_test,
+                self.ys_: np.array([self._V_test, self._Ca_test])
+            })
+            self._test_losses.append(test_loss)
+
+
         with (open(self.dir + FILE_LV, 'wb')) as f:
             pickle.dump([losses, rates, vars], f)
-        plot_loss_rate(losses[:i + 1], rates[:i + 1], suffix=self.suffix, show=False, save=True)
+
+        plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, '{}{}'.format(self.dir, SAVE_PATH))
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + 'evolution', show=False,

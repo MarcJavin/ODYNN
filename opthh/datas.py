@@ -121,8 +121,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
         cas[:,j] = s_ca
     plt.show()
     plt.close()
-    with open(DUMP_real, 'wb') as f:
-        pickle.dump([t, curs, None, cas], f)
+    train = [t, curs, None, cas]
     t_all = sp.arange(0., len(trace)*unit_time, dt)
     td_all = sp.arange(0., len(trace))*unit_time
     spl = splrep(td_all, trace, s=0.25)
@@ -132,9 +131,8 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     plt.plot(td_all, trace)
     plt.plot(t_all, s_ca_all)
     plt.show()
-    with open(DUMP_real_all, 'wb') as f:
-        pickle.dump([t_all, s_i_all, None, s_ca_all], f)
-    return DUMP_real, DUMP_real_all
+    test = [t_all, s_i_all, None, s_ca_all]
+    return train, test
 
 
 
@@ -177,6 +175,8 @@ if __name__ == '__main__':
     pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))
 
 DT = 0.1
+
+
 def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     """time and currents for optimization"""
     t = np.array(sp.arange(0.0, max_t, dt))
@@ -188,6 +188,19 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     if nb_neuron_zero is not None:
         i_zeros = np.zeros(i_fin.shape)
         i_fin = np.stack([i_fin, i_zeros], axis=2)
+    return t, i_fin
+
+
+def give_test(dt=DT):
+    """time and currents for optimization"""
+    t = np.array(sp.arange(0.0, 1200, dt))
+    i1 = (t - 100) * (30. / 100) * ((t > 100) & (t <= 200)) + 30 * ((t > 200) & (t <= 1100)) - (t - 1000) * (
+            30. / 100) * ((t > 1000) & (t <= 1100))
+    i2 = 30. * ((t > 100) & (t < 300)) + 15. * ((t > 400) & (t < 500)) + 10. * ((t > 700) & (t < 1000))
+    i3 = (t - 600) * (1. / 500) * ((t > 100) & (t <= 600)) + (1100 - t) * (1. / 500) * (
+            (t > 600) & (t <= 1100))
+    i4 = np.sum([(30. - (n * 4 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
+    i_fin = np.stack([i1, i2, i3, i4], axis=1)
     return t, i_fin
 
 

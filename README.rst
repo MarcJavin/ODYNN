@@ -10,14 +10,14 @@ Optimization of biological models of neurons (Integrate and Fire, Hodgkin-Huxley
     :width: 800px
     :align: center
     :height: 500px
-    :scale: 10
+    :scale: 50
     :alt: alternate text
 
 .. image:: img/inhexc.png
     :width: 800px
     :align: center
     :height: 500px
-    :scale: 10
+    :scale: 50
     :alt: alternate text
 
 Commands
@@ -34,4 +34,14 @@ Run in the root directory :
 
 TODO
 ---------------
+
+- Run one step LSTM
+- peephole
+- Refactor simulations
+- Refactor optimizations
+- update tests opts
+- inhibitory synapses : default and constraints
+- plots circuitopt
+- heatmaps
+- refactor plots
 

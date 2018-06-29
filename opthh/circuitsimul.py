@@ -74,13 +74,16 @@ class CircuitSimul():
             states = states[:,:,np.newaxis,:]
             i_injs = self.i_injs[:,np.newaxis,:]
 
+        V = np.stack([states[:, 0, :, n] for n in n_out], axis=-1)
+        Ca = np.stack([states[:, -1, :, n] for n in n_out], axis=-1)
+        todump = [self.t, i_injs, V, Ca]
         if dump:
-            V = np.stack([states[:,0,:,n] for n in n_out], axis=-1)
-            Ca = np.stack([states[:, -1, :, n] for n in n_out], axis=-1)
-            todump = [self.t, i_injs, V, Ca]
             with open(DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)
             return DUMP_FILE
+        else:
+            return todump
+
 
 
 if __name__ == '__main__':

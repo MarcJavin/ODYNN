@@ -73,8 +73,8 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     utils.set_dir(dir)
     MODEL.step_model = loop_func
     MODEL.step_model = loop_func
-    file = sim.simul(show=True, dump=True)
-    opt.optimize(dir, w=[w_v, w_ca], file=file)
+    train = sim.simul(show=True)
+    opt.optimize(dir, w=[w_v, w_ca], train=train)
     MODEL.step_model = base
     return dir
 
@@ -87,8 +87,8 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=CA_VAR)
     sim = NeuronSimul(init_p=MODEL.default_params, t=t, i_inj=i_inj)
-    file = sim.simul(dump=True, suffix='step2', show=False)
-    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', file=file)
+    train = sim.simul(suffix='step2', show=False)
+    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
 
     test_xp(dir)
 
@@ -101,8 +101,8 @@ def steps2_exp_k(w_v2, w_ca2):
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=K_VAR)
     sim = NeuronSimul(t=t, i_inj=i_inj)
-    file = sim.simul(dump=True, suffix='step2')
-    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', file=file)
+    train = sim.simul(suffix='step2')
+    opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
 
     test_xp(dir)
 
@@ -134,15 +134,15 @@ def alternate(name=''):
     dir = 'Integcomp_alternate_%s' % name
     utils.set_dir(dir)
     sim = NeuronSimul(t=t, i_inj=i_inj)
-    file = sim.simul(show=False, suffix='train', dump=True)
+    train = sim.simul(show=False, suffix='train')
     wv = 0.2
     wca = 0.8
-    opt = NeuronOpt(init_p=pars, dt=dt)
-    opt.optimize(dir, [wv, wca], epochs=20, step=0, file=file)
+    opt = NeuronOpt(init_p=pars, epochs=20, dt=dt)
+    opt.optimize(dir, train=train, w=[wv, wca], step=0)
     for i in range(24):
         wv = 1 - wv
         wca = 1 - wca
-        n = opt.optimize(dir, [wv, wca], reload=True, epochs=20, step=i + 1, file=file)
+        n = opt.optimize(dir, train=train, w=[wv, wca], reload=True, step=i + 1)
     comp_pars(dir, n)
     test_xp(dir)
 
@@ -157,13 +157,16 @@ def classic(name, wv, wca, default=hhmodel.DEFAULT_2, lstm=True):
     if (lstm):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
-        opt = NeuronOpt(neur)
+        opt = NeuronOpt(neur, epochs=700)
     else:
         opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
     sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
-    file = sim.simul(show=False, suffix='train', dump=True)
-    n = opt.optimize(dir, w=[wv, wca], epochs=700, file=file)
+    train = sim.simul(show=False, suffix='train')
+    tt, it = datas.give_test(dt)
+    sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
+    test= sim.simul(show=False, suffix='test')
+    n = opt.optimize(dir, w=[wv, wca], train=train, test=test)
     comp_pars(dir, n)
     test_xp(dir, default=default)
 
@@ -172,10 +175,10 @@ def real_data(name):
     dir = 'Real_data_%s' % name
     utils.set_dir(dir)
     opt = NeuronOpt(init_p=pars, dt=dt)
-    filetrain, filetest = datas.dump_data()
-    n = opt.optimize(dir, w=[0, 1], epochs=500, file=filetrain)
+    train, test = datas.dump_data()
+    n = opt.optimize(dir, w=[0, 1], train = train)
     comp_pars(dir, n)
-    t, i, v, ca = datas.get_data_dump(filetest)
+    t, i, v, ca = test
     sim = NeuronSimul(init_p=datas.get_best_result(dir), t=t, i_inj=i)
     sim.simul(suffix='test', save=True, ca_true=ca)
 
