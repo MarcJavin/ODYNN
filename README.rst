@@ -28,6 +28,10 @@ Run in the root directory :
 
         make init
 
+2) install the package
+
+        python3 setup.py install
+
 2) Launch tests
 
         make test

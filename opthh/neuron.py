@@ -153,7 +153,16 @@ class NeuronLSTM(Optimized):
             input = hidden
 
         v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
+
+        hidden = []
+        for cell in range(self._hidden_layer_cells):
+            out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(self._hidden_layer_nb+1, cell))
+            hidden.append(out)
+        hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
+        input = hidden
+
         ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
+
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
             Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
