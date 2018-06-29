@@ -41,7 +41,7 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     opt = NeuronOpt()
     sim = NeuronSimul(t=t, i_inj=i_inj)
     base = MODEL.step_model
-
+c
     if (xp == 'ica'):
         name = 'Icafromv'
         opt = NeuronOpt(fixed=CA_CONST)
