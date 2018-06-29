@@ -16,24 +16,24 @@ class TestNeuronOpt(TestCase):
         default = hhmodel.DEFAULT
         pars = hhmodel.give_rand()
         sim = NeuronSimul(init_p=default, t=t, i_inj=i)
-        file = sim.simul(show=False, suffix='train', dump=True)
+        train = sim.simul(show=False, suffix='train')
 
         #LSTM
         n = NeuronLSTM(dt=dt)
-        opt = NeuronOpt(neuron=n)
+        opt = NeuronOpt(neuron=n, epochs=1)
         self.assertEqual(opt.parallel, 1)
-        n = opt.optimize('unittest', w=[1, 1], epochs=1, file=file)
+        n = opt.optimize('unittest', w=[1, 1],  train=train)
 
         #one neuron
-        opt = NeuronOpt(init_p=pars, dt=dt)
+        opt = NeuronOpt(init_p=pars, dt=dt, epochs=1)
         self.assertEqual(opt.parallel, 1)
-        n = opt.optimize('unittest', w=[1,1], epochs=1, file=file)
-        n = opt.optimize('unittest', w=[1, 1], epochs=1, reload=True, file=file)
+        n = opt.optimize('unittest', w=[1,1],  train=train)
+        n = opt.optimize('unittest', w=[1, 1],  reload=True, train=train)
 
         #parallel
         pars = [hhmodel.give_rand() for _ in range(2)]
-        opt = NeuronOpt(init_p=pars, dt=dt)
+        opt = NeuronOpt(init_p=pars, dt=dt, epochs=1)
         self.assertEqual(opt.parallel, 2)
-        n = opt.optimize('unittest', w=[1, 1], epochs=1, file=file)
+        n = opt.optimize('unittest', w=[1, 1],  train=train)
         self.assertEqual(opt.loss.shape[0], opt.parallel)
 

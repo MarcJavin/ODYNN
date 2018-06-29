@@ -39,7 +39,6 @@ TODO
 - peephole
 - Refactor simulations
 - Refactor optimizations
-- update tests opts
 - inhibitory synapses : default and constraints
 - plots circuitopt
 - heatmaps

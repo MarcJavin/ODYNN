@@ -113,17 +113,17 @@ DEFAULT = {
     'h__mdp': 6.42,
 
     'C_m': 20.0,
-    # membrane capacitance, in uF/cm^2
+    # membrane capacitance, in uF/cm$^2$
 
     'g_Ca': 3.0,
-    # Calcium (Na) maximum conductances, in mS/cm^2
+    # Calcium (Na) maximum conductances, in mS/cm$^2$
 
     'g_Ks': 10.0,
     'g_Kf': 0.07,
-    # Postassium (K) maximum conductances, in mS/cm^2
+    # Postassium (K) maximum conductances, in mS/cm$^2$
 
     'g_L': 0.005,
-    # Leak maximum conductances, in mS/cm^2
+    # Leak maximum conductances, in mS/cm$^2$
 
     'E_Ca': 20.0,
     # Sodium (Na) Nernst reversal potentials, in mV
