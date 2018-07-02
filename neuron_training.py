@@ -5,7 +5,6 @@
 .. moduleauthor:: Marc Javin
 """
 import sys
-<<<<<<< HEAD:opthh/neuron_training.py
 
 import numpy as np
 import scipy as sp
