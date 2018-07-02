@@ -128,10 +128,11 @@ class NeuronLSTM(Optimized):
     _scale_v = 100
     _scale_ca = 1000
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=True):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size
+        self._extra_ca = extra_ca
         Optimized.__init__(self)
         self.dt = dt
 
@@ -149,17 +150,20 @@ class NeuronLSTM(Optimized):
             for cell in range(self._hidden_layer_cells):
                 out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(layer, cell))
                 hidden.append(out)
-            hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
-            input = hidden
+            with tf.variable_scope('interlayer{}'.format(layer)):
+                hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
+                input = hidden
 
         v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
 
-        hidden = []
-        for cell in range(self._hidden_layer_cells):
-            out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(self._hidden_layer_nb+1, cell))
-            hidden.append(out)
-        hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
-        input = hidden
+        if(self._extra_ca):
+            hidden = []
+            for cell in range(self._hidden_layer_cells):
+                out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(self._hidden_layer_nb+1, cell))
+                hidden.append(out)
+            with tf.variable_scope('interlayer{}'.format(self._hidden_layer_nb+1)):
+                hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
+                input = hidden
 
         ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
 
@@ -184,6 +188,7 @@ class NeuronLSTM(Optimized):
         return ('Cell size : {} '.format(self._cell_size) + '\n' +
                 'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
                 'Number of hidden cells : {}'.format(self._hidden_layer_cells) + '\n' +
+                'Extra layer for $Ca^{2+}$ : %s' % self._extra_ca + '\n' +
                 'State size in hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +
                 'max current : {}, min voltage : {}, scale voltage : {}, scale calcium : {}'
