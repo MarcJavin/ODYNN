@@ -10,8 +10,7 @@ import sys
 import numpy as np
 import scipy as sp
 
-import opthh
-from opthh import utils, config, hhmodel, datas
+from . import utils, config, hhmodel, datas
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul
