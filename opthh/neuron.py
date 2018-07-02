@@ -123,10 +123,10 @@ class NeuronLSTM(Optimized):
     _cell_size = 2
     init_p = {}
 
-    _max_cur = 60
-    _min_v = -60
-    _scale_v = 100
-    _scale_ca = 1000
+    _max_cur = 60.
+    _min_v = -60.
+    _scale_v = 100.
+    _scale_ca = 1000.
 
     def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=True):
         self._hidden_layer_nb = nb_layer
@@ -143,7 +143,7 @@ class NeuronLSTM(Optimized):
             batch = 1
 
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
+        input = tf.expand_dims(curs_ / tf.get_variable('max_cur', initializer=self._max_cur, dtype=tf.float32), axis=len(xshape))
 
         for layer in range(self._hidden_layer_nb):
             hidden = []
