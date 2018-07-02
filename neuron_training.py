@@ -28,7 +28,8 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
-t, i_inj = datas.give_train(dt)
+t, i_inj = datas.give_train(dt)[:,3][:,None]
+tt, it = datas.give_test(dt)[:,2][:,None]
 # i_inj = i_inj[:,2][:,None]
 
 """Single optimisation"""
@@ -146,7 +147,7 @@ def alternate(name=''):
     test_xp(dir)
 
 
-def classic(name, wv, wca, default=hhmodel.DEFAULT_2, lstm=True):
+def classic(name, wv, wca, default=MODEL.default_params, lstm=True):
     if (wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif (wca == 0):
@@ -162,7 +163,6 @@ def classic(name, wv, wca, default=hhmodel.DEFAULT_2, lstm=True):
     utils.set_dir(dir)
     sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
     train = sim.simul(show=False, suffix='train')
-    tt, it = datas.give_test(dt)
     sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
     test= sim.simul(show=False, suffix='test')
     n = opt.optimize(dir, w=[wv, wca], train=train, test=test)

@@ -180,7 +180,7 @@ class NeuronLSTM(Optimized):
     @staticmethod
     def _lstm_cell(size, input, batch, scope):
         with tf.variable_scope(scope):
-            cell = tf.nn.rnn_cell.BasicLSTMCell(size, state_is_tuple=True)
+            cell = tf.nn.rnn_cell.LSTMCell(size, use_peepholes=True, state_is_tuple=True)
             initializer = cell.zero_state(batch, dtype=tf.float32)
             return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
 

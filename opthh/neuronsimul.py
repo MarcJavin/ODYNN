@@ -78,6 +78,12 @@ class NeuronSimul():
 
 if __name__ == '__main__':
 
+    t,i = datas.give_train2(0.5)
+    sim = NeuronSimul(init_p=hhmodel.DEFAULT, t=t, i_inj=i)
+    sim.simul(show=True)
+
+    exit(0)
+
 
 
     sim = NeuronSimul(init_p=hhmodel.DEFAULT, t=datas.t, i_inj=datas.i_inj)

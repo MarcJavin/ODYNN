@@ -15,6 +15,7 @@ import pylab as plt
 import scipy as sp
 from scipy.interpolate import splrep, splev
 from scipy.signal import savgol_filter
+from random import random as rd
 
 from . import utils
 
@@ -135,63 +136,41 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     return train, test
 
 
-
-
-if __name__ == '__main__':
-    df = pd.read_csv('data/SMDBoxes.csv')
-    df = df.head(1510)
-    trace = np.array(df['Calcium_bc'])
-    i = np.array(df['Input']) * 100
-    tinit = np.array(df['time [s]']) * 1000
-    t = np.arange(0, tinit[-1], step=2)
-
-
-    t1 = time.time()
-
-    # f = interp1d(tinit, l, kind='cubic')
-    # z = f(t)
-    t2 = time.time()
-    print('lowess+interp : %s'%(t2-t1))
-
-    t1 = time.time()
-    exact = splrep(tinit, trace, k=1)
-    spl = splrep(tinit, trace, s=0.25)
-    zexact = splev(tinit, exact)
-    z = splev(tinit, spl)
-    t2 = time.time()
-    print('splrep : %s' % (t2-t1))
-
-    spli = splrep(tinit, i, k=2)
-    i = splev(tinit, spli)
-
-    plt.subplot(211)
-    plt.plot(tinit, trace, 'r', label='trace')
-    plt.plot(tinit, z, 'b', label='splrev')
-    plt.legend()
-    plt.subplot(212)
-    plt.plot(i)
-    plt.show()
-
-    pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))
-
 DT = 0.1
 
 
 def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     """time and currents for optimization"""
     t = np.array(sp.arange(0.0, max_t, dt))
-    i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950)) + t/1200
-    i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900)) + t/1200
-    i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0) + t/1200
-    i4 = 15. * ((t > 400) & (t < 800)) + t/1200
+    i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950))
+    i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))
+    i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
+    i4 = 15. * ((t > 400) & (t < 800))
     i_fin = np.stack([i, i2, i3, i4], axis=1)
-    i_noise = 0.1*(np.random.rand(i_fin.shape[0], i_fin.shape[1]) - 0.5)
+    i_noise = 0.1 * (np.random.rand(i_fin.shape[0], i_fin.shape[1]) - 0.5)
     i_fin += i_noise
     # plt.plot(i_noise[:,0])
     # plt.show()
     if nb_neuron_zero is not None:
         i_zeros = np.zeros(i_fin.shape)
         i_fin = np.stack([i_fin, i_zeros], axis=2)
+    return t, i_fin
+
+
+def give_periodic(t, max_i, size, freq):
+    return np.sum([max_i * ((t > n) & (t < n + size)) for n in range(0, int(t[-1]), freq)], axis=0)
+
+
+
+def give_train2(dt=DT):
+    t = np.array(sp.arange(0.0, 1200., dt))
+    b1 = 40. * t / 1200
+    b2 = -b1/2
+    b3 = 40. - b1
+    b4 = -b3/2
+    i_fin = np.stack([b1 * rd() + b2 * rd() + b3 * rd() + b4 * rd() + give_periodic(t, rd() * 15., rd()*200, int(rd() * 500)) +
+             give_periodic(t, rd() * 15., rd()*200, int(rd() * 500)) + give_periodic(t, rd() * 15., rd()*200, int(rd() * 500))
+                      for _ in range(10)], axis=1)
     return t, i_fin
 
 
@@ -236,6 +215,7 @@ def test():
     i = np.append(i, i_1, axis=2)
     print(i.shape)
 
+
 t_len = 5000.
 t = np.array(sp.arange(0.0, t_len, DT))
 i_inj = 10. * ((t > 100) & (t < 750)) + 20. * ((t > 1500) & (t < 2500)) + 40. * ((t > 3000) & (t < 4000))
@@ -247,3 +227,46 @@ t_test = np.array(sp.arange(0.0, 2000, DT))
 i_test = 10. * ((t_test > 100) & (t_test < 300)) + 20. * ((t_test > 400) & (t_test < 600)) + 40. * (
         (t_test > 800) & (t_test < 950)) + \
          (t_test - 1200) * (50. / 500) * ((t_test > 1200) & (t_test < 1700))
+
+if __name__ == '__main__':
+
+    give_train2(0.5)
+    exit(0)
+
+    df = pd.read_csv('data/SMDBoxes.csv')
+    df = df.head(1510)
+    trace = np.array(df['Calcium_bc'])
+    i = np.array(df['Input']) * 100
+    tinit = np.array(df['time [s]']) * 1000
+    t = np.arange(0, tinit[-1], step=2)
+
+
+    t1 = time.time()
+
+    # f = interp1d(tinit, l, kind='cubic')
+    # z = f(t)
+    t2 = time.time()
+    print('lowess+interp : %s'%(t2-t1))
+
+    t1 = time.time()
+    exact = splrep(tinit, trace, k=1)
+    spl = splrep(tinit, trace, s=0.25)
+    zexact = splev(tinit, exact)
+    z = splev(tinit, spl)
+    t2 = time.time()
+    print('splrep : %s' % (t2-t1))
+
+    spli = splrep(tinit, i, k=2)
+    i = splev(tinit, spli)
+
+    plt.subplot(211)
+    plt.plot(tinit, trace, 'r', label='trace')
+    plt.plot(tinit, z, 'b', label='splrev')
+    plt.legend()
+    plt.subplot(212)
+    plt.plot(i)
+    plt.show()
+
+    pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))
+
+

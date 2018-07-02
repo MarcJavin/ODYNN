@@ -159,6 +159,7 @@ class Optimizer(ABC):
                     "Output voltage shape : {}".format(self._V.shape) + "\n" +
                     self.optimized.settings())
 
+
     def _train_and_gather(self, sess, i, losses, rates, vars):
         """Train the model and collect loss, learn_rate and variables"""
         summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
