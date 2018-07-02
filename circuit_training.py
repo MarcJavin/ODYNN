@@ -16,7 +16,7 @@ from opthh import config, utils
 from opthh.circuitopt import CircuitOpt
 from opthh.circuitsimul import CircuitSimul
 
-p = config.NEURON_MODEL.default
+p = config.NEURON_MODEL.default_params
 
 def inhibit():
     inhib =circuit.SYNAPSE_inhib
