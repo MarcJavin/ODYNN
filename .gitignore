@@ -2,6 +2,8 @@
 *.sh
 opthh/results/*
 opthh/data/*
-docs/_build/*
+docs/_build
+docs/_static
+docs/_templates
 .idea/*
 other/*

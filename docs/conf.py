@@ -14,8 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../opthh'))
-sys.path.insert(1, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('..'))
 
 from unittest.mock import MagicMock
 
@@ -51,6 +50,9 @@ release = ''
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'nbsphinx'
+    # 'numpydoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -78,6 +80,7 @@ language = None
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
+highlight_language = 'python'
 pygments_style = 'sphinx'
 
 
@@ -165,7 +168,6 @@ texinfo_documents = [
      author, 'opt_HH', 'One line description of project.',
      'Miscellaneous'),
 ]
-print('yo')
 
 
 # -- Extension configuration -------------------------------------------------

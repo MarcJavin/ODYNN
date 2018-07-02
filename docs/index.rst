@@ -9,8 +9,13 @@ Welcome to opt_HH's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :glob:
 
-   modules
+   Tutorial
+   tuto.ipynb
+   opthh
+
+
 
 
 

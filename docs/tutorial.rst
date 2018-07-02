@@ -1,7 +1,7 @@
-optimize module
+tutorial module
 ===============
 
-.. automodule:: optimize
+.. automodule:: tutorial
     :members:
     :undoc-members:
     :show-inheritance:
