@@ -168,8 +168,8 @@ class NeuronLSTM(Optimized):
         ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
 
         with tf.name_scope('Scale'):
-            V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
-            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
+            V = v_outputs[:, :, V_pos] * tf.get_variable('scale_v', self._scale_v, dtype=tf.float32) + tf.get_variable('min_v', self._min_v, dtype=tf.float32)
+            Ca = ca_outputs[:, :, Ca_pos] * tf.get_variable('scale_ca', self._scale_ca, dtype=tf.float32)
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
