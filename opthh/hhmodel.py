@@ -10,8 +10,8 @@ import numpy as np
 import random
 import tensorflow as tf
 import scipy as sp
-from opthh.model import Model, V_pos, Ca_pos
-from opthh import utils
+from .model import Model, V_pos, Ca_pos
+from . import utils
 
 
 REST_CA = 0.

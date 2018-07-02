@@ -3,3 +3,6 @@ init:
 
 test:
 	python3 -m unittest discover tests/
+
+install:
+    python3 setup.py install --user

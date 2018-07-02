@@ -4,13 +4,13 @@
 
 .. moduleauthor:: Marc Javin
 """
-
 import sys
+<<<<<<< HEAD:opthh/neuron_training.py
 
 import numpy as np
 import scipy as sp
 
-from . import utils, config, hhmodel, datas
+from opthh import utils, config, hhmodel, datas
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul

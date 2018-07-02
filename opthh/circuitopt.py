@@ -10,12 +10,12 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from opthh import hhmodel
-from opthh.circuit import CircuitTf
-from opthh.model import V_pos, Ca_pos
-from opthh.optimize import Optimizer
-from opthh.neuronopt import NeuronOpt
-from opthh.utils import plots_output_double, plots_output_mult
+from . import hhmodel
+from .circuit import CircuitTf
+from .model import V_pos, Ca_pos
+from .optimize import Optimizer
+from .neuronopt import NeuronOpt
+from .utils import plots_output_double, plots_output_mult
 
 
 class CircuitOpt(Optimizer):
