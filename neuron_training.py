@@ -28,9 +28,10 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
-t, i_inj = datas.give_train(dt)[:,3][:,None]
-tt, it = datas.give_test(dt)[:,2][:,None]
-# i_inj = i_inj[:,2][:,None]
+t, i_inj = datas.give_train(dt)
+i_inj = i_inj[:,3][:,None]
+tt, it = datas.give_test(dt)
+it = it[:,2][:,None]
 
 """Single optimisation"""
 
