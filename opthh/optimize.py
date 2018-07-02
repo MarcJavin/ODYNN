@@ -79,7 +79,7 @@ class Optimizer(ABC):
             self.decay_rate,  # Decay rate.
             staircase=True)
         # self.learning_rate = 0.1
-        tf.summary.scalar('learning rate', self.learning_rate)
+        tf.summary.scalar("learning rate", self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         gvs = opt.compute_gradients(self.loss)
@@ -117,7 +117,7 @@ class Optimizer(ABC):
         and initialize placeholders for target output and results.
         """
         self.suffix = suffix
-        self.dir = set_dir(subdir + '/')
+        self.dir = set_dir(subdir + "/")
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
 
@@ -142,21 +142,21 @@ class Optimizer(ABC):
             yshape.append(self.parallel)
 
         self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
-        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name='voltage_Ca')
+        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name="voltage_Ca")
 
-        print('i expected : ', self.xs_.shape)
-        print('i : ', self._X.shape, 'V : ', self._V.shape)
+        print("i expected : ", self.xs_.shape)
+        print("i : ", self._X.shape, "V : ", self._V.shape)
 
     def write_settings(self, w):
         """Write the settings of the optimization in a file"""
         with open(self.dir + OUT_SETTINGS, 'w') as f:
-            f.write('Weights (out, cac) : {}'.format(w) + '\n' +
-                    'Start rate : {}, decay_step : {}, decay_rate : {}'.format(self.start_rate, self.decay_step,
-                                                                               self.decay_rate) + '\n' +
-                    'Number of batches : {}'.format(self.n_batch) + '\n' +
-                    'Number of time steps : {}'.format(self._T.shape) + 'Input current shape : {}'.format(
+            f.write("Weights (out, cac) : {}".format(w) + "\n" +
+                    "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.start_rate, self.decay_step,
+                                                                               self.decay_rate) + "\n" +
+                    "Number of batches : {}".format(self.n_batch) + "\n" +
+                    "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
                 self._X.shape) +
-                    'Output voltage shape : {}'.format(self._V.shape) + '\n' +
+                    "Output voltage shape : {}".format(self._V.shape) + "\n" +
                     self.optimized.settings())
 
     def _train_and_gather(self, sess, i, losses, rates, vars):
@@ -170,17 +170,17 @@ class Optimizer(ABC):
 
         self.optimized.apply_constraints(sess)
 
-        with open('{}{}_{}.txt'.format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
+        with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
             for name, v in self.optimized.get_params():
                 v_ = sess.run(v)
-                f.write('{} : {}\n'.format(name, v_))
+                f.write("{} : {}\n".format(name, v_))
                 vars[name][i + 1] = v_
 
         rates[i] = sess.run(self.learning_rate)
         losses[i] = train_loss
         if self.parallel > 1:
             train_loss = np.nanmean(train_loss)
-        print('[{}] loss : {}'.format(i, train_loss))
+        print("[{}] loss : {}".format(i, train_loss))
         return results
 
     def _plots_dump(self, sess, losses, rates, vars, i):
@@ -198,9 +198,9 @@ class Optimizer(ABC):
             pickle.dump([losses, rates, vars], f)
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
-        self.saver.save(sess, '{}{}'.format(self.dir, SAVE_PATH))
+        self.saver.save(sess, "{}{}".format(self.dir, SAVE_PATH))
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
-                                 suffix=self.suffix + 'evolution', show=False,
+                                 suffix=self.suffix + "evolution", show=False,
                                  save=True)
         return results
 
