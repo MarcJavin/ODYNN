@@ -80,9 +80,10 @@ class NeuronOpt(Optimizer):
                 """Get variables and measurements from previous steps"""
                 self.saver.restore(sess, '%s/%s' % (RES_DIR + reload_dir, SAVE_PATH))
                 with open(RES_DIR + reload_dir + '/' + FILE_LV, 'rb') as f:
-                    l, r, vars = pickle.load(f)
+                    l, self._test_losses, r, vars = pickle.load(f)
                 losses = np.concatenate((l, losses))
                 rates = np.concatenate((r, rates))
+                sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
                 vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])

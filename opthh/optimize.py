@@ -69,8 +69,7 @@ class Optimizer(ABC):
         self._test_losses = None
         self._test = False
 
-    def _build_train(self):
-        """learning rate and optimization"""
+    def _init_l_rate(self):
         self.global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
         self.learning_rate = tf.train.exponential_decay(
@@ -79,13 +78,16 @@ class Optimizer(ABC):
             self.decay_step,  # Decay step.
             self.decay_rate,  # Decay rate.
             staircase=True)
+
+    def _build_train(self):
+        """learning rate and optimization"""
+        self._init_l_rate()
         # self.learning_rate = 0.1
         tf.summary.scalar("learning rate", self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         gvs = opt.compute_gradients(self.loss)
         grads, vars = zip(*gvs)
-        print(grads)
 
         if self.parallel > 1:
             grads_normed = []
@@ -197,7 +199,7 @@ class Optimizer(ABC):
 
 
         with (open(self.dir + FILE_LV, 'wb')) as f:
-            pickle.dump([losses, rates, vars], f)
+            pickle.dump([losses, self._test_losses, rates, vars], f)
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, "{}{}".format(self.dir, SAVE_PATH))
