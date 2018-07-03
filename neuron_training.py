@@ -29,9 +29,9 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
 t, iinj = datas.give_train(dt)
-i_inj = iinj[:,np.array([1,3])]
+i_inj = iinj[:,np.array([3])]
 tt, it = datas.give_test(dt)
-it = iinj[:,np.array([1,3])]
+it = iinj[:,np.array([1])]
 
 """Single optimisation"""
 
