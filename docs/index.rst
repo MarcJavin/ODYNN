@@ -12,7 +12,6 @@ Welcome to opt_HH's documentation!
    :glob:
 
    Tutorial
-   tuto.ipynb
    opthh
 
 

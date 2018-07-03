@@ -26,12 +26,12 @@ MODEL = config.NEURON_MODEL
 
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
-# pars = [dict([(k, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
+# pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
-t, i_inj = datas.give_train(dt)
-i_inj = i_inj[:,3][:,None]
+t, iinj = datas.give_train(dt)
+i_inj = iinj[:,3][:,None]
 tt, it = datas.give_test(dt)
-it = it[:,2][:,None]
+it = iinj[:,1][:,None]
 
 """Single optimisation"""
 
@@ -204,8 +204,8 @@ def add_plots():
 if __name__ == '__main__':
 
     xp = sys.argv[1]
-    if len(sys.argv)>2:
-        suf = sys.argv[2]
+    if len(sys.argv)>3:
+        suf = sys.argv[3]
     else:
         suf = ''
     if (xp == 'alt'):
