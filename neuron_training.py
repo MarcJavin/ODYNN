@@ -166,7 +166,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     train = sim.simul(show=False, suffix='train')
     sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
     test= sim.simul(show=False, suffix='test')
-    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
+    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
     comp_pars(dir, n)
     test_xp(dir, default=default)
 

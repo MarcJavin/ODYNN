@@ -198,7 +198,7 @@ class Optimizer(ABC):
             self._test_losses.append(test_loss)
 
 
-        with (open(self.dir + FILE_LV, 'wb')) as f:
+        with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
             pickle.dump([losses, self._test_losses, rates, vars], f)
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)

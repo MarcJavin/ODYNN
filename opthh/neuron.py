@@ -159,13 +159,17 @@ class NeuronLSTM(Optimized):
         if(self._extra_ca):
             hidden = []
             for cell in range(self._hidden_layer_cells):
-                out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(self._hidden_layer_nb+1, cell))
+                out, st = self._lstm_cell(self._hidden_layer_size, v_outputs, batch, '{}-{}'.format(self._hidden_layer_nb+1, cell))
                 hidden.append(out)
             with tf.variable_scope('interlayer{}'.format(self._hidden_layer_nb+1)):
                 hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
                 input = hidden
 
-        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
+            ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
+
+        else:
+
+            ca_outputs, ca_states = self._lstm_cell(1, v_outputs, batch, 'post_Ca')
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
