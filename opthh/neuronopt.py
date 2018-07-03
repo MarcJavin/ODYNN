@@ -35,7 +35,7 @@ class NeuronOpt(Optimizer):
 
     def _build_loss(self, w):
         """Define how the loss is computed"""
-        with tf.variable_scope('Loss')
+        with tf.variable_scope('Loss'):
             cac = self.res[:, Ca_pos]
             out = self.res[:, V_pos]
             losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
