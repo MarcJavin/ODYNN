@@ -128,7 +128,7 @@ class NeuronLSTM(Optimized):
     _scale_v = 100.
     _scale_ca = 1000.
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=0):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=1, layer_size=10, extra_ca=0):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size
@@ -147,31 +147,17 @@ class NeuronLSTM(Optimized):
             input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
         for layer in range(self._hidden_layer_nb):
-            hidden = []
-            for cell in range(self._hidden_layer_cells):
-                out, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}-{}'.format(layer, cell))
-                hidden.append(out)
-            with tf.variable_scope('interlayer{}'.format(layer)):
-                hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
-                input = hidden
+            input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(layer))
 
         v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
+        input = v_outputs
 
         if self._extra_ca > 0:
             for layer in range(self._extra_ca):
-                hidden = []
-                for cell in range(self._hidden_layer_cells):
-                    out, st = self._lstm_cell(self._hidden_layer_size, v_outputs, batch, '{}-{}'.format(self._hidden_layer_nb+layer+1, cell))
-                    hidden.append(out)
-                with tf.variable_scope('interlayer{}'.format(self._hidden_layer_nb+1)):
-                    hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
-                    input = hidden
+                input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(self._hidden_layer_nb+layer+1))
 
-            ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
+        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
 
-        else:
-
-            ca_outputs, ca_states = self._lstm_cell(1, v_outputs, batch, 'post_Ca')
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
@@ -193,7 +179,7 @@ class NeuronLSTM(Optimized):
     def settings(self):
         return ('Cell size : {} '.format(self._cell_size) + '\n' +
                 'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
-                'Number of hidden cells per layer : {}'.format(self._hidden_layer_cells) + '\n' +
+                # 'Number of hidden cells per layer : {}'.format(self._hidden_layer_cells) + '\n' +
                 'Extra layer for [Ca] : %s' % self._extra_ca + '\n' +
                 'State size in hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +

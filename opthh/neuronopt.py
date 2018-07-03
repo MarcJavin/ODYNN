@@ -89,6 +89,8 @@ class NeuronOpt(Optimizer):
             else:
                 vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
                 len_prev = 0
+            for v in tf.trainable_variables():
+                print(v.name, sess.run(v).shape)
 
             vars = dict([(var, np.vstack((val, np.zeros((self._epochs, self.parallel))))) for var, val in vars.items()])
 
