@@ -1,6 +1,6 @@
 """
-.. module:: model
-    :synopsis: Module defining a model for C. elegans neurons
+.. module:: self
+    :synopsis: Module defining a self for C. elegans neurons
 
 .. moduleauthor:: Marc Javin
 """
@@ -12,6 +12,8 @@ import tensorflow as tf
 import scipy as sp
 from .model import Model, V_pos, Ca_pos
 from . import utils
+from pylab import plt
+
 
 
 REST_CA = 0.
@@ -182,6 +184,8 @@ def give_rand():
         'E_L': random.uniform(-80, -40.),
     }
 
+
+
 class HodgkinHuxley(Model):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
@@ -261,10 +265,10 @@ class HodgkinHuxley(Model):
         """
         return self._param['g_L'] * (V - self._param['E_L'])
 
-    """default model"""
+    """default self"""
 
     @staticmethod
-    def step_model(X, i_inj, self):
+    def step_self(X, i_inj, self):
         """
         Integrate and update voltage after one time step
         Parameters
@@ -309,6 +313,70 @@ class HodgkinHuxley(Model):
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
             return [V, p, q, n, e, f, cac]
+
+    def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
+        """plot all dynamics"""
+        V = results[:, 0]
+        p = results[:, 1]
+        q = results[:, 2]
+        n = results[:, 3]
+        e = results[:, 4]
+        f = results[:, 5]
+        cac = results[:, 6]
+
+        h = self.h(cac)
+        ica = self.I_Ca(V, e, f, h)
+        ik = self.I_Ks(V, n) + self.I_Kf(V, p, q)
+        il = self.I_L(V)
+
+        plt.figure()
+
+        plt.subplot(5, 1, 1)
+        plt.title('Hodgkin-Huxley Neuron')
+        if (V.ndim == 1):
+            plt.plot(ts, V, 'k')
+        else:
+            plt.plot(ts, V)
+        plt.ylabel('V (mV)')
+
+        plt.subplot(5, 1, 2)
+        if (ca_true is not None):
+            plt.plot(ts, ca_true, 'Navy', linestyle='-.', label='real data')
+            plt.legend()
+        if (V.ndim == 1):
+            plt.plot(ts, cac, 'r')
+        else:
+            plt.plot(ts, cac)
+        plt.ylabel('[$Ca^{2+}$]')
+
+        plt.subplot(5, 1, 3)
+        plt.plot(ts, ica, utils.RATE_COLORS['f'], label='$I_{Ca}$')
+        plt.plot(ts, ik, 'm', label='$I_{K}$')
+        plt.plot(ts, il, 'g', label='$I_{L}$')
+        plt.ylabel('Current')
+        plt.legend()
+
+        plt.subplot(5, 1, 4)
+        plt.plot(ts, p, utils.RATE_COLORS['p'], label='p')
+        plt.plot(ts, q, utils.RATE_COLORS['q'], label='q')
+        plt.plot(ts, n, utils.RATE_COLORS['n'], label='n')
+        plt.plot(ts, e, utils.RATE_COLORS['e'], label='e')
+        plt.plot(ts, f, utils.RATE_COLORS['f'], label='f')
+        plt.plot(ts, h, utils.RATE_COLORS['h'], label='h')
+        plt.ylabel('Gating Value')
+        plt.legend()
+
+        plt.subplot(5, 1, 5)
+        plt.plot(ts, i_inj_values, 'b')
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+        # plt.ylim(-1, 40)
+
+        if save:
+            plt.savefig('{}results_{}.png'.format(DIR, suffix), dpi=300)
+        if show:
+            plt.show()
+        plt.close()
 
     @staticmethod
     def get_random():

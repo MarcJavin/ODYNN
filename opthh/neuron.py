@@ -143,7 +143,7 @@ class NeuronLSTM(Optimized):
             batch = 1
 
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        input = tf.expand_dims(curs_ / tf.get_variable('max_cur', initializer=self._max_cur, dtype=tf.float32), axis=len(xshape))
+        input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
         for layer in range(self._hidden_layer_nb):
             hidden = []
@@ -168,8 +168,8 @@ class NeuronLSTM(Optimized):
         ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
 
         with tf.name_scope('Scale'):
-            V = v_outputs[:, :, V_pos] * tf.get_variable('scale_v', initializer=self._scale_v, dtype=tf.float32) + tf.get_variable('min_v', initializer=self._min_v, dtype=tf.float32)
-            Ca = ca_outputs[:, :, Ca_pos] * tf.get_variable('scale_ca', initializer=self._scale_ca, dtype=tf.float32)
+            V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
+            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results

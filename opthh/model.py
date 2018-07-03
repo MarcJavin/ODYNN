@@ -81,6 +81,10 @@ class Model(ABC):
         """Return a dictionnary with random parameters"""
         pass
 
+    @staticmethod
+    def plot_results():
+        pass
+
     @abstractmethod
     def calculate(self, i):
         """

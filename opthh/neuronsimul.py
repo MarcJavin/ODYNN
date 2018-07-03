@@ -7,7 +7,6 @@
 
 from .neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
 import time
-from .utils import plots_results
 from . import hhmodel, datas, utils
 import numpy as np
 import pickle
@@ -61,10 +60,10 @@ class NeuronSimul():
         if True:
             if self.i_inj.ndim > 1:
                 for i in range(self.i_inj.shape[1]):
-                    plots_results(self.neuron, self.t, self.i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
+                    self.neuron.plot_results(self.t, self.i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
                                   save=save)
             else:
-                plots_results(self.neuron, self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
+                self.neuron.plot_results(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
         todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
         if dump:
