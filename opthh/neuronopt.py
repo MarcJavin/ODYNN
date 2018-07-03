@@ -35,12 +35,13 @@ class NeuronOpt(Optimizer):
 
     def _build_loss(self, w):
         """Define how the loss is computed"""
-        cac = self.res[:, Ca_pos]
-        out = self.res[:, V_pos]
-        losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
-        losses_ca = w[1] * tf.square(tf.subtract(cac, self.ys_[-1]))
-        losses = losses_v + losses_ca
-        self.loss = tf.reduce_mean(losses, axis=[0,1])
+        with tf.variable_scope('Loss')
+            cac = self.res[:, Ca_pos]
+            out = self.res[:, V_pos]
+            losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
+            losses_ca = w[1] * tf.square(tf.subtract(cac, self.ys_[-1]))
+            losses = losses_v + losses_ca
+            self.loss = tf.reduce_mean(losses, axis=[0,1])
         # print(self.loss)
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 

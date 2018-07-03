@@ -202,7 +202,7 @@ class Optimizer(ABC):
             pickle.dump([losses, self._test_losses, rates, vars], f)
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
-        self.saver.save(sess, "{}{}".format(self.dir, SAVE_PATH))
+        self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
 
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + "evolution", show=False,

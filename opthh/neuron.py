@@ -143,7 +143,8 @@ class NeuronLSTM(Optimized):
             batch = 1
 
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
+        with tf.variable_scope('prelayer'):
+            input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
         for layer in range(self._hidden_layer_nb):
             hidden = []
