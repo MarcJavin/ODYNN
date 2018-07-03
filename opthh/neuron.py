@@ -128,7 +128,7 @@ class NeuronLSTM(Optimized):
     _scale_v = 100.
     _scale_ca = 1000.
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=2):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=0):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size
@@ -161,7 +161,7 @@ class NeuronLSTM(Optimized):
             for layer in range(self._extra_ca):
                 hidden = []
                 for cell in range(self._hidden_layer_cells):
-                    out, st = self._lstm_cell(self._hidden_layer_size, v_outputs, batch, '{}-{}'.format(self._hidden_layer_nb+self._extra_ca+1, cell))
+                    out, st = self._lstm_cell(self._hidden_layer_size, v_outputs, batch, '{}-{}'.format(self._hidden_layer_nb+layer+1, cell))
                     hidden.append(out)
                 with tf.variable_scope('interlayer{}'.format(self._hidden_layer_nb+1)):
                     hidden = tf.reduce_sum(tf.stack(hidden, axis=0), axis=0)
