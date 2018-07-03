@@ -128,7 +128,7 @@ class NeuronLSTM(Optimized):
     _scale_v = 100.
     _scale_ca = 1000.
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=True):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=10, layer_size=20, extra_ca=False):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size
@@ -187,8 +187,8 @@ class NeuronLSTM(Optimized):
     def settings(self):
         return ('Cell size : {} '.format(self._cell_size) + '\n' +
                 'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
-                'Number of hidden cells : {}'.format(self._hidden_layer_cells) + '\n' +
-                'Extra layer for $Ca^{2+}$ : %s' % self._extra_ca + '\n' +
+                'Number of hidden cells per layer : {}'.format(self._hidden_layer_cells) + '\n' +
+                'Extra layer for [Ca] : %s' % self._extra_ca + '\n' +
                 'State size in hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +
                 'max current : {}, min voltage : {}, scale voltage : {}, scale calcium : {}'

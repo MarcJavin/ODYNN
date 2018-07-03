@@ -148,7 +148,7 @@ def alternate(name=''):
     test_xp(dir)
 
 
-def classic(name, wv, wca, default=MODEL.default_params, lstm=True):
+def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     if (wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif (wca == 0):
@@ -166,7 +166,7 @@ def classic(name, wv, wca, default=MODEL.default_params, lstm=True):
     train = sim.simul(show=False, suffix='train')
     sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
     test= sim.simul(show=False, suffix='test')
-    n = opt.optimize(dir, w=[wv, wca], train=train, test=test)
+    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix)
     comp_pars(dir, n)
     test_xp(dir, default=default)
 
@@ -204,18 +204,22 @@ def add_plots():
 if __name__ == '__main__':
 
     xp = sys.argv[1]
+    if len(sys.argv)>2:
+        suf = sys.argv[2]
+    else:
+        suf = ''
     if (xp == 'alt'):
         name = sys.argv[2]
         alternate(name)
     elif (xp == 'cac'):
         name = sys.argv[2]
-        classic(name, wv=0, wca=1)
+        classic(name, wv=0, wca=1, suffix=suf)
     elif (xp == 'v'):
         name = sys.argv[2]
-        classic(name, wv=1, wca=0)
+        classic(name, wv=1, wca=0, suffix=suf)
     elif (xp == 'both'):
         name = sys.argv[2]
-        classic(name, wv=1, wca=1)
+        classic(name, wv=1, wca=1, suffix=suf)
     elif (xp == 'real'):
         name = sys.argv[2]
         real_data(name)
