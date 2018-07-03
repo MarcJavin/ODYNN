@@ -128,7 +128,7 @@ class NeuronLSTM(Optimized):
     _scale_v = 100.
     _scale_ca = 1000.
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=10, layer_size=20, extra_ca=False):
+    def __init__(self, dt=0.1, nb_layer=3, nb_cells=5, layer_size=10, extra_ca=True):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size

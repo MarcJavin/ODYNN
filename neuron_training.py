@@ -29,9 +29,9 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
 t, iinj = datas.give_train(dt)
-i_inj = iinj[:,3][:,None]
+i_inj = iinj[:,1][:,None]
 tt, it = datas.give_test(dt)
-it = iinj[:,1][:,None]
+it = iinj[:,3][:,None]
 
 """Single optimisation"""
 
@@ -166,7 +166,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     train = sim.simul(show=False, suffix='train')
     sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
     test= sim.simul(show=False, suffix='test')
-    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix)
+    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
     comp_pars(dir, n)
     test_xp(dir, default=default)
 

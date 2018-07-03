@@ -22,10 +22,6 @@ from . import utils
 DUMP_FILE = 'data/dump'
 DUMP_real = 'data/real'
 DUMP_real_all = 'data/real_all'
-SAVE_PATH = 'tmp/model.ckpt'
-FILE_LV = 'tmp/dump_lossratevars'
-FILE_NEUR = 'tmp/neuron'
-FILE_CIRC = 'tmp/circuit'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 def get_vars(dir, i=-1):

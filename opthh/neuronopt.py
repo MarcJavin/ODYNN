@@ -12,11 +12,10 @@ import tensorflow as tf
 from tqdm import tqdm
 
 from . import hhmodel
-from .datas import SAVE_PATH, FILE_LV
 from .model import Ca_pos, V_pos
 from .neuron import NeuronTf
-from .optimize import Optimizer
-from .utils import plots_output_double
+from .optimize import Optimizer, SAVE_PATH, FILE_LV
+from .utils import plots_output_double, RES_DIR
 
 
 class NeuronOpt(Optimizer):
@@ -46,7 +45,7 @@ class NeuronOpt(Optimizer):
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 
     def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
-                 reload=False):
+                 reload=False, reload_dir=None):
         """Optimize the neuron parameters"""
         print(suffix, step)
 
@@ -57,6 +56,8 @@ class NeuronOpt(Optimizer):
         yshape = [2, None, None]
 
         self._init(subdir, suffix, train, test, l_rate, w, yshape)
+        if reload_dir is None:
+            reload_dir = self.dir
 
         if self._V is None:
             self._V = np.full(self._Ca.shape, -50.)
@@ -77,8 +78,8 @@ class NeuronOpt(Optimizer):
 
             if reload:
                 """Get variables and measurements from previous steps"""
-                self.saver.restore(sess, '%s%s' % (self.dir, SAVE_PATH))
-                with open(self.dir + FILE_LV, 'rb') as f:
+                self.saver.restore(sess, '%s/%s' % (RES_DIR + reload_dir, SAVE_PATH))
+                with open(RES_DIR + reload_dir + '/' + FILE_LV, 'rb') as f:
                     l, r, vars = pickle.load(f)
                 losses = np.concatenate((l, losses))
                 rates = np.concatenate((r, rates))

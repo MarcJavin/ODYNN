@@ -12,10 +12,11 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
-from .datas import FILE_LV, SAVE_PATH
 from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 
-
+SAVE_PATH = 'tmp/model.ckpt'
+FILE_LV = 'tmp/dump_lossratevars'
+FILE_CIRC = 'tmp/circuit'
 
 class Optimized(ABC):
     """
@@ -200,6 +201,7 @@ class Optimizer(ABC):
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, "{}{}".format(self.dir, SAVE_PATH))
+
         self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + "evolution", show=False,
                                  save=True)
