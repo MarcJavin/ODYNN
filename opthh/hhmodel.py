@@ -268,7 +268,7 @@ class HodgkinHuxley(Model):
     """default self"""
 
     @staticmethod
-    def step_self(X, i_inj, self):
+    def step_model(X, i_inj, self):
         """
         Integrate and update voltage after one time step
         Parameters
@@ -373,7 +373,7 @@ class HodgkinHuxley(Model):
         # plt.ylim(-1, 40)
 
         if save:
-            plt.savefig('{}results_{}.png'.format(DIR, suffix), dpi=300)
+            plt.savefig('{}results_{}.png'.format(utils.DIR, suffix), dpi=300)
         if show:
             plt.show()
         plt.close()
