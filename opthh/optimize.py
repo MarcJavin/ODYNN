@@ -11,9 +11,13 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 
-from . import config
-from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
+import utils
+from .model import Ca_pos, V_pos
+from .utils import plots_output_double
+import pylab as plt
+from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS
 
 SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
@@ -214,10 +218,79 @@ class Optimizer(ABC):
                                  save=True)
         return results
 
+    def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step='',
+                 reload=False, reload_dir=None):
+
+        print(suffix, step)
+        T, X, V, Ca = train
+        if test is not None:
+            T_test, X_test, V_test, Ca_test = test
+
+        yshape = [2, None, None]
+        if reload_dir is None:
+            reload_dir = subdir
+        self._init(subdir, suffix, train, test, l_rate, w, yshape)
+
+        self._build_loss(w)
+        self._build_train()
+        self.summary = tf.summary.merge_all()
+
+        with tf.Session() as sess:
+
+            self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
+                                             sess.graph)
+
+            sess.run(tf.global_variables_initializer())
+            losses = np.zeros((self._epochs, self.parallel))
+            rates = np.zeros(self._epochs)
+
+            if reload:
+                """Get variables and measurements from previous steps"""
+                self.saver.restore(sess, '%s/%s' % (utils.RES_DIR + reload_dir, SAVE_PATH))
+                with open(utils.RES_DIR + reload_dir + '/' + FILE_LV, 'rb') as f:
+                    l, self._test_losses, r, vars = pickle.load(f)
+                losses = np.concatenate((l, losses))
+                rates = np.concatenate((r, rates))
+                sess.run(tf.assign(self.global_step, 200))
+                len_prev = len(l)
+            else:
+                vars = {var : [val] for var, val in self.optimized.init_p.items()}
+                len_prev = 0
+
+            vars = dict([(var, np.vstack((val, np.zeros((self._epochs, self.parallel))))) for var, val in vars.items()])
+
+            for i in tqdm(range(self._epochs)):
+                results = self._train_and_gather(sess, len_prev + i, losses, rates, vars)
+
+                # if losses[len_prev+i]<self.min_loss:
+                #     self.plots_dump(sess, losses, rates, vars, len_prev + i)
+                #     return i+len_prev
+
+                for b in range(self.n_batch):
+                    plots_output_double(self._T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
+                                        Ca[:, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                                        save=True, l=0.7, lt=2)
+
+                if i % self._frequency == 0 or i == self._epochs - 1:
+                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
+                    if res_test is not None:
+                        for b in range(self.n_batch):
+                            plots_output_double(self._T, X_test[:, b], res_test[:, V_pos, b], V_test[:, b], res_test[:, Ca_pos, b],
+                                                Ca_test[:, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
+                                                show=False,
+                                                save=True, l=0.7, lt=2)
+
+            with open(self.dir + 'time', 'w') as f:
+                f.write(str(time.time() - self.start_time))
+
+        return -1
+
+
+
 
 def get_vars(dir, i=-1):
     """get dic of vars from dumped file"""
-    file = config.RES_DIR + dir + '/' + FILE_LV
+    file = utils.RES_DIR + dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
@@ -226,7 +299,7 @@ def get_vars(dir, i=-1):
 
 def get_vars_all(dir, i=-1):
     """get dic of vars from dumped file"""
-    file = config.RES_DIR + dir + '/' + FILE_LV
+    file = utils.RES_DIR + dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l,r,dic = pickle.load(f)
         dic = dict([(var, val[:i]) for var, val in dic.items()])
@@ -235,9 +308,51 @@ def get_vars_all(dir, i=-1):
 
 def get_best_result(dir, i=-1):
     """Return parameters of the best optimized model"""
-    file = config.RES_DIR + dir + '/' + FILE_LV
+    file = utils.RES_DIR + dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l, r, dic = pickle.load(f)
         idx = np.nanargmin(l[-1])
         dic = dict([(var, val[i,idx]) for var, val in dic.items()])
     return dic
+
+
+def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=True, save=False):
+    """plot loss (log10) and learning rate"""
+    plt.figure()
+
+    n_p = 2
+
+    plt.ylabel('Test Loss')
+    plt.yscale('log')
+
+    plt.subplot(n_p,1,1)
+    if parallel == 1:
+        plt.plot(losses, 'r', linewidth=0.6, label='Train')
+    else:
+        plt.plot(losses, linewidth=0.6, label='Train')
+    if losses_test is not None:
+        losses_test = np.array(losses_test)
+        pts = np.linspace(0, losses.shape[0]-1, num=losses_test.shape[0], endpoint=True)
+        if parallel == 1:
+            plt.plot(pts, losses_test, 'Navy', linewidth=0.6, label='Test')
+        else:
+            # add another subplot for readability
+            n_p = 3
+            plt.ylabel('Loss')
+            plt.yscale('log')
+            plt.legend()
+            plt.subplot(n_p,1,2)
+            plt.plot(pts, losses_test, linewidth=0.6, label='Test')
+    plt.ylabel('Loss')
+    plt.yscale('log')
+    plt.legend()
+
+    plt.subplot(n_p,1,n_p)
+    plt.plot(rates)
+    plt.ylabel('Learning rate')
+
+    if save:
+        plt.savefig('{}losses_{}.png'.format(utils.current_dir, suffix), dpi=300)
+    if show:
+        plt.show()
+    plt.close()

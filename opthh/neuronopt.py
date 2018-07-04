@@ -16,7 +16,7 @@ from .model import Ca_pos, V_pos
 from .neuron import NeuronTf
 from .optimize import Optimizer, SAVE_PATH, FILE_LV
 from .utils import plots_output_double
-from .config import RES_DIR
+from utils import RES_DIR
 
 
 class NeuronOpt(Optimizer):
@@ -46,7 +46,7 @@ class NeuronOpt(Optimizer):
         # print(self.loss)
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 
-    def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
+    def toptimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
                  reload=False, reload_dir=None):
         """Optimize the neuron parameters"""
         print(suffix, step)

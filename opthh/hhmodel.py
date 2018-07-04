@@ -11,7 +11,6 @@ import random
 import tensorflow as tf
 import scipy as sp
 
-import config
 from .model import Model, V_pos, Ca_pos
 from . import utils
 from pylab import plt
@@ -316,7 +315,7 @@ class HodgkinHuxley(Model):
         else:
             return [V, p, q, n, e, f, cac]
 
-    def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
+    def plot_results(self, ts, i_inj_values, results, ca_true=None, dir='.', suffix="", show=True, save=False):
         """plot all dynamics"""
         V = results[:, 0]
         p = results[:, 1]
@@ -375,7 +374,7 @@ class HodgkinHuxley(Model):
         # plt.ylim(-1, 40)
 
         if save:
-            plt.savefig('{}results_{}.png'.format(config.DIR, suffix), dpi=300)
+            plt.savefig('{}results_{}.png'.format(utils.current_dir, suffix), dpi=300)
         if show:
             plt.show()
         plt.close()

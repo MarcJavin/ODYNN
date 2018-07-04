@@ -82,7 +82,7 @@ class Model(ABC):
         pass
 
     @staticmethod
-    def plot_results():
+    def plot_results(*args, **kwargs):
         pass
 
     @abstractmethod
