@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
-import utils
+from . import utils
 from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 
 SAVE_PATH = 'tmp/model.ckpt'
