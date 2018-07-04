@@ -10,6 +10,8 @@ import numpy as np
 import random
 import tensorflow as tf
 import scipy as sp
+
+import config
 from .model import Model, V_pos, Ca_pos
 from . import utils
 from pylab import plt
@@ -373,7 +375,7 @@ class HodgkinHuxley(Model):
         # plt.ylim(-1, 40)
 
         if save:
-            plt.savefig('{}results_{}.png'.format(utils.DIR, suffix), dpi=300)
+            plt.savefig('{}results_{}.png'.format(config.DIR, suffix), dpi=300)
         if show:
             plt.show()
         plt.close()

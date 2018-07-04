@@ -9,6 +9,7 @@ import sys
 import numpy as np
 import scipy as sp
 
+import config
 from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
@@ -193,8 +194,8 @@ def comp_pars(dir, i=-1):
 def add_plots():
     import glob
     import re
-    for filename in glob.iglob(utils.RES_DIR + '*'):
-        dir = re.sub(utils.RES_DIR, '', filename)
+    for filename in glob.iglob(config.RES_DIR + '*'):
+        dir = re.sub(config.RES_DIR, '', filename)
         try:
             comp_pars(dir)
         except:

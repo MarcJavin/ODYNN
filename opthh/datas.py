@@ -76,7 +76,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     unit_time = final_time/delta
     t = sp.arange(0., final_time, dt)
     i = np.array(df['inputCurrent']) * 10
-    intervals = [0, 420, 1140, 2400]
+    intervals = [0, 0, 420, 1140, 2400]
     curs = np.zeros((len(t), len(intervals)))
     cas = np.zeros(curs.shape)
     for j, st in enumerate(intervals):

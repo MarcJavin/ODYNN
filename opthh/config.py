@@ -9,3 +9,6 @@ from .hhmodel import HodgkinHuxley
 
 NEURON_MODEL = HodgkinHuxley
 """Class used for neuron models"""
+RES_DIR = 'results/'
+IMG_DIR = 'img/'
+DIR = RES_DIR

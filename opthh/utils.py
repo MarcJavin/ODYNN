@@ -9,6 +9,9 @@ import socket
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
+
+from .config import RES_DIR, IMG_DIR, DIR
+
 if (socket.gethostname()=='1080'):
     mpl.use("Agg")
 import pylab as plt
@@ -23,9 +26,6 @@ BIGGER_SIZE = 12
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 
-RES_DIR = 'results/'
-IMG_DIR = 'img/'
-DIR = RES_DIR
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
 REGEX_VARS = '(.*) : (.*)'
@@ -52,14 +52,13 @@ if __name__ == '__main__':
 
 def set_dir(subdir):
     """Set directory to save files"""
-    global DIR
-    DIR = RES_DIR + subdir + '/'
-    if not os.path.exists(DIR):
-        os.makedirs(DIR)
-    if not os.path.exists(DIR+IMG_DIR):
-        os.makedirs(DIR+IMG_DIR)
-        os.makedirs(DIR+'tmp/')
-    return DIR
+    config.DIR = RES_DIR + subdir + '/'
+    if not os.path.exists(config.DIR):
+        os.makedirs(config.DIR)
+    if not os.path.exists(config.DIR + IMG_DIR):
+        os.makedirs(config.DIR + IMG_DIR)
+        os.makedirs(config.DIR + 'tmp/')
+    return config.DIR
 
 
 def get_dic_from_var(dir, suffix=""):
