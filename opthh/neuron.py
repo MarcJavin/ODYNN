@@ -124,13 +124,11 @@ class NeuronLSTM(Optimized):
     init_p = {}
 
     _max_cur = 60.
-    _min_v = -60.
     _scale_v = 100.
-    _scale_ca = 1000.
+    _scale_ca = 500.
 
-    def __init__(self, dt=0.1, nb_layer=3, nb_cells=1, layer_size=10, extra_ca=0):
+    def __init__(self, dt=0.1, nb_layer=3, layer_size=50, extra_ca=1):
         self._hidden_layer_nb = nb_layer
-        self._hidden_layer_cells = nb_cells
         self._hidden_layer_size = layer_size
         self._extra_ca = extra_ca
         Optimized.__init__(self)
@@ -160,8 +158,8 @@ class NeuronLSTM(Optimized):
 
 
         with tf.name_scope('Scale'):
-            V = v_outputs[:, :, V_pos] * self._scale_v + self._min_v
-            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
+            V = v_outputs[:, :, V_pos] * self._scale_v
+            Ca = (ca_outputs[:, :, Ca_pos] + 1) * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
@@ -179,12 +177,11 @@ class NeuronLSTM(Optimized):
     def settings(self):
         return ('Cell size : {} '.format(self._cell_size) + '\n' +
                 'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
-                # 'Number of hidden cells per layer : {}'.format(self._hidden_layer_cells) + '\n' +
-                'Extra layer for [Ca] : %s' % self._extra_ca + '\n' +
-                'State size in hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
+                'Units per hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
+                'Extra layers for [Ca] : %s' % self._extra_ca + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +
-                'max current : {}, min voltage : {}, scale voltage : {}, scale calcium : {}'
-                .format(self._max_cur, self._min_v, self._scale_v, self._scale_ca)
+                'max current : {}, scale voltage : {}, scale calcium : {}'
+                .format(self._max_cur, self._scale_v, self._scale_ca)
                 )
 
 

@@ -158,15 +158,17 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     if (lstm):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
+        l_rate = [0.01, 9, 0.95]
         opt = NeuronOpt(neur, epochs=700)
     else:
+        l_rate = [1, 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
     sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
     train = sim.simul(show=False, suffix='train')
     sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
     test= sim.simul(show=False, suffix='test')
-    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
+    n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, l_rate=l_rate)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
     comp_pars(dir, n)
     test_xp(dir, default=default)
 
