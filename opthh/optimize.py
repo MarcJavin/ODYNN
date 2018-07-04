@@ -125,7 +125,7 @@ class Optimizer(ABC):
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
 
-        self._T, self._X, self._V, self._Ca = test
+        self._T, self._X, self._V, self._Ca = train
         if test is not None:
             self._test = True
             self._test_losses = []
