@@ -124,6 +124,7 @@ class NeuronLSTM(Optimized):
     init_p = {}
 
     _max_cur = 60.
+    _rest_v = -50.
     _scale_v = 100.
     _scale_ca = 500.
 
@@ -158,8 +159,8 @@ class NeuronLSTM(Optimized):
 
 
         with tf.name_scope('Scale'):
-            V = v_outputs[:, :, V_pos] * self._scale_v
-            Ca = (ca_outputs[:, :, Ca_pos] + 1) * self._scale_ca
+            V = v_outputs[:, :, V_pos] * self._scale_v + self._rest_v
+            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
@@ -171,7 +172,7 @@ class NeuronLSTM(Optimized):
     def _lstm_cell(size, input, batch, scope):
         with tf.variable_scope(scope):
             cell = tf.nn.rnn_cell.LSTMCell(size, use_peepholes=True, state_is_tuple=True)
-            initializer = cell.zero_state(batch, dtype=tf.float32)
+            initializer = cell.zero_state(batch, dtype=tf.float32) 
             return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
 
     def settings(self):
@@ -180,8 +181,8 @@ class NeuronLSTM(Optimized):
                 'Units per hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'Extra layers for [Ca] : %s' % self._extra_ca + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +
-                'max current : {}, scale voltage : {}, scale calcium : {}'
-                .format(self._max_cur, self._scale_v, self._scale_ca)
+                'max current : {}, rest. voltage : {}, scale voltage : {}, scale calcium : {}'
+                .format(self._max_cur, self._rest_v, self._scale_v, self._scale_ca)
                 )
 
 
