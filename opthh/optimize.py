@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import tensorflow as tf
 
+import utils
 from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS, plot_loss_rate
 
 SAVE_PATH = 'tmp/model.ckpt'
@@ -124,11 +125,10 @@ class Optimizer(ABC):
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
 
-        self._T, self._X, self._V, self._Ca = train
+        self._T, self._X, self._V, self._Ca = test
         if test is not None:
             self._test = True
-            nb_test = np.ceil(self._epochs / self._frequency) + 1
-            self._test_losses = []#np.zeros((nb_test, self.parallel))
+            self._test_losses = []
             self._T_test, self._X_test, self._V_test, self._Ca_test = test
             assert (self.optimized.dt == self._T_test[1] - self._T_test[0])
         assert (self.optimized.dt == self._T[1] - self._T[0])
@@ -142,6 +142,9 @@ class Optimizer(ABC):
             self._X = np.stack([self._X for _ in range(self.parallel)], axis=self._X.ndim)
             self._V = np.stack([self._V for _ in range(self.parallel)], axis=self._V.ndim)
             self._Ca = np.stack([self._Ca for _ in range(self.parallel)], axis=self._Ca.ndim)
+            self._X_test = np.stack([self._X_test for _ in range(self.parallel)], axis=self._X_test.ndim)
+            self._V_test = np.stack([self._V_test for _ in range(self.parallel)], axis=self._V_test.ndim)
+            self._Ca_test = np.stack([self._Ca_test for _ in range(self.parallel)], axis=self._Ca_test.ndim)
             yshape.append(self.parallel)
 
         self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
@@ -210,3 +213,29 @@ class Optimizer(ABC):
         return results
 
 
+def get_vars(dir, i=-1):
+    """get dic of vars from dumped file"""
+    file = utils.RES_DIR + dir + '/' + FILE_LV
+    with open(file, 'rb') as f:
+        l,r,dic = pickle.load(f)
+        dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
+    return dic
+
+
+def get_vars_all(dir, i=-1):
+    """get dic of vars from dumped file"""
+    file = utils.RES_DIR + dir + '/' + FILE_LV
+    with open(file, 'rb') as f:
+        l,r,dic = pickle.load(f)
+        dic = dict([(var, val[:i]) for var, val in dic.items()])
+    return dic
+
+
+def get_best_result(dir, i=-1):
+    """Return parameters of the best optimized model"""
+    file = utils.RES_DIR + dir + '/' + FILE_LV
+    with open(file, 'rb') as f:
+        l, r, dic = pickle.load(f)
+        idx = np.nanargmin(l[-1])
+        dic = dict([(var, val[i,idx]) for var, val in dic.items()])
+    return dic

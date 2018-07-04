@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import utils, config, hhmodel, datas
+from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
 from opthh.neuronsimul import NeuronSimul
@@ -28,10 +28,8 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
-t, iinj = datas.give_train(dt)
-i_inj = iinj[:,np.array([3])]
+t, i_inj = datas.give_train(dt)
 tt, it = datas.give_test(dt)
-it = iinj[:,np.array([1])]
 
 """Single optimisation"""
 
@@ -110,7 +108,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     utils.set_dir(dir)
-    param = datas.get_best_result(dir)
+    param = optimize.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim = NeuronSimul(init_p=param, t=t, i_inj=i_)
         sim.comp_targ(param, default, show=show, save=True, suffix='train%s' % j)
@@ -161,7 +159,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         l_rate = [0.01, 9, 0.95]
         opt = NeuronOpt(neur, epochs=700)
     else:
-        l_rate = [1, 9, 0.92]
+        l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
     sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
@@ -181,12 +179,12 @@ def real_data(name):
     n = opt.optimize(dir, w=[0, 1], train = train)
     comp_pars(dir, n)
     t, i, v, ca = test
-    sim = NeuronSimul(init_p=datas.get_best_result(dir), t=t, i_inj=i)
+    sim = NeuronSimul(init_p=optimize.get_best_result(dir), t=t, i_inj=i)
     sim.simul(suffix='test', save=True, ca_true=ca)
 
 
 def comp_pars(dir, i=-1):
-    p = datas.get_vars(dir, i)
+    p = optimize.get_vars(dir, i)
     utils.set_dir(dir)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.boxplot_vars(p, suffix='boxes', show=False, save=True)

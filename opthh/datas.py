@@ -13,41 +13,16 @@ import numpy as np
 import pandas as pd
 import pylab as plt
 import scipy as sp
+from scipy import signal
 from scipy.interpolate import splrep, splev
 from scipy.signal import savgol_filter
 from random import random as rd
-
-from . import utils
 
 DUMP_FILE = 'data/dump'
 DUMP_real = 'data/real'
 DUMP_real_all = 'data/real_all'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
-def get_vars(dir, i=-1):
-    """get dic of vars from dumped file"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
-    with open(file, 'rb') as f:
-        l,r,dic = pickle.load(f)
-        dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
-    return dic
-
-def get_vars_all(dir, i=-1):
-    """get dic of vars from dumped file"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
-    with open(file, 'rb') as f:
-        l,r,dic = pickle.load(f)
-        dic = dict([(var, val[:i]) for var, val in dic.items()])
-    return dic
-
-def get_best_result(dir, i=-1):
-    """Return parameters of the best optimized model"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
-    with open(file, 'rb') as f:
-        l, r, dic = pickle.load(f)
-        idx = np.nanargmin(l[-1])
-        dic = dict([(var, val[i,idx]) for var, val in dic.items()])
-    return dic
 
 def get_data_dump(file=DUMP_FILE):
     with open(file, 'rb') as f:
@@ -142,7 +117,8 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))
     i3 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
     i4 = 15. * ((t > 400) & (t < 800))
-    i_fin = np.stack([i, i2, i3, i4], axis=1)
+    i5 = (t - 450) * (8. / 550) * ((t > 100) & (t <= 1100))
+    i_fin = np.stack([i, i2, i3, i4, i5], axis=1)
     i_noise = 0.1 * (np.random.rand(i_fin.shape[0], i_fin.shape[1]) - 0.5)
     i_fin += i_noise
     # plt.plot(i_noise[:,0])
@@ -179,7 +155,8 @@ def give_test(dt=DT):
     i3 = (t - 600) * (1. / 500) * ((t > 100) & (t <= 600)) + (1100 - t) * (1. / 500) * (
             (t > 600) & (t <= 1100))
     i4 = np.sum([(30. - (n * 4 / 100)) * ((t > n) & (t < n + 50)) for n in range(100, 1100, 100)], axis=0)
-    i_fin = np.stack([i1, i2, i3, i4], axis=1)
+    i5 = signal.gaussian(len(t), std=len(t)/5) * 20.
+    i_fin = np.stack([i1, i2, i3, i4, i5], axis=1)
     return t, i_fin
 
 

@@ -56,9 +56,10 @@ class NeuronOpt(Optimizer):
 
         yshape = [2, None, None]
 
-        self._init(subdir, suffix, train, test, l_rate, w, yshape)
         if reload_dir is None:
-            reload_dir = self.dir
+            reload_dir = subdir
+        self._init(subdir, suffix, train, test, l_rate, w, yshape)
+
 
         if self._V is None:
             self._V = np.full(self._Ca.shape, -50.)
@@ -87,10 +88,8 @@ class NeuronOpt(Optimizer):
                 sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
-                vars = dict([(var, [val]) for var, val in self.optimized.init_p.items()])
+                vars = {var : [val] for var, val in self.optimized.init_p.items()}
                 len_prev = 0
-            for v in tf.trainable_variables():
-                print(v.name, sess.run(v).shape)
 
             vars = dict([(var, np.vstack((val, np.zeros((self._epochs, self.parallel))))) for var, val in vars.items()])
 

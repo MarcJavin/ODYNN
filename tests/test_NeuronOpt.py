@@ -28,6 +28,8 @@ class TestNeuronOpt(TestCase):
         self.assertEqual(opt.parallel, 1)
         n = opt.optimize('unittest', w=[1,1],  train=train)
         n = opt.optimize('unittest', w=[1, 1],  reload=True, train=train)
+        n = opt.optimize('unittest', w=[1, 1], train=train, test=train)
+
 
         #parallel
         pars = [hhmodel.give_rand() for _ in range(2)]
