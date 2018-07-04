@@ -1,9 +1,8 @@
 *.pyc
 *.sh
-opthh/results/*
-opthh/data/*
+results/
+data/
 docs/_build
 docs/_static
 docs/_templates
-.idea/*
-other/*
+.idea/
