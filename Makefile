@@ -1,8 +1,13 @@
+PYTHON = python3
+
 init:
 	pip3 install -r requirements.txt
 
 test:
-	python3 -m unittest discover tests/
+	$(PYTHON) -m unittest discover tests/
 
 install:
-    python3 setup.py install --user
+    $(PYTHON) setup.py install --user
+
+
+.PHONY : init test install

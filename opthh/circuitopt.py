@@ -12,7 +12,6 @@ from tqdm import tqdm
 
 from . import hhmodel
 from .circuit import CircuitTf
-from .model import V_pos, Ca_pos
 from .optimize import Optimizer
 from .neuronopt import NeuronOpt
 from .utils import plots_output_double, plots_output_mult
@@ -95,14 +94,14 @@ class CircuitOpt(Optimizer):
                 results = self._train_and_gather(sess, i, losses, rates, vars)
 
                 for b in range(self.n_batch):
-                    plots_output_double(self._T, X[:, b, 0], results[:, V_pos, b, n_out], V[:, b, 0],
-                                        results[:, Ca_pos, b, n_out],
+                    plots_output_double(self._T, X[:, b, 0], results[:, self.circuit._neurons.V_pos, b, n_out], V[:, b, 0],
+                                        results[:, self.circuit._neurons.Ca_pos, b, n_out],
                                         Ca[:, b, 0], suffix='trace%s_%s' % (b, i), show=False, save=True)
                     # plots_output_mult(self._T, self._X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
                     for b in range(self.n_batch):
-                        plots_output_mult(self._T, X[:, b, 0], results[:, V_pos, b, :], results[:, Ca_pos, b, :],
+                        plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit._neurons.V_pos, b, :], results[:, self.circuit._neurons.Ca_pos, b, :],
                                           suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)
 
                     self._plots_dump(sess, losses, rates, vars, i)

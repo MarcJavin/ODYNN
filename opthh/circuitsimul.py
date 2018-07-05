@@ -9,7 +9,6 @@ import numpy as np
 
 from . import datas
 from . import circuit
-from .neuron import V_pos, Ca_pos
 from .circuit import CircuitFix
 from .utils import plots_output_mult
 from .datas import DUMP_FILE
@@ -63,13 +62,13 @@ class CircuitSimul():
 
         if self.batch:
             for i in range(self.i_injs.shape[0]):
-                plots_output_mult(self.t, self.i_injs[i], states[i,:,V_pos,:], states[i,:,Ca_pos,:],
+                plots_output_mult(self.t, self.i_injs[i], states[i,:,self.circuit._neurons.V_pos,:], states[i,:,self.circuit._neurons.Ca_pos,:],
                           i_syn=curs[i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i))
             # [t, state, (batch,) neuron]
             states = np.moveaxis(states, 0, -2)
             i_injs = np.moveaxis(self.i_injs, 0, 1)
         else:
-            plots_output_mult(self.t, self.i_injs, states[:,V_pos,:], states[:,Ca_pos,:],
+            plots_output_mult(self.t, self.i_injs, states[:,self.circuit._neurons.V_pos,:], states[:,self.circuit._neurons.Ca_pos,:],
                           i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
             #reshape for batch dimension
             states = states[:,:,np.newaxis,:]

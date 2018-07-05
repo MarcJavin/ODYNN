@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 from . import config
-from .model import V_pos, Ca_pos
+from .model import Model
 from .optimize import Optimized
 
 
@@ -115,13 +115,14 @@ class NeuronTf(MODEL, Optimized):
         return self._param.items()
 
 
-class NeuronLSTM(Optimized):
+class NeuronLSTM(Optimized, Model):
     """
     Behavior model of a neuron using an LSTM network
     """
     num = 1
     _cell_size = 2
     init_p = {}
+    ions_in_state = MODEL.ions_in_state
 
     _max_cur = 60.
     _rest_v = -50.
@@ -159,11 +160,14 @@ class NeuronLSTM(Optimized):
 
 
         with tf.name_scope('Scale'):
-            V = v_outputs[:, :, V_pos] * self._scale_v + self._rest_v
-            Ca = ca_outputs[:, :, Ca_pos] * self._scale_ca
+            V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
+            Ca = ca_outputs[:, :, self.Ca_pos] * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
+
+    def step_model(X, i_inj, self):
+        pass
 
     def calculate(self, i):
         pass

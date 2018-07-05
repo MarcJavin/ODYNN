@@ -14,6 +14,7 @@ import re
 
 
 RES_DIR = 'results/'
+IMG_DIR = 'img/'
 current_dir = RES_DIR
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
@@ -249,27 +250,47 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
         plt.show()
     plt.close()
 
-def plots_output_double(ts, i_inj, v, y_v, cac, y_cac, suffix="", show=True, save=False, l=1, lt=1, targstyle='-'):
-    """plot voltage and Ca2+ conc compared to the target model"""
+def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show=True, save=False, l=1, lt=1, targstyle='-'):
+    """
+    plot voltage and ion concentrations, potentially compared to a target model
+    Parameters
+    -----------
+    ts : array of dimension [time]
+        time steps of the measurements
+    i_inj : array of dimension [time]
+    states : array of dimension [time, state_var, nb_neuron]
+    y_states : array of dimension [time, state_var]
+        values for the target model
+    Returns
+    -----------
+    Nothing
+    """
     plt.figure()
+    nb_plots = len(model.ions_in_state) + 2
 
-    if(v.ndim > 2):
-        v = np.reshape(v, (v.shape[0], -1))
-        cac = np.reshape(cac, (cac.shape[0], -1))
+    # if(v.ndim > 2):
+    #     v = np.reshape(v, (v.shape[0], -1))
+    #     cac = np.reshape(cac, (cac.shape[0], -1))
 
-    plt.subplot(3, 1, 2)
-    plt.plot(ts, cac, linewidth=l)
-    plt.plot(ts, y_cac, 'r', linestyle=targstyle, linewidth=lt, label='target model')
-    plt.ylabel('[$Ca^{2+}$]')
-    plt.legend()
-
-    plt.subplot(3, 1, 1)
-    plt.plot(ts, v, linewidth=l)
-    plt.plot(ts, y_v, 'r', linestyle=targstyle, linewidth=lt, label='target model')
+    # Plot voltage
+    plt.subplot(nb_plots, 1, 1)
+    plt.plot(ts, states[:,model.V_pos], linewidth=l)
+    if y_states is not None:
+        if y_states[:,model.V_pos] is not None:
+            plt.plot(ts, y_states[:,model.V_pos], 'r', linestyle=targstyle, linewidth=lt, label='target model')
     plt.ylabel('Voltage (mV)')
     plt.legend()
 
-    plt.subplot(3, 1, 3)
+    for ion, pos in model.ions_in_state.items():
+        plt.subplot(nb_plots, 1, 2)
+        plt.plot(ts, y_states[:,pos], linewidth=l)
+        if y_states is not None:
+            if y_states[:, pos] is not None:
+                plt.plot(ts, y_states[:, pos], 'r', linestyle=targstyle, linewidth=lt, label='target model')
+        plt.ylabel('[{}]'.format(ion))
+        plt.legend()
+
+    plt.subplot(nb_plots, 1, nb_plots)
     plt.plot(ts, i_inj, 'b')
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')

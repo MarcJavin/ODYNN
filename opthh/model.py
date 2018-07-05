@@ -9,10 +9,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
-V_pos = 0
-"""int, Default position of the voltage in state vectors"""
-Ca_pos = -1
-"""int, Default position of the calcium concentration in state vectors"""
+
 
 
 class Model(ABC):
@@ -20,6 +17,12 @@ class Model(ABC):
     Abstract class to implement for using a new model
     All methods and class variables have to be implemented in order to have the expected behavior
     """
+    V_pos = 0
+    """int, Default position of the voltage in state vectors"""
+    Ca_pos = -1
+    """int, Default position of the calcium concentration in state vectors"""
+    ions_in_state = {}
+    """dictionnary, name of ions in the vector states and their positions"""
     default_params = None
     """dict, Default set of parameters for the model"""
     _constraints_dic = None
@@ -76,13 +79,16 @@ class Model(ABC):
         pass
 
     @staticmethod
-    @abstractmethod
     def get_random():
         """Return a dictionnary with random parameters"""
         pass
 
     @staticmethod
     def plot_results(*args, **kwargs):
+        pass
+
+    @staticmethod
+    def plot_output(t, i_inj, v, v_targ=None, ca=None, ca_targ=None, suffix='', show=False, save=False, l=1, lt=1, targstyle='-'):
         pass
 
     @abstractmethod

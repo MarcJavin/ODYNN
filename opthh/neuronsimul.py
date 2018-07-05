@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from .neuron import NeuronFix, NeuronTf, V_pos, Ca_pos
+from .neuron import NeuronFix, NeuronTf
 import time
 from . import hhmodel, datas, utils
 import numpy as np
@@ -27,17 +27,15 @@ class NeuronSimul():
         start = time.time()
         neurons = NeuronTf(init_p=ps, dt=self.dt)
         X = neurons.calculate(self.i_inj)
-        Vs = X[:,V_pos]
-        Cacs = X[:,Ca_pos]
         print(time.time() - start)
-        utils.plots_output_mult(self.t, self.i_inj, Vs, Cacs, show=show, save=save)
+        self.neuron.plot_output(self.t, self.i_inj, X, show=show, save=save)
 
     """Compare 2 parameters sets"""
     def comp_targ(self, p, p_targ, suffix='', save=False, show=True):
         neurons = NeuronTf(init_p=[p, p_targ], dt=self.dt)
         X = neurons.calculate(self.i_inj)
 
-        utils.plots_output_double(self.t, self.i_inj, X[:, V_pos, 0], X[:, V_pos, -1], X[:, Ca_pos, 0], X[:, Ca_pos, -1], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
+        self.neuron.plot_output(self.t, self.i_inj, X[:, :, 0], X[:, :, -1], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
 
     """Runs and plot the neuron"""
@@ -65,7 +63,7 @@ class NeuronSimul():
             else:
                 self.neuron.plot_results(self.t, self.i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
-        todump = [self.t, self.i_inj, X[:, V_pos], X[:, Ca_pos]]
+        todump = [self.t, self.i_inj, X[:, self.neuron.V_pos], X[:, self.neuron.Ca_pos]]
         if dump:
             with open(datas.DUMP_FILE, 'wb') as f:
                 pickle.dump(todump, f)

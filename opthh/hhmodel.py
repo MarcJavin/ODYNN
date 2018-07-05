@@ -11,7 +11,7 @@ import random
 import tensorflow as tf
 import scipy as sp
 
-from .model import Model, V_pos, Ca_pos
+from .model import Model
 from . import utils
 from pylab import plt
 
@@ -191,6 +191,7 @@ class HodgkinHuxley(Model):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
     REST_CA = REST_CA
+    ions_in_state = {'$Ca^{2+}$' : -1}
     _init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
@@ -283,13 +284,13 @@ class HodgkinHuxley(Model):
         ----------
         An updated state vector
         """
-        V = X[V_pos]
+        V = X[self.V_pos]
         p = X[1]
         q = X[2]
         n = X[3]
         e = X[4]
         f = X[5]
-        cac = X[Ca_pos]
+        cac = X[self.Ca_pos]
 
         h = self.h(cac)
         # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
@@ -385,6 +386,10 @@ class HodgkinHuxley(Model):
         return give_rand()
 
     @staticmethod
+    def plot_output(*args, **kwargs):
+        return utils.plots_output_double(HodgkinHuxley, *args, **kwargs)
+
+    @staticmethod
     def plot_vars(*args, **kwargs):
         """Plot functions for the parameters"""
         return utils.plot_vars(*args, **kwargs)
@@ -394,7 +399,7 @@ class HodgkinHuxley(Model):
     def ica_from_v(X, v_fix, self):
         e = X[1]
         f = X[2]
-        cac = X[Ca_pos]
+        cac = X[self.Ca_pos]
 
         h = self.h(cac)
         tau = self._param['e__tau']

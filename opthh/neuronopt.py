@@ -12,7 +12,6 @@ import tensorflow as tf
 from tqdm import tqdm
 
 from . import hhmodel
-from .model import Ca_pos, V_pos
 from .neuron import NeuronTf
 from .optimize import Optimizer, SAVE_PATH, FILE_LV
 from .utils import plots_output_double
@@ -37,8 +36,8 @@ class NeuronOpt(Optimizer):
     def _build_loss(self, w):
         """Define how the loss is computed"""
         with tf.variable_scope('Loss'):
-            cac = self.res[:, Ca_pos]
-            out = self.res[:, V_pos]
+            cac = self.res[:, self.neuron.Ca_pos]
+            out = self.res[:, self.neuron.V_pos]
             losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
             losses_ca = w[1] * tf.square(tf.subtract(cac, self.ys_[-1]))
             losses = losses_v + losses_ca
@@ -46,14 +45,16 @@ class NeuronOpt(Optimizer):
         # print(self.loss)
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 
-    def toptimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
+    def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step=None,
                  reload=False, reload_dir=None):
         """Optimize the neuron parameters"""
         print(suffix, step)
 
         T, X, V, Ca = train
+        res_targ = np.stack([V, Ca], axis=1)
         if test is not None:
             T_test, X_test, V_test, Ca_test = test
+            res_targ_test = np.stack([V_test, Ca_test], axis=1)
 
         yshape = [2, None, None]
 
@@ -102,16 +103,14 @@ class NeuronOpt(Optimizer):
                 #     return i+len_prev
 
                 for b in range(self.n_batch):
-                    plots_output_double(self._T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
-                                        Ca[:, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                    self.neuron.plot_output(self._T, X[:, b], results[:, :, b], res_targ[:, :, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
                     res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
                     if res_test is not None:
                         for b in range(self.n_batch):
-                            plots_output_double(self._T, X_test[:, b], res_test[:, V_pos, b], V_test[:, b], res_test[:, Ca_pos, b],
-                                                Ca_test[:, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
+                            self.neuron.plot_output(self._T, X_test[:, b], res_test[:, :, b], res_targ_test[:, :, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
                                                 show=False,
                                                 save=True, l=0.7, lt=2)
 
