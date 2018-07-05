@@ -14,8 +14,7 @@ from tqdm import tqdm
 from . import hhmodel
 from .neuron import NeuronTf
 from .optimize import Optimizer, SAVE_PATH, FILE_LV
-from .utils import plots_output_double
-from utils import RES_DIR
+from .utils import plots_output_double, RES_DIR
 
 
 class NeuronOpt(Optimizer):

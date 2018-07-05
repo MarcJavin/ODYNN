@@ -13,10 +13,9 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-import utils
-from .utils import plots_output_double
+from .utils import plots_output_double, OUT_SETTINGS, set_dir, OUT_PARAMS
+from . import utils
 import pylab as plt
-from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS
 
 SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'

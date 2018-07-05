@@ -9,7 +9,6 @@ import sys
 import numpy as np
 import scipy as sp
 
-import utils
 from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
