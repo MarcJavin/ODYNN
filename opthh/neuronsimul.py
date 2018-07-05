@@ -50,11 +50,15 @@ class NeuronSimul():
         print("Simulation time : ", time.time() - start)
         neurons[0].plot_output(self.t, self.i_inj, X, show=show, save=save)
 
-    def comp_neuron_trace(self, neuron, trace, show=True, save=False):
+    def comp_neuron_trace(self, neuron, trace, scale=False, show=True, save=False):
         """Compare a neuron with a given measured trace"""
         start = time.time()
         X = neuron.calculate(self.i_inj)
         print("Simulation time : ", time.time() - start)
+        if scale:
+            for i, t in enumerate(trace):
+                if t is not None:
+                    t *= np.max(X[:,i]) / np.max(t)
         neuron.plot_output(self.t, self.i_inj, X, trace, show=show, save=save)
 
 

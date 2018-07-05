@@ -68,10 +68,6 @@ class CircuitOpt(Optimizer):
 
         self._init(subdir, suffix, train, test, l_rate, w, yshape)
 
-        if self._V is None:
-            self._V = np.full(self._Ca.shape, -50.)
-            w[0] = 0
-
         self._build_loss(w, n_out)
         self._build_train()
         self.summary = tf.summary.merge_all()

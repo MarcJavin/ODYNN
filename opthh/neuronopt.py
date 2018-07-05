@@ -50,10 +50,10 @@ class NeuronOpt(Optimizer):
         print(suffix, step)
 
         T, X, V, Ca = train
-        res_targ = np.stack([V, Ca], axis=1)
+        res_targ = [V, Ca]
         if test is not None:
             T_test, X_test, V_test, Ca_test = test
-            res_targ_test = np.stack([V_test, Ca_test], axis=1)
+            res_targ_test = [V_test, Ca_test]
 
         yshape = [2, None, None]
 
@@ -61,10 +61,6 @@ class NeuronOpt(Optimizer):
             reload_dir = subdir
         self._init(subdir, suffix, train, test, l_rate, w, yshape)
 
-
-        if self._V is None:
-            self._V = np.full(self._Ca.shape, -50.)
-            w[0] = 0
 
         self._build_loss(w)
         self._build_train()
@@ -102,14 +98,17 @@ class NeuronOpt(Optimizer):
                 #     return i+len_prev
 
                 for b in range(self.n_batch):
-                    self.neuron.plot_output(self._T, X[:, b], results[:, :, b], res_targ[:, :, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
+                    res_t = [res_targ[i][:,b] if res_targ[i] is not None else None for i in range(len(res_targ))]
+                    self.neuron.plot_output(self._T, X[:, b], results[:, :, b], res_t, suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
                                         save=True, l=0.7, lt=2)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
                     res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
                     if res_test is not None:
                         for b in range(self.n_batch):
-                            self.neuron.plot_output(self._T, X_test[:, b], res_test[:, :, b], res_targ_test[:, :, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
+                            res_t = [res_targ_test[i][:, b] if res_targ_test[i] is not None else None for i in
+                                     range(len(res_targ_test))]
+                            self.neuron.plot_output(self._T, X_test[:, b], res_test[:, :, b], res_t, suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
                                                 show=False,
                                                 save=True, l=0.7, lt=2)
 

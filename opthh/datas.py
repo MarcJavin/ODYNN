@@ -103,6 +103,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     plt.plot(td_all, trace)
     plt.plot(t_all, s_ca_all)
     plt.show()
+    plt.close()
     test = [t_all, s_i_all, None, s_ca_all]
     return train, test
 

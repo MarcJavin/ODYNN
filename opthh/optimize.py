@@ -163,10 +163,14 @@ class Optimizer(ABC):
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name="voltage_Ca")
 
         print("i expected : ", self.xs_.shape)
-        print("i : ", self._X.shape, "V : ", self._V.shape)
+        print("i : ", self._X.shape)
 
     def write_settings(self, w):
         """Write the settings of the optimization in a file"""
+        show_shape = self._V
+        if self._V is None:
+            show_shape = self._Ca
+
         with open(self.dir + OUT_SETTINGS, 'w') as f:
             f.write("Weights (out, cac) : {}".format(w) + "\n" +
                     "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.start_rate, self.decay_step,
@@ -174,15 +178,16 @@ class Optimizer(ABC):
                     "Number of batches : {}".format(self.n_batch) + "\n" +
                     "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
                 self._X.shape) +
-                    "Output voltage shape : {}".format(self._V.shape) + "\n" +
+                    "Output shape : {}".format(show_shape.shape) + "\n" +
                     self.optimized.settings())
 
 
     def _train_and_gather(self, sess, i, losses, rates, vars):
         """Train the model and collect loss, learn_rate and variables"""
+        V = self._V if self._V is not None else np.zeros(self._Ca.shape)
         summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
             self.xs_: self._X,
-            self.ys_: np.array([self._V, self._Ca])
+            self.ys_: np.array([V, self._Ca])
         })
 
         self.tdb.add_summary(summ, i)

@@ -157,7 +157,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
         l_rate = [0.01, 9, 0.95]
-        opt = NeuronOpt(neur, epochs=10)
+        opt = NeuronOpt(neur, epochs=700)
     else:
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
@@ -171,16 +171,24 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     test_xp(dir, default=default)
 
 
-def real_data(name):
+def real_data(name, suffix='', lstm=True):
     dir = 'Real_data_%s' % name
+    if (lstm):
+        dir += '_lstm'
+        neur = NeuronLSTM(dt=dt)
+        l_rate = [0.01, 9, 0.95]
+        opt = NeuronOpt(neur, epochs=700)
+    else:
+        l_rate = [1., 9, 0.92]
+        opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
-    opt = NeuronOpt(init_p=pars, dt=dt)
-    train, test = datas.dump_data()
-    n = opt.optimize(dir, w=[0, 1], train = train)
+    train, test = datas.dump_data(dt=dt)
+    n = opt.optimize(dir, w=[0, 1], train = train, suffix=suffix, l_rate=l_rate)
     comp_pars(dir, n)
     t, i, v, ca = test
     sim = NeuronSimul(init_p=optimize.get_best_result(dir), t=t, i_inj=i)
-    sim.simul(suffix='test', save=True, ca_true=ca)
+    if not lstm:
+        sim.simul(suffix='test', save=True, ca_true=ca)
 
 
 def comp_pars(dir, i=-1):
@@ -200,6 +208,17 @@ def add_plots():
         except:
             print(dir)
 
+def test_lstm():
+    import pickle
+    with open('data/optimized4', 'rb') as f:
+        load = pickle.load(f)
+    n = NeuronLSTM(load=load)
+    trace, test = datas.dump_data(dt=n.dt)
+    sim = NeuronSimul(t=test[0], i_inj=test[1])
+    trace = np.array(test[2:])
+    print(len(trace[1]))
+    sim.comp_neuron_trace(n, trace, scale=True)
+    exit(0)
 
 if __name__ == '__main__':
 
@@ -222,7 +241,7 @@ if __name__ == '__main__':
         classic(name, wv=1, wca=1, suffix=suf)
     elif (xp == 'real'):
         name = sys.argv[2]
-        real_data(name)
+        real_data(name, suffix=suf)
     elif (xp == 'single'):
         xp = sys.argv[2]
         w_v, w_ca = list(map(int, sys.argv[3:5]))

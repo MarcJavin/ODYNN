@@ -123,9 +123,9 @@ class NeuronLSTM(Optimized, MODEL):
     _scale_ca = 500.
 
     def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1, load=None):
-        self.init_op = None
+        self.vars_init = {}
         if load is not None:
-            dt = self.load()
+            dt = self.load(load)
         else:
             self._hidden_layer_nb = nb_layer
             self._hidden_layer_size = layer_size
@@ -149,6 +149,7 @@ class NeuronLSTM(Optimized, MODEL):
 
 
     def build_graph(self, batch=None):
+        tf.reset_default_graph()
         self.reset()
         xshape = [None, None]
         if batch is None:
@@ -160,10 +161,12 @@ class NeuronLSTM(Optimized, MODEL):
 
         with tf.variable_scope('Volt'):
             initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
+            self.vstate = initializer
             v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
 
         with tf.variable_scope('Calc'):
             initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
+            self.castate = initializer
             ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
 
         with tf.name_scope('Scale'):
@@ -174,10 +177,24 @@ class NeuronLSTM(Optimized, MODEL):
         return curs_, results
 
     def step(self, X, i_inj):
-        pass
+        v, self.vstate = self._volt_net(i_inj, self.vstate)
+        ca, self.castate = self._ca_net(v, self.castate)
+        return v, ca
 
     def calculate(self, i):
-        pass
+        if i.ndim > 1:
+            input_cur, res_ = self.build_graph(batch=i.shape[1])
+        else:
+            input_cur, res_ = self.build_graph()
+            i = i[:, None]
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            self.apply_init(sess)
+            results = sess.run(res_, feed_dict={
+                input_cur: i
+            })
+        return results
+
 
     def settings(self):
         return ('Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
@@ -212,13 +229,12 @@ class NeuronLSTM(Optimized, MODEL):
         self._hidden_layer_nb = load['_hidden_layer_nb']
         self._hidden_layer_size = load['_hidden_layer_size']
         self._extra_ca = load['extra_ca']
-        vars = load['vars']
-        self.init_op = [tf.assign(name, val) for name, val in vars]
+        self.vars_init = load['vars']
         return self.dt
 
     def apply_init(self, sess):
         """Initialize the variables if loaded object"""
-        sess.run(self.init_op)
+        sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
 
