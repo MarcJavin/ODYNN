@@ -11,4 +11,4 @@ if __name__ == '__main__':
 
     from opthh.hhmodel import DEFAULT, DEFAULT_2
 
-    simul.comp_targ(DEFAULT, DEFAULT_2, show=True)
+    simul.comp_pars_targ(DEFAULT, DEFAULT_2, show=True)

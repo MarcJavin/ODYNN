@@ -116,4 +116,4 @@ class NeuronOpt(Optimizer):
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))
 
-        return -1
+        return self.optimized

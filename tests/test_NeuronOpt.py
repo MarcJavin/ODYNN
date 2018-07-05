@@ -9,7 +9,6 @@ from opthh.neuronsimul import NeuronSimul
 class TestNeuronOpt(TestCase):
 
     def test_optimize(self):
-        return
         utils.set_dir('unittest')
         dt = 0.5
         t,i = datas.give_train(dt=dt, max_t=5.)

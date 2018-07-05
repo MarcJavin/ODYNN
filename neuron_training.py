@@ -111,7 +111,7 @@ def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     param = optimize.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim = NeuronSimul(init_p=param, t=t, i_inj=i_)
-        sim.comp_targ(param, default, show=show, save=True, suffix='train%s' % j)
+        sim.comp_pars_targ(param, default, show=show, save=True, suffix='train%s' % j)
 
     dt = 0.05
     tt = np.array(sp.arange(0.0, 4000, dt))
@@ -126,7 +126,7 @@ def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     ts_ = [tt, tt, t3]
     for j, i_ in enumerate(is_):
         sim = NeuronSimul(init_p=param, t=ts_[j], i_inj=i_)
-        sim.comp_targ(param, default, show=show, save=True, suffix='test%s' % j)
+        sim.comp_pars_targ(param, default, show=show, save=True, suffix='test%s' % j)
 
 
 def alternate(name=''):
