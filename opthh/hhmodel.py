@@ -267,10 +267,8 @@ class HodgkinHuxley(Model):
         """
         return self._param['g_L'] * (V - self._param['E_L'])
 
-    """default self"""
 
-    @staticmethod
-    def step_model(X, i_inj, self):
+    def step(self, X, i_inj):
         """
         Integrate and update voltage after one time step
         Parameters
@@ -314,7 +312,7 @@ class HodgkinHuxley(Model):
         if self._tensors:
             return tf.stack([V, p, q, n, e, f, cac], 0)
         else:
-            return [V, p, q, n, e, f, cac]
+            return np.array([V, p, q, n, e, f, cac])
 
     def plot_results(self, ts, i_inj_values, results, ca_true=None, dir='.', suffix="", show=True, save=False):
         """plot all dynamics"""

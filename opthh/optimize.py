@@ -27,9 +27,9 @@ class Optimized(ABC):
     Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit.
     """
 
-    def __init__(self, dt):
+    def __init__(self, dt, init_p={}):
         self.dt = dt
-        self.init_p = {}
+        self.init_p = init_p
 
     @abstractmethod
     def build_graph(self):
@@ -55,6 +55,9 @@ class Optimized(ABC):
 
     def apply_constraints(self, session):
         """Return a tensorflow operation applying constraints to the variables"""
+        pass
+
+    def apply_init(self, session):
         pass
 
     def get_params(self):

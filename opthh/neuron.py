@@ -26,8 +26,7 @@ class NeuronTf(MODEL, Optimized):
 
     def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
-        Optimized.__init__(self, dt=dt)
-        self.init_p = self._param
+        Optimized.__init__(self, dt=dt, init_p=self._param)
         self._fixed = fixed
         if(fixed == 'all'):
             self._fixed = set(self.init_p.keys())
@@ -39,9 +38,6 @@ class NeuronTf(MODEL, Optimized):
     def give_id(cls):
         cls.nb += 1
         return str(cls.nb)
-
-    def step(self, hprev, x):
-        return self.step_model(hprev, x, self)
 
     def _reset(self):
         """rebuild tf variable graph"""
@@ -126,12 +122,16 @@ class NeuronLSTM(Optimized, MODEL):
     _scale_v = 100.
     _scale_ca = 500.
 
-    def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1):
-        self._hidden_layer_nb = nb_layer
-        self._hidden_layer_size = layer_size
-        self._extra_ca = extra_ca
-        self._volt_net = None
-        self._ca_net = None
+    def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1, load=None):
+        self.init_op = None
+        if load is not None:
+            dt = self.load()
+        else:
+            self._hidden_layer_nb = nb_layer
+            self._hidden_layer_size = layer_size
+            self._extra_ca = extra_ca
+            self._volt_net = None
+            self._ca_net = None
         Optimized.__init__(self, dt=dt)
 
     def reset(self):
@@ -173,7 +173,7 @@ class NeuronLSTM(Optimized, MODEL):
 
         return curs_, results
 
-    def step_model(X, i_inj, self):
+    def step(self, X, i_inj):
         pass
 
     def calculate(self, i):
@@ -189,6 +189,7 @@ class NeuronLSTM(Optimized, MODEL):
                 )
 
     def todump(self, sess):
+        """Informations to save to retrieve the object later"""
         vars = {v.name: sess.run(v) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables}
         return {'dt' : self.dt,
                 '_max_cur': self._max_cur,
@@ -200,6 +201,24 @@ class NeuronLSTM(Optimized, MODEL):
                 'extra_ca': self._extra_ca,
                 'vars' : vars
                 }
+
+    def load(self, load):
+        """Load settings from a past object"""
+        self.dt = load['dt']
+        self._max_cur = load['_max_cur']
+        self._rest_v = load['_rest_v']
+        self._scale_v = load['_scale_v']
+        self._scale_ca = load['_scale_ca']
+        self._hidden_layer_nb = load['_hidden_layer_nb']
+        self._hidden_layer_size = load['_hidden_layer_size']
+        self._extra_ca = load['extra_ca']
+        vars = load['vars']
+        self.init_op = [tf.assign(name, val) for name, val in vars]
+        return self.dt
+
+    def apply_init(self, sess):
+        """Initialize the variables if loaded object"""
+        sess.run(self.init_op)
 
 
 
@@ -216,15 +235,15 @@ class NeuronFix(MODEL):
     def init_batch(self, n):
         self._init_state = np.stack([self._init_state for _ in range(n)], axis=1)
 
-    def step(self, i):
-        self.state = np.array(self.step_model(self.state, i, self))
+    def step_fix(self, i):
+        self.state = self.step(self.state, i)
         return self.state
 
     def calculate(self, i_inj, currents=False):
         X = []
         self.reset()
         for i in i_inj:
-            X.append(self.step(i))
+            X.append(self.step_fix(i))
         return np.array(X)
 
     def reset(self):

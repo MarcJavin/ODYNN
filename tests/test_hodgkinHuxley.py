@@ -153,11 +153,11 @@ class TestNeuronFix(TestCase):
 
     def test_step(self):
         hh = NeuronFix(p)
-        hh.step(2.)
+        hh.step_fix(2.)
         self.assertEqual(hh._init_state.shape, hh.state.shape)
 
         hh = NeuronFix(init_p=[hhmodel.give_rand() for _ in range(13)])
-        hh.step(2.)
+        hh.step_fix(2.)
         self.assertEqual(hh._init_state.shape, hh.state.shape)
 
     def test_calculate(self):

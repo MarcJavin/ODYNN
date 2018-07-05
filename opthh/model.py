@@ -59,9 +59,8 @@ class Model(ABC):
         self._param = init_p
         self.dt = dt
 
-    @staticmethod
     @abstractmethod
-    def step_model(X, i, self):
+    def step(self, X, i):
         """
         Integrate and update voltage after one time step
 

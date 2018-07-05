@@ -102,7 +102,7 @@ class Circuit:
             return h
         else:
             # update neurons
-            self._neurons.step(curs)
+            self._neurons.step_fix(curs)
             # update synapses
             vpres = self._neurons.state[0, self._pres]
             vposts = self._neurons.state[0, self._posts]
