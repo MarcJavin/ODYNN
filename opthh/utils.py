@@ -289,7 +289,7 @@ def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show
 
     for ion, pos in model.ions_in_state.items():
         plt.subplot(nb_plots, 1, 2)
-        plt.plot(ts, y_states[:,pos], linewidth=l)
+        plt.plot(ts, states[:,pos], linewidth=l)
         if y_states is not None:
             if y_states[:, pos] is not None:
                 plt.plot(ts, y_states[:, pos], 'r', linestyle=targstyle, linewidth=lt, label='target model')

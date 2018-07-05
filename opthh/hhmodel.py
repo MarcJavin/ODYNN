@@ -191,7 +191,7 @@ class HodgkinHuxley(Model):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
     REST_CA = REST_CA
-    ions_in_state = {'$Ca^{2+}$' : -1}
+    ions_in_state = {'$Ca^{2+}$': -1}
     _init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT

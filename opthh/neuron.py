@@ -189,7 +189,8 @@ class NeuronLSTM(Optimized, MODEL):
                 )
 
     def get_params(self):
-        return []
+        return []#{v.name : v for v in self._volt_net.variables+self._ca_net.variables}.items()
+
 
 
 class NeuronFix(MODEL):
