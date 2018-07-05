@@ -125,7 +125,7 @@ class CircuitTf(Circuit, Optimized):
     def __init__(self, inits_p, conns, fixed='all', constraints_n=None, dt=0.1):
         neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
-        Optimized.__init__(self)
+        Optimized.__init__(self, dt=dt)
         if self.num > 1:
             constraints_dic = give_constraints_syn(conns[0])
             #update constraint size for parallelization

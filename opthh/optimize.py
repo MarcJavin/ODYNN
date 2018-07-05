@@ -26,7 +26,8 @@ class Optimized(ABC):
     Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit.
     """
 
-    def __init__(self):
+    def __init__(self, dt):
+        self.dt = dt
         self.init_p = {}
 
     @abstractmethod

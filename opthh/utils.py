@@ -12,6 +12,12 @@ import numpy as np
 import os
 import re
 
+# Use on my server
+import matplotlib as mpl
+import socket
+if (socket.gethostname()=='1080'):
+    mpl.use("Agg")
+
 
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
