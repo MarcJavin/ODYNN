@@ -13,13 +13,14 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from .utils import plots_output_double, OUT_SETTINGS, set_dir, OUT_PARAMS
+from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS
 from . import utils
 import pylab as plt
 
 SAVE_PATH = 'tmp/model.ckpt'
 FILE_LV = 'tmp/dump_lossratevars'
-FILE_CIRC = 'tmp/circuit'
+FILE_OBJ = 'tmp/optimized'
+
 
 class Optimized(ABC):
     """
@@ -58,6 +59,9 @@ class Optimized(ABC):
 
     def get_params(self):
         """Return the variables parameters names of the optimized object"""
+        return []
+
+    def todump(self, sess):
         return []
 
 
@@ -208,6 +212,8 @@ class Optimizer(ABC):
 
         with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
             pickle.dump([losses, self._test_losses, rates, vars], f)
+        with open(self.dir + FILE_OBJ + self.suffix, 'wb') as f:
+            pickle.dump(self.optimized.todump(sess), f)
 
         plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))

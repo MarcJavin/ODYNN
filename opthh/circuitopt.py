@@ -96,12 +96,12 @@ class CircuitOpt(Optimizer):
 
                 for b in range(self.n_batch):
                     self.circuit._neurons.plot_output(self._T, X[:, b, 0], results[:, :, b, n_out], res_targ[:, :, b, 0],
-                                        Ca[:, b, 0], suffix='trace%s_%s' % (b, i), show=False, save=True)
+                                                      suffix='trace%s_%s' % (b, i), show=False, save=True)
                     # plots_output_mult(self._T, self._X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
                     for b in range(self.n_batch):
-                        plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit._neurons.self.circuit._neurons.V_pos, b, :], results[:, self.circuit._neurons.self.circuit._neurons.Ca_pos, b, :],
+                        plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit._neurons.V_pos, b, :], results[:, self.circuit._neurons.Ca_pos, b, :],
                                           suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)
 
                     self._plots_dump(sess, losses, rates, vars, i)

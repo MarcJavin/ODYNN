@@ -274,9 +274,9 @@ def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show
     plt.figure()
     nb_plots = len(model.ions_in_state) + 2
 
-    # if(v.ndim > 2):
-    #     v = np.reshape(v, (v.shape[0], -1))
-    #     cac = np.reshape(cac, (cac.shape[0], -1))
+    if(states.ndim > 3):
+        states = np.reshape(states, (states.shape[0], states.shape[1], -1))
+        y_states = np.reshape(y_states, (y_states.shape[0], y_states.shape[1], -1))
 
     # Plot voltage
     plt.subplot(nb_plots, 1, 1)
@@ -376,5 +376,3 @@ def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
         plt.show()
     plt.close()
 
-
-IMG_DIR = 'img/'

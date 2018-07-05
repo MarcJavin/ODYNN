@@ -89,7 +89,7 @@ class NeuronOpt(Optimizer):
                 sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
-                vars = {var : [val] for var, val in self.optimized.get_params()}
+                vars = {var : [val] for var, val in self.optimized.init_p.items()}
                 len_prev = 0
 
             vars = {var : np.vstack((val, np.zeros((self._epochs, self.parallel)))) for var, val in vars.items()}

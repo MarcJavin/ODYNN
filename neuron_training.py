@@ -157,7 +157,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
         l_rate = [0.01, 9, 0.95]
-        opt = NeuronOpt(neur, epochs=700)
+        opt = NeuronOpt(neur, epochs=10)
     else:
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)

@@ -188,8 +188,18 @@ class NeuronLSTM(Optimized, MODEL):
                 .format(self._max_cur, self._rest_v, self._scale_v, self._scale_ca)
                 )
 
-    def get_params(self):
-        return []#{v.name : v for v in self._volt_net.variables+self._ca_net.variables}.items()
+    def todump(self, sess):
+        vars = {v.name: sess.run(v) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables}
+        return {'dt' : self.dt,
+                '_max_cur': self._max_cur,
+                '_rest_v': self._rest_v,
+                '_scale_v': self._scale_v,
+                '_scale_ca': self._scale_ca,
+                '_hidden_layer_nb': self._hidden_layer_nb,
+                '_hidden_layer_size': self._hidden_layer_size,
+                'extra_ca': self._extra_ca,
+                'vars' : vars
+                }
 
 
 
