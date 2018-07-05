@@ -31,12 +31,12 @@ class CircuitOpt(Optimizer):
         """Define how to compute the loss"""
         out, ca = [], []
         for n in n_out:
-            out.append(self.res[:, V_pos, :, n])
-            ca.append(self.res[:, Ca_pos, :, n])
+            out.append(self.res[:, self.circuit._neurons.V_pos, :, n])
+            ca.append(self.res[:, self.circuit._neurons.Ca_pos, :, n])
         out = tf.stack(out, axis=2)
         ca = tf.stack(ca, axis=2)
-        losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[V_pos]))
-        losses_ca = w[1] * tf.square(tf.subtract(ca, self.ys_[Ca_pos]))
+        losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[self.circuit._neurons.V_pos]))
+        losses_ca = w[1] * tf.square(tf.subtract(ca, self.ys_[self.circuit._neurons.Ca_pos]))
         losses = losses_v + losses_ca
         self.loss = tf.reduce_mean(losses, axis=[0, 1, 2])
 
@@ -62,6 +62,7 @@ class CircuitOpt(Optimizer):
         """optimize circuit parameters"""
         print(suffix)
         T, X, V, Ca = train
+        res_targ = np.stack([V, Ca], axis=1)
 
         yshape = [2, None, None, len(n_out)]
 
@@ -94,14 +95,13 @@ class CircuitOpt(Optimizer):
                 results = self._train_and_gather(sess, i, losses, rates, vars)
 
                 for b in range(self.n_batch):
-                    plots_output_double(self._T, X[:, b, 0], results[:, self.circuit._neurons.V_pos, b, n_out], V[:, b, 0],
-                                        results[:, self.circuit._neurons.Ca_pos, b, n_out],
+                    self.circuit._neurons.plot_output(self._T, X[:, b, 0], results[:, :, b, n_out], res_targ[:, :, b, 0],
                                         Ca[:, b, 0], suffix='trace%s_%s' % (b, i), show=False, save=True)
                     # plots_output_mult(self._T, self._X[:,n_b], results[:,0,b,:], results[:,-1,b,:], suffix='circuit_%s_trace%s'%(i,n_b), show=False, save=True)
 
                 if i % self._frequency == 0 or i == self._epochs - 1:
                     for b in range(self.n_batch):
-                        plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit._neurons.V_pos, b, :], results[:, self.circuit._neurons.Ca_pos, b, :],
+                        plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit._neurons.self.circuit._neurons.V_pos, b, :], results[:, self.circuit._neurons.self.circuit._neurons.Ca_pos, b, :],
                                           suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)
 
                     self._plots_dump(sess, losses, rates, vars, i)

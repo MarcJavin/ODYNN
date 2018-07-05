@@ -120,8 +120,6 @@ class NeuronLSTM(Optimized, Model):
     Behavior model of a neuron using an LSTM network
     """
     num = 1
-    _cell_size = 2
-    init_p = {}
     ions_in_state = MODEL.ions_in_state
 
     _max_cur = 60.
@@ -133,11 +131,27 @@ class NeuronLSTM(Optimized, Model):
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_size = layer_size
         self._extra_ca = extra_ca
+        self._volt_net = None
+        self._ca_net = None
         Optimized.__init__(self)
         self.dt = dt
 
+    def reset(self):
+        num_units1 = [self._hidden_layer_size for _ in range(self._hidden_layer_nb)]
+        num_units1.append(1)
+        with tf.variable_scope('Volt'):
+            cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
+            self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
+
+        num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
+        num_units2.append(1)
+        with tf.variable_scope('Calc'):
+            cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
+            self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
+
+
     def build_graph(self, batch=None):
-        tf.reset_default_graph()
+        self.reset()
         xshape = [None, None]
         if batch is None:
             batch = 1
@@ -146,18 +160,13 @@ class NeuronLSTM(Optimized, Model):
         with tf.variable_scope('prelayer'):
             input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
-        for layer in range(self._hidden_layer_nb):
-            input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(layer))
+        with tf.variable_scope('Volt'):
+            initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
+            v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
 
-        v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
-        input = v_outputs
-
-        if self._extra_ca > 0:
-            for layer in range(self._extra_ca):
-                input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(self._hidden_layer_nb+layer+1))
-
-        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
-
+        with tf.variable_scope('Calc'):
+            initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
+            ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
@@ -172,22 +181,17 @@ class NeuronLSTM(Optimized, Model):
     def calculate(self, i):
         pass
 
-    @staticmethod
-    def _lstm_cell(size, input, batch, scope):
-        with tf.variable_scope(scope):
-            cell = tf.nn.rnn_cell.LSTMCell(size, use_peepholes=True, state_is_tuple=True)
-            initializer = cell.zero_state(batch, dtype=tf.float32) 
-            return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
-
     def settings(self):
-        return ('Cell size : {} '.format(self._cell_size) + '\n' +
-                'Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
+        return ('Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
                 'Units per hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'Extra layers for [Ca] : %s' % self._extra_ca + '\n' +
                 'dt : {}'.format(self.dt) + '\n' +
                 'max current : {}, rest. voltage : {}, scale voltage : {}, scale calcium : {}'
                 .format(self._max_cur, self._rest_v, self._scale_v, self._scale_ca)
                 )
+
+    def get_params(self):
+        return []
 
 
 class NeuronFix(MODEL):

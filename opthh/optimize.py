@@ -27,7 +27,7 @@ class Optimized(ABC):
     """
 
     def __init__(self):
-        pass
+        self.init_p = {}
 
     @abstractmethod
     def build_graph(self):

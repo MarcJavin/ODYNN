@@ -36,11 +36,20 @@ Run in the root directory :
 
         make test
 
+Folders
+---------------
+
+- docs : files for creating documentation with Sphinx
+- img : images
+- opthh : package python files
+- tests : unit tests
+- tutorial : notebook to run with Jupyter
+
+
 TODO
 ---------------
 
 - Run one step LSTM
-- peephole
 - Refactor simulations
 - Refactor optimizations
 - inhibitory synapses : default and constraints
