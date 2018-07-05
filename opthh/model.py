@@ -88,7 +88,7 @@ class Model(ABC):
         pass
 
     @staticmethod
-    def plot_output(t, i_inj, v, v_targ=None, ca=None, ca_targ=None, suffix='', show=False, save=False, l=1, lt=1, targstyle='-'):
+    def plot_output(t, i_inj, states, states_y, suffix='', show=False, save=False, l=1, lt=1, targstyle='-'):
         pass
 
     @abstractmethod

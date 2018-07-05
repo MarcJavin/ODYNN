@@ -115,12 +115,11 @@ class NeuronTf(MODEL, Optimized):
         return self._param.items()
 
 
-class NeuronLSTM(Optimized, Model):
+class NeuronLSTM(Optimized, MODEL):
     """
     Behavior model of a neuron using an LSTM network
     """
     num = 1
-    ions_in_state = MODEL.ions_in_state
 
     _max_cur = 60.
     _rest_v = -50.
