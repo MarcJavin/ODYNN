@@ -43,8 +43,9 @@ def opt_neurons():
     c.opt_neurons(f)
 
 def comp_pars(dir):
+    dir = utils.set_dir(dir)
     p = optimize.get_vars(dir)
-    utils.set_dir(dir)
+
     utils.plot_vars_syn(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 

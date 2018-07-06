@@ -18,6 +18,13 @@ import socket
 if (socket.gethostname()=='1080'):
     mpl.use("Agg")
 
+# Tune the plots appearance
+COLORS = [ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
+mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
+SMALL_SIZE = 8
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+
 
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
@@ -51,9 +58,9 @@ def set_dir(subdir):
     return current_dir
 
 
-def get_dic_from_var(dir, suffix=""):
+def get_dic_from_var(dir, name=""):
     """Get variables values into a dictionnary"""
-    file = '{}{}/{}_{}.txt'.format(RES_DIR, dir, OUT_PARAMS, suffix)
+    file = '{}{}/{}_{}.txt'.format(RES_DIR, dir, OUT_PARAMS, name)
     dic = {}
     with open(file, 'r') as f:
         for line in f:
@@ -67,9 +74,14 @@ def get_dic_from_var(dir, suffix=""):
                 dic[m.group(1)] = float(m.group(2))
     return dic
 
+def save_show(show, save, name='', dpi=100):
+    if (save):
+        plt.savefig('{}{}.png'.format(current_dir,name), dpi=dpi)
+    if (show):
+        plt.show()
 
 def bar(ax, var):
-    ax.bar(x=range(len(var)), height=var, color=matplotlib.rcParams['axes.prop_cycle'])
+    ax.bar(x=range(len(var)), height=var, color=COLORS)
 def plot(ax, var):
     ax.plot(var, linewidth=0.5)
 def boxplot(ax, var):
@@ -92,10 +104,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     labels = MEMB
     box(var_dic, cols, labels)
     plt.title('Membrane')
-    if (save):
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'Membrane', suffix), dpi=300)
-    if (show):
-        plt.show()
+    save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
 
     plt.figure()
     plt.subplot(211)
@@ -105,10 +114,7 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     box(var_dic, ['b'], ['decay_ca'])  # , 'b')
     plt.title('Decay_ca')
     plt.tight_layout()
-    if (save):
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'CalciumPump', suffix), dpi=300)
-    if (show):
-        plt.show()
+    save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
 
     plt.figure()
     for i, type in enumerate(['mdp', 'scale', 'tau']):
@@ -119,27 +125,28 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
         if(type=='tau'):
             labels = ['h__alpha' if x=='h__tau' else x for x in labels]
         box(var_dic, cols, labels)
-    if (save):
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'Rates', suffix), dpi=300)
-    if (show):
-        plt.show()
+    save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
     plt.close()
 
 def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
     """plot variation/comparison/boxplots of synaptic variables"""
-    plt.figure()
     if(list(var_dic.values())[0].ndim > 2):
-        var_dic = dict([(var, np.reshape(val, (val.shape[0], -1))) for var, val in var_dic.items()])
-    for i,var in enumerate(['G', 'mdp', 'E', 'scale']):
-        plt.subplot(2,2,i+1)
-        func(plt, var_dic[var])
-        plt.ylabel(var)
-    plt.tight_layout()
-    if (save):
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'Synapses', suffix), dpi=300)
-    if (show):
-        plt.show()
-    plt.close()
+        # TODO
+        var_dic = {var: np.reshape(val, (val.shape[0], -1)) for var, val in var_dic.items()}
+    for i in var_dic['E'].shape[0]:
+        var_d = {var: val[i] for var, val in var_dic.items()}
+        plt.figure()
+        labels = ['G', 'mdp', 'E', 'scale']
+        if func == box:
+            func(var_d, COLORS[:len(labels)], labels)
+        else:
+            for i,var in enumerate(labels):
+                plt.subplot(2,2,i+1)
+                func(plt, var_d[var])
+                plt.ylabel(var)
+        plt.tight_layout()
+        save_show(show, save, name='Synapses_i{}'.format(suffix), dpi=300)
+        plt.close()
 
 
 
@@ -154,10 +161,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
                    var_dic['h__alpha'], fig, grid[5], False, func=func)
     plt.tight_layout()
-    if save:
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'Rates', suffix), dpi=300)
-    if show:
-        plt.show()
+    save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
 
     fig = plt.figure()
     grid = plt.GridSpec(1, 2)
@@ -179,10 +183,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
         ax.yaxis.tick_right()
         fig.add_subplot(ax)
     plt.tight_layout()
-    if save:
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'Membrane', suffix), dpi=300)
-    if show:
-        plt.show()
+    save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
 
     plt.figure()
     ax = plt.subplot(211)
@@ -191,10 +192,7 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     ax = plt.subplot(212)
     func(ax, var_dic['decay_ca'])#, 'b')
     plt.ylabel('Decay_ca')
-    if (save):
-        plt.savefig('{}var_{}_{}.png'.format(current_dir, 'CalciumPump', suffix), dpi=300)
-    if (show):
-        plt.show()
+    save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
 
     plt.close('all')
 
@@ -212,6 +210,7 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
         if(i==0):
             ax.set_title(name)
         fig.add_subplot(ax)
+
 
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
     """plot multiple voltages and Ca2+ concentration"""
@@ -250,13 +249,12 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
-    if (save):
-        plt.savefig('{}{}output_{}.png'.format(current_dir, IMG_DIR, suffix))
-    if (show):
-        plt.show()
+    save_show(show, save, IMG_DIR+'output_%s'%suffix)
     plt.close()
 
-def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show=True, save=False, l=1, lt=1, targstyle='-'):
+
+def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show=True, save=False, l=1, lt=1,
+                        targstyle='-'):
     """
     plot voltage and ion concentrations, potentially compared to a target model
     Parameters
@@ -276,7 +274,7 @@ def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show
 
     if(states.ndim > 3):
         states = np.reshape(states, (states.shape[0], states.shape[1], -1))
-        y_states = np.reshape(y_states, (y_states.shape[0], y_states.shape[1], -1))
+        y_states = [np.reshape(y, (y.shape[0], -1)) if y is not None else None for y in y_states]
 
     # Plot voltage
     plt.subplot(nb_plots, 1, 1)
@@ -302,13 +300,11 @@ def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
-    if save:
-        plt.savefig('{}{}output_{}.png'.format(current_dir, IMG_DIR, suffix))
-    if show:
-        plt.show()
+    save_show(show, save, IMG_DIR+'output_%s'%suffix)
     plt.close()
 
-def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
+
+def plots_ica_from_v(ts, V, results, name="ica", show=True, save=False):
     """plot i_ca and Ca conc depending on the voltage"""
     ica = results[:, 0]
     e = results[:, 1]
@@ -339,13 +335,11 @@ def plots_ica_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    if save:
-        plt.savefig('{}results_ica_{}.png'.format(current_dir, suffix))
-    if show:
-        plt.show()
+    save_show(show, save, name)
     plt.close()
 
-def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
+
+def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
     """plot i_k depending on the voltage"""
     ik = results[:, 0]
     p = results[:, 1]
@@ -371,9 +365,6 @@ def plots_ik_from_v(ts, V, results, suffix="", show=True, save=False):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    if (save):
-        plt.savefig('{}results_ik_{}.png'.format(current_dir, suffix))
-    if (show):
-        plt.show()
+    save_show(show, save, name)
     plt.close()
 

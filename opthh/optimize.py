@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 
-from .utils import OUT_SETTINGS, set_dir, OUT_PARAMS
+from .utils import OUT_SETTINGS, IMG_DIR
 from . import utils
 import pylab as plt
 
@@ -67,6 +67,9 @@ class Optimized(ABC):
     def todump(self, sess):
         return []
 
+    def study_vars(self, p):
+        pass
+
 
 class Optimizer(ABC):
     min_loss = 1.
@@ -75,7 +78,8 @@ class Optimizer(ABC):
         self.start_time = time.time()
         self.optimized = optimized
         self.parallel = self.optimized.num
-        self._epochs = epochs
+        self.dir = None
+        self.loss = None
         self._frequency = frequency
         self._test_losses = None
         self._test = False
@@ -125,13 +129,13 @@ class Optimizer(ABC):
 
         self.saver = tf.train.Saver()
 
-    def _init(self, subdir, suffix, train, test, l_rate, w, yshape):
+    def _init(self, dir, suffix, train, test, l_rate, w, yshape):
         """
         Initialize directory and the object to be optimized, get the dataset, write settings in the directory
         and initialize placeholders for target output and results.
         """
+        self.dir = dir
         self.suffix = suffix
-        self.dir = set_dir(subdir + "/")
         tf.reset_default_graph()
         self.start_rate, self.decay_step, self.decay_rate = l_rate
 
@@ -182,30 +186,6 @@ class Optimizer(ABC):
                     self.optimized.settings())
 
 
-    def _train_and_gather(self, sess, i, losses, rates, vars):
-        """Train the model and collect loss, learn_rate and variables"""
-        V = self._V if self._V is not None else np.zeros(self._Ca.shape)
-        summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
-            self.xs_: self._X,
-            self.ys_: np.array([V, self._Ca])
-        })
-
-        self.tdb.add_summary(summ, i)
-
-        self.optimized.apply_constraints(sess)
-
-        with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-            for name, v in self.optimized.get_params():
-                v_ = sess.run(v)
-                f.write("{} : {}\n".format(name, v_))
-                vars[name][i + 1] = v_
-
-        rates[i] = sess.run(self.learning_rate)
-        losses[i] = train_loss
-        if self.parallel > 1:
-            train_loss = np.nanmean(train_loss)
-        print("[{}] loss : {}".format(i, train_loss))
-        return results
 
     def _plots_dump(self, sess, losses, rates, vars, i):
         """Plot the variables evolution, the loss and saves it in a file"""
@@ -231,18 +211,25 @@ class Optimizer(ABC):
                                  save=True)
         return results
 
-    def optimize(self, subdir, train=None, test=None, w=[1, 0], l_rate=[0.1, 9, 0.92], suffix='', step='',
-                 reload=False, reload_dir=None):
+    def plot_out(self, *args, **kwargs):
+        pass
+
+    def _build_loss(self, w):
+        pass
+
+    def optimize(self, dir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.1, 9, 0.92], suffix='', step='',
+                 reload=False, reload_dir=None, yshape=None, shapevars=None):
 
         print(suffix, step)
         T, X, V, Ca = train
+        res_targ = [V, Ca]
         if test is not None:
             T_test, X_test, V_test, Ca_test = test
+            res_targ_test = [V_test, Ca_test]
 
-        yshape = [2, None, None]
         if reload_dir is None:
-            reload_dir = subdir
-        self._init(subdir, suffix, train, test, l_rate, w, yshape)
+            reload_dir = dir
+        self._init(dir, suffix, train, test, l_rate, w, yshape)
 
         self._build_loss(w)
         self._build_train()
@@ -250,86 +237,101 @@ class Optimizer(ABC):
 
         with tf.Session() as sess:
 
+            Vt = self._V if self._V is not None else np.zeros(self._Ca.shape)
+
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
 
             sess.run(tf.global_variables_initializer())
-            losses = np.zeros((self._epochs, self.parallel))
-            rates = np.zeros(self._epochs)
+            losses = np.zeros((epochs, self.parallel))
+            rates = np.zeros(epochs)
 
             if reload:
                 """Get variables and measurements from previous steps"""
-                self.saver.restore(sess, '%s/%s' % (utils.RES_DIR + reload_dir, SAVE_PATH))
-                with open(utils.RES_DIR + reload_dir + '/' + FILE_LV, 'rb') as f:
+                self.saver.restore(sess, '%s/%s' % (reload_dir, SAVE_PATH + suffix))
+                with open(reload_dir + '/' + FILE_LV + suffix, 'rb') as f:
                     l, self._test_losses, r, vars = pickle.load(f)
                 losses = np.concatenate((l, losses))
                 rates = np.concatenate((r, rates))
-                sess.run(tf.assign(self.global_step, 200))
+                # sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
                 vars = {var : [val] for var, val in self.optimized.init_p.items()}
                 len_prev = 0
 
-            vars = dict([(var, np.vstack((val, np.zeros((self._epochs, self.parallel))))) for var, val in vars.items()])
+            vars = dict([(var, np.vstack((val, np.zeros(shapevars)))) for var, val in vars.items()])
 
-            for i in tqdm(range(self._epochs)):
-                results = self._train_and_gather(sess, len_prev + i, losses, rates, vars)
+            for j in tqdm(range(epochs)):
+                i = len_prev + j
+                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
+                    self.xs_: self._X,
+                    self.ys_: np.array([Vt, self._Ca])
+                })
 
-                # if losses[len_prev+i]<self.min_loss:
-                #     self.plots_dump(sess, losses, rates, vars, len_prev + i)
-                #     return i+len_prev
+                self.tdb.add_summary(summ, i)
 
-                # for b in range(self.n_batch):
-                #     plots_output_double(self._T, X[:, b], results[:, V_pos, b], V[:, b], results[:, Ca_pos, b],
-                #                         Ca[:, b], suffix='%s_train%s_%s_%s' % (suffix, b, step, i + 1), show=False,
-                #                         save=True, l=0.7, lt=2)
-                #
-                # if i % self._frequency == 0 or i == self._epochs - 1:
-                #     res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
-                #     if res_test is not None:
-                #         for b in range(self.n_batch):
-                #             plots_output_double(self._T, X_test[:, b], res_test[:, V_pos, b], V_test[:, b], res_test[:, Ca_pos, b],
-                #                                 Ca_test[:, b], suffix='%s_test%s_%s_%s' % (suffix, b, step, i + 1),
-                #                                 show=False,
-                #                                 save=True, l=0.7, lt=2)
+                self.optimized.apply_constraints(sess)
+
+                # with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
+                for name, v in self.optimized.get_params():
+                    v_ = sess.run(v)
+                    # f.write("{} : {}\n".format(name, v_))
+                    vars[name][i + 1] = v_
+
+                rates[i] = sess.run(self.learning_rate)
+                losses[i] = train_loss
+                if self.parallel > 1:
+                    train_loss = np.nanmean(train_loss)
+                print("[{}] loss : {}".format(i, train_loss))
+
+                self.plot_out(X, results, res_targ, suffix, step, 'train', i)
+
+                if i % self._frequency == 0 or j == epochs - 1:
+                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
+                    if res_test is not None:
+                        self.plot_out(X, results, res_targ_test, suffix, step, 'test', i)
 
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))
 
-        return -1
+        # plot evolution of variables
+        p = get_vars(self.dir)
+        self.optimized.study_vars(p)
+        return self.optimized
 
 
 
 
 def get_vars(dir, i=-1):
     """get dic of vars from dumped file"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
+    file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        l,r,dic = pickle.load(f)
+        dic = pickle.load(f)[-1]
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 
 
 def get_vars_all(dir, i=-1):
     """get dic of vars from dumped file"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
+    file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        l,r,dic = pickle.load(f)
+        dic = pickle.load(f)[-1]
         dic = dict([(var, val[:i]) for var, val in dic.items()])
     return dic
 
 
 def get_best_result(dir, i=-1):
     """Return parameters of the best optimized model"""
-    file = utils.RES_DIR + dir + '/' + FILE_LV
+    file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        l, r, dic = pickle.load(f)
+        l = pickle.load(f)[0]
+        dic = pickle.load(f)[-1]
         idx = np.nanargmin(l[-1])
         dic = dict([(var, val[i,idx]) for var, val in dic.items()])
     return dic
 
 
-def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=True, save=False):
+def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=False, save=True):
     """plot loss (log10) and learning rate"""
     plt.figure()
 
@@ -364,8 +366,4 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
     plt.plot(rates)
     plt.ylabel('Learning rate')
 
-    if save:
-        plt.savefig('{}losses_{}.png'.format(utils.current_dir, suffix), dpi=300)
-    if show:
-        plt.show()
-    plt.close()
+    utils.save_show(show, save, name='losses_{}'.format(suffix), dpi=300)

@@ -237,7 +237,6 @@ class NeuronLSTM(Optimized, MODEL):
         sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
-
 class NeuronFix(MODEL):
     """
     Class representing a neuron, implemented only in Python

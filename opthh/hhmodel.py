@@ -229,44 +229,21 @@ class HodgkinHuxley(Model):
         q = self.inf(cac, 'h')
         return 1 + (q - 1) * self._param['h__alpha']
 
-    def g_Ca(self, e, f, h):
-        return self._param['g_Ca'] * e ** 2 * f * h
-
     def I_Ca(self, V, e, f, h):
-        """
-        Membrane current (in uA/cm^2)
-        Calcium (Ca = element name)
-        """
+        """Membrane current (in uA/cm^2) for Calcium"""
         return self._param['g_Ca'] * e ** 2 * f * h * (V - self._param['E_Ca'])
 
-    def g_Kf(self, p, q):
-        return self._param['g_Kf'] * p ** 4 * q
-
     def I_Kf(self, V, p, q):
-        """
-        Membrane current (in uA/cm^2)
-        Potassium (K = element name)
-        """
+        """Membrane current (in uA/cm^2) for Potassium"""
         return self._param['g_Kf'] * p ** 4 * q * (V - self._param['E_K'])
 
-    def g_Ks(self, n):
-        return self._param['g_Ks'] * n
-
     def I_Ks(self, V, n):
-        """
-        Membrane current (in uA/cm^2)
-        Potassium (K = element name)
-        """
+        """Membrane current (in uA/cm^2) for Potassium"""
         return self._param['g_Ks'] * n * (V - self._param['E_K'])
 
-    #  Leak
     def I_L(self, V):
-        """
-        Membrane current (in uA/cm^2)
-        Leak
-        """
+        """Membrane leak current (in uA/cm^2)"""
         return self._param['g_L'] * (V - self._param['E_L'])
-
 
     def step(self, X, i_inj):
         """
@@ -314,7 +291,7 @@ class HodgkinHuxley(Model):
         else:
             return np.array([V, p, q, n, e, f, cac])
 
-    def plot_results(self, ts, i_inj_values, results, ca_true=None, dir='.', suffix="", show=True, save=False):
+    def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
         """plot all dynamics"""
         V = results[:, 0]
         p = results[:, 1]
@@ -372,10 +349,7 @@ class HodgkinHuxley(Model):
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
         # plt.ylim(-1, 40)
 
-        if save:
-            plt.savefig('{}results_{}.png'.format(utils.current_dir, suffix), dpi=300)
-        if show:
-            plt.show()
+        utils.save_show(show, save, name='Results_{}'.format(suffix), dpi=300)
         plt.close()
 
     @staticmethod
@@ -392,6 +366,13 @@ class HodgkinHuxley(Model):
         """Plot functions for the parameters"""
         return utils.plot_vars(*args, **kwargs)
 
+    boxplot_vars = utils.boxplot_vars
+    """Plot functions for the parameters"""
+
+    @staticmethod
+    def study_vars(p):
+        HodgkinHuxley.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+        HodgkinHuxley.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
     @staticmethod
     def ica_from_v(X, v_fix, self):

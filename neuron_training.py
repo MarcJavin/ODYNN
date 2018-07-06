@@ -107,7 +107,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
-    utils.set_dir(dir)
+    dir = utils.set_dir(dir)
     param = optimize.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim = NeuronSimul(init_p=param, t=t, i_inj=i_)
@@ -129,19 +129,26 @@ def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
         sim.comp_pars_targ(param, default, show=show, save=True, suffix='test%s' % j)
 
 
-def alternate(name=''):
+def alternate(name='', suffix='', lstm=True):
     dir = 'Integcomp_alternate_%s' % name
+    wv = 1
+    wca = 0
+    if (lstm):
+        dir += '_lstm'
+        neur = NeuronLSTM(dt=dt)
+        l_rate = [0.01, 9, 0.95]
+        opt = NeuronOpt(neur)
+    else:
+        l_rate = [1., 9, 0.92]
+        opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
     sim = NeuronSimul(t=t, i_inj=i_inj)
     train = sim.simul(show=False, suffix='train')
-    wv = 0.2
-    wca = 0.8
-    opt = NeuronOpt(init_p=pars, epochs=20, dt=dt)
-    opt.optimize(dir, train=train, w=[wv, wca], step=0)
-    for i in range(24):
-        wv = 1 - wv
-        wca = 1 - wca
-        n = opt.optimize(dir, train=train, w=[wv, wca], reload=True, step=i + 1)
+    opt.optimize(dir, suffix=suffix, train=train, w=[wv, wca], epochs=300, step=0, l_rate=l_rate)
+    for i in range(40):
+        wv -= 1./50
+        wca += 1./50
+        n = opt.optimize(dir, suffix=suffix, train=train, w=[wv, wca], epochs=10, l_rate=l_rate, reload=True, step=i + 1)
     comp_pars(dir, n)
     test_xp(dir)
 
@@ -157,7 +164,7 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
         l_rate = [0.01, 9, 0.95]
-        opt = NeuronOpt(neur, epochs=700)
+        opt = NeuronOpt(neur)
     else:
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
@@ -177,7 +184,7 @@ def real_data(name, suffix='', lstm=True):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
         l_rate = [0.01, 9, 0.95]
-        opt = NeuronOpt(neur, epochs=700)
+        opt = NeuronOpt(neur)
     else:
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
@@ -192,8 +199,8 @@ def real_data(name, suffix='', lstm=True):
 
 
 def comp_pars(dir, i=-1):
+    dir = utils.set_dir(dir)
     p = optimize.get_vars(dir, i)
-    utils.set_dir(dir)
     utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     utils.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
@@ -229,7 +236,7 @@ if __name__ == '__main__':
         suf = ''
     if (xp == 'alt'):
         name = sys.argv[2]
-        alternate(name)
+        alternate(name, suffix=suf)
     elif (xp == 'cac'):
         name = sys.argv[2]
         classic(name, wv=0, wca=1, suffix=suf)

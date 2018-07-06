@@ -119,6 +119,13 @@ class Circuit:
     def plot_vars(*args, **kwargs):
         return utils.plot_vars_syn(*args, **kwargs)
 
+    plot_output = NeuronTf.plot_output
+
+    @staticmethod
+    def study_vars(p):
+        Circuit.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+        Circuit.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
+
 
 class CircuitTf(Circuit, Optimized):
 

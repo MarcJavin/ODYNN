@@ -32,11 +32,16 @@ class NeuronSimul():
         print("Simulation time : ", time.time() - start)
         neurons.plot_output(self.t, self.i_inj, X, show=show, save=save)
 
-    def comp_pars_targ(self, p, suffix='', save=False, show=True):
+    def comp_pars_targ(self, p, p_targ, suffix='', save=False, show=True):
         """Compare parameter sets with a target"""
+        if(isinstance(p, list)):
+            p.append(p_targ)
+        else:
+            p = [p, p_targ]
         start = time.time()
         neurons = NeuronFix(init_p=p, dt=self.dt)
         X = neurons.calculate(self.i_inj)
+        print(X.shape)
         print("Simulation time : ", time.time() - start)
         neurons.plot_output(self.t, self.i_inj, X[:, :, :-1], X[:, :, -1], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 

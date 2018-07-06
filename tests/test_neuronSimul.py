@@ -17,7 +17,7 @@ class TestNeuronSimul(TestCase):
         self.sim.comp_pars(self.pars5, show=False)
 
     def test_comp_targ(self):
-        self.sim.comp_pars_targ(self.pars5, show=False)
+        self.sim.comp_pars_targ(self.pars5, self.pars, show=False)
 
     def test_Sim(self):
         self.sim.simul()
