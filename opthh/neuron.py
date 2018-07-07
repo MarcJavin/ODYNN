@@ -150,6 +150,44 @@ class NeuronLSTM(Optimized, MODEL):
 
     def build_graph(self, batch=None):
         tf.reset_default_graph()
+        xshape = [None, None]
+        if batch is None:
+            batch = 1
+
+        curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        with tf.variable_scope('prelayer'):
+            input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
+
+        for layer in range(self._hidden_layer_nb):
+            input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(layer))
+
+        v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
+        input = v_outputs
+
+        if self._extra_ca > 0:
+            for layer in range(self._extra_ca):
+                input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(self._hidden_layer_nb+layer+1))
+
+        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
+
+
+        with tf.name_scope('Scale'):
+            V = v_outputs[:, :, 0] * self._scale_v + self._rest_v
+            Ca = ca_outputs[:, :, -1] * self._scale_ca
+            results = tf.stack([V, Ca], axis=1)
+
+        return curs_, results
+
+    @staticmethod
+    def _lstm_cell(size, input, batch, scope):
+        with tf.variable_scope(scope):
+            cell = tf.nn.rnn_cell.LSTMCell(size, use_peepholes=True, state_is_tuple=True)
+            initializer = cell.zero_state(batch, dtype=tf.float32)
+            return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
+
+
+    def build_graph2(self, batch=None):
+        tf.reset_default_graph()
         self.reset()
         xshape = [None, None]
         if batch is None:
@@ -207,7 +245,7 @@ class NeuronLSTM(Optimized, MODEL):
 
     def todump(self, sess):
         """Informations to save to retrieve the object later"""
-        vars = {v.name: sess.run(v) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables}
+        vars = {v.name: sess.run(v) for v in tf.trainable_variables()}#self._ca_net.trainable_variables+self._volt_net.trainable_variables}
         return {'dt' : self.dt,
                 '_max_cur': self._max_cur,
                 '_rest_v': self._rest_v,
