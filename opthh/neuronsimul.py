@@ -25,7 +25,16 @@ class NeuronSimul():
         self.i_inj = i_inj
 
     def comp_pars(self, ps, show=True, save=False):
-        """Compare different parameter sets on the same experiment"""
+        """Compare different parameter sets on the same experiment
+
+        Args:
+          ps: 
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+
+        Returns:
+
+        """
         start = time.time()
         neurons = NeuronFix(init_p=ps, dt=self.dt)
         X = neurons.calculate(self.i_inj)
@@ -33,7 +42,18 @@ class NeuronSimul():
         neurons.plot_output(self.t, self.i_inj, X, show=show, save=save)
 
     def comp_pars_targ(self, p, p_targ, suffix='', save=False, show=True):
-        """Compare parameter sets with a target"""
+        """Compare parameter sets with a target
+
+        Args:
+          p: 
+          p_targ: 
+          suffix:  (Default value = '')
+          save(bool): If True, save the figure (Default value = False)
+          show(bool): If True, show the figure (Default value = True)
+
+        Returns:
+
+        """
         if(isinstance(p, list)):
             p.append(p_targ)
         else:
@@ -46,7 +66,16 @@ class NeuronSimul():
         neurons.plot_output(self.t, self.i_inj, X[:, :, :-1], X[:, :, -1], suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
     def comp_neurons(self, neurons, show=True, save=False):
-        """Compare different neurons on the same experiment"""
+        """Compare different neurons on the same experiment
+
+        Args:
+          neurons: 
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+
+        Returns:
+
+        """
         start = time.time()
         X = []
         for n in neurons:
@@ -56,7 +85,18 @@ class NeuronSimul():
         neurons[0].plot_output(self.t, self.i_inj, X, show=show, save=save)
 
     def comp_neuron_trace(self, neuron, trace, scale=False, show=True, save=False):
-        """Compare a neuron with a given measured trace"""
+        """Compare a neuron with a given measured trace
+
+        Args:
+          neuron: 
+          trace: 
+          scale:  (Default value = False)
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+
+        Returns:
+
+        """
         start = time.time()
         X = neuron.calculate(self.i_inj)
         print("Simulation time : ", time.time() - start)
@@ -69,8 +109,17 @@ class NeuronSimul():
 
     """Runs and plot the neuron"""
     def simul(self, dump=False, suffix='', show=False, save=True, ca_true=None):
-        """
-        Main demo for the Hodgkin Huxley neuron model
+        """Main demo for the Hodgkin Huxley neuron model
+
+        Args:
+          dump:  (Default value = False)
+          suffix:  (Default value = '')
+          show(bool): If True, show the figure (Default value = False)
+          save:  (Default value = True)
+          ca_true:  (Default value = None)
+
+        Returns:
+
         """
         start = time.time()
 

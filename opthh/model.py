@@ -1,30 +1,33 @@
 """
-.. module:: model
-    :synopsis: Module containing basic model abstract class
+.. module:: cls
+    :synopsis: Module containing basic cls abstract class
 
 .. moduleauthor:: Marc Javin
 """
 
-
+import pylab as plt
 from abc import ABC, abstractmethod
 import numpy as np
+from . import utils
 
 
 
 
 class Model(ABC):
-    """
-    Abstract class to implement for using a new model
+    """Abstract class to implement for using a new cls
     All methods and class variables have to be implemented in order to have the expected behavior
+
+    Args:
+
+    Returns:
+
     """
     V_pos = 0
     """int, Default position of the voltage in state vectors"""
-    Ca_pos = -1
-    """int, Default position of the calcium concentration in state vectors"""
-    ions_in_state = {}
+    ions = {}
     """dictionnary, name of ions in the vector states and their positions"""
     default_params = None
-    """dict, Default set of parameters for the model"""
+    """dict, Default set of parameters for the cls"""
     _constraints_dic = None
     """dict, Constraints to be applied during optimization
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
@@ -33,19 +36,17 @@ class Model(ABC):
     """array, Initial values for the vector of state variables"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
-        """
-        Initialize the attributes
+        """Initialize the attributes
         Reshape the initial state and parameters for parallelization in case init_p is a list
 
-        Parameters
-        ----------
-        init_p : dict or list
-            Values of the parameters in a dictionnary
-            In case of a list, the instance will behave as a set of neurons
-        tensors : bool
-            In order to define functions in pure python or tensorflow
-        dt : float
-            timestep of the system
+        Args:
+          init_p:  (Default value = None)
+          tensors:  (Default value = False)
+          dt:  (Default value = 0.1)
+
+        Returns:
+
+        
         """
         if(init_p is None):
             init_p = self.default_params
@@ -61,45 +62,90 @@ class Model(ABC):
 
     @abstractmethod
     def step(self, X, i):
-        """
-        Integrate and update voltage after one time step
+        """Integrate and update voltage after one time step
 
-        Parameters
-        ----------
-        X : vector
-            State variables
-        i : float
-            Input current
+        Args:
+          X(vector): State variables
+          i(float): Input current
 
-        Returns
-        ----------
-        Vector with the same size as X containing the updated state variables
+        Returns:
+
+        
         """
         pass
 
     @staticmethod
     def get_random():
-        """Return a dictionnary with random parameters"""
+        """ """
         pass
 
     @staticmethod
     def plot_results(*args, **kwargs):
         pass
 
-    @staticmethod
-    def plot_output(t, i_inj, v, v_targ=None, ca=None, ca_targ=None, suffix='', show=False, save=False, l=1, lt=1, targstyle='-'):
-        pass
+    @classmethod
+    def plot_output(cls, ts, i_inj, states, y_states=None, suffix="", show=True, save=False, l=1, lt=1,
+                            targstyle='-'):
+        """plot voltage and ion concentrations, potentially compared to a target cls
+
+        Args:
+          ts(array of dimension [time]): time steps of the measurements
+          i_inj(array of dimension [time]): 
+          states(array of dimension [time, state_var, nb_neuron]): 
+          y_states(array of dimension [time, state_var], optional):  (Default value = None)
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+          l:  (Default value = 1)
+          lt:  (Default value = 1)
+          targstyle:  (Default value = '-')
+
+        Returns:
+
+
+        """
+        plt.figure()
+        nb_plots = len(cls.ions) + 2
+
+        if (states.ndim > 3):
+            states = np.reshape(states, (states.shape[0], states.shape[1], -1))
+            y_states = [np.reshape(y, (y.shape[0], -1)) if y is not None else None for y in y_states]
+
+        # Plot voltage
+        plt.subplot(nb_plots, 1, 1)
+        plt.plot(ts, states[:, cls.V_pos], linewidth=l)
+        if y_states is not None:
+            if y_states[:][cls.V_pos] is not None:
+                plt.plot(ts, y_states[:][cls.V_pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
+                plt.legend()
+        plt.ylabel('Voltage (mV)')
+
+        for ion, pos in cls.ions.items():
+            plt.subplot(nb_plots, 1, 2)
+            plt.plot(ts, states[:, pos], linewidth=l)
+            if y_states is not None:
+                if y_states[:][pos] is not None:
+                    plt.plot(ts, y_states[:][pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
+                    plt.legend()
+            plt.ylabel('[{}]'.format(ion))
+
+        plt.subplot(nb_plots, 1, nb_plots)
+        plt.plot(ts, i_inj, 'b')
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+
+        utils.save_show(show, save, utils.IMG_DIR + 'output_%s' % suffix)
+        plt.close()
 
     @abstractmethod
     def calculate(self, i):
-        """
-        Iterate over i (current) and return the state variables obtained after each step
-        Parameters
-        ---------
-        i : array
-            array of successive input current to the neuron
-        Returns
-        ---------
-        Array of dimension [len(i), len(init_state)]
+        """Iterate over i (current) and return the state variables obtained after each step
+
+        Args:
+          i(array): 
+
+        Returns:
+
+        
         """
         pass

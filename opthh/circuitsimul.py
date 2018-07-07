@@ -17,10 +17,7 @@ import time
 
 
 class CircuitSimul():
-    """
-    Simulation of a neuron circuit
-
-    """
+    """Simulation of a neuron circuit"""
 
     def __init__(self, inits_p, conns, t, i_injs, dt=0.1):
         assert(dt == t[1] - t[0])
@@ -41,6 +38,14 @@ class CircuitSimul():
         return self.circuit.step(None, curs)
 
     def calculate(self, i_inj):
+        """Simulate the circuit with a given input current.
+
+        Args:
+            i_inj(array): input current
+
+        Returns:
+            array, array: state vector and synaptical currents
+        """
         self.circuit._neurons.reset()
         states = np.zeros((np.hstack((len(self.t), self.circuit._neurons._init_state.shape))))
         curs = np.zeros(i_inj.shape)
@@ -54,7 +59,19 @@ class CircuitSimul():
         return states, curs
 
     def simul(self, n_out, dump=False, suffix='', show=False, save=True):
-        """runs the entire simulation"""
+        """runs the entire simulation
+
+        Args:
+          n_out(list): neurons to register
+          dump(bool): If True, dump the measurement (Default value = False)
+          suffix(str): suffix for the figure files (Default value = '')
+          show(bool): If True, show the figure (Default value = False)
+          save(bool): If True, save the figure (Default value = True)
+
+        Returns:
+            str or list: If dump, return the file name,
+            otherwise, return the measurements as a list [time, input, voltage, calcium]
+        """
         #[(batch,) time, state, neuron]
         start = time.time()
         states, curs = self.calculate(self.i_injs)

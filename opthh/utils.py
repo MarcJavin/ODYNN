@@ -47,7 +47,14 @@ MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
 
 def set_dir(subdir):
-    """Set directory to save files"""
+    """Set directory to save files
+
+    Args:
+      subdir: 
+
+    Returns:
+
+    """
     global current_dir
     current_dir = RES_DIR + subdir + '/'
     if not os.path.exists(current_dir):
@@ -59,7 +66,15 @@ def set_dir(subdir):
 
 
 def get_dic_from_var(dir, name=""):
-    """Get variables values into a dictionnary"""
+    """Get variables values into a dictionnary
+
+    Args:
+      dir: 
+      name:  (Default value = "")
+
+    Returns:
+
+    """
     file = '{}{}/{}_{}.txt'.format(RES_DIR, dir, OUT_PARAMS, name)
     dic = {}
     with open(file, 'r') as f:
@@ -129,7 +144,18 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     plt.close()
 
 def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
-    """plot variation/comparison/boxplots of synaptic variables"""
+    """plot variation/comparison/boxplots of synaptic variables
+
+    Args:
+      var_dic: 
+      suffix:  (Default value = "")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+      func:  (Default value = plot)
+
+    Returns:
+
+    """
     if(list(var_dic.values())[0].ndim > 2):
         # TODO
         var_dic = {var: np.reshape(val, (val.shape[0], -1)) for var, val in var_dic.items()}
@@ -151,7 +177,18 @@ def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
 
 
 def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
-    """plot variation/comparison/boxplots of all variables organized by categories"""
+    """plot variation/comparison/boxplots of all variables organized by categories
+
+    Args:
+      var_dic: 
+      suffix:  (Default value = "")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+      func:  (Default value = plot)
+
+    Returns:
+
+    """
     fig = plt.figure()
     grid = plt.GridSpec(2, 3)
     for nb in range(len(GATES)):
@@ -197,7 +234,21 @@ def plot_vars(var_dic, suffix="", show=True, save=False, func=plot):
     plt.close('all')
 
 def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
-    """plot the gates variables"""
+    """plot the gates variables
+
+    Args:
+      name: 
+      mdp: 
+      scale: 
+      tau: 
+      fig: 
+      pos: 
+      labs: 
+      func:  (Default value = plot)
+
+    Returns:
+
+    """
     subgrid = gridspec.GridSpecFromSubplotSpec(3,1,pos, hspace=0.1)
     vars = [('Midpoint',mdp), ('Scale',scale), ('Tau',tau)]
     for i, var in enumerate(vars):
@@ -213,7 +264,22 @@ def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=plot):
 
 
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
-    """plot multiple voltages and Ca2+ concentration"""
+    """plot multiple voltages and Ca2+ concentration
+
+    Args:
+      ts: 
+      i_inj: 
+      Vs: 
+      Cacs: 
+      i_syn:  (Default value = None)
+      labels:  (Default value = None)
+      suffix:  (Default value = "")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+
+    Returns:
+
+    """
     plt.figure()
 
     if (Vs.ndim > 2):
@@ -253,59 +319,20 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.close()
 
 
-def plots_output_double(model, ts, i_inj, states, y_states=None, suffix="", show=True, save=False, l=1, lt=1,
-                        targstyle='-'):
-    """
-    plot voltage and ion concentrations, potentially compared to a target model
-    Parameters
-    -----------
-    ts : array of dimension [time]
-        time steps of the measurements
-    i_inj : array of dimension [time]
-    states : array of dimension [time, state_var, nb_neuron]
-    y_states : array of dimension [time, state_var]
-        values for the target model
-    Returns
-    -----------
-    Nothing
-    """
-    plt.figure()
-    nb_plots = len(model.ions_in_state) + 2
-
-    if(states.ndim > 3):
-        states = np.reshape(states, (states.shape[0], states.shape[1], -1))
-        y_states = [np.reshape(y, (y.shape[0], -1)) if y is not None else None for y in y_states]
-
-    # Plot voltage
-    plt.subplot(nb_plots, 1, 1)
-    plt.plot(ts, states[:,model.V_pos], linewidth=l)
-    if y_states is not None:
-        if y_states[:][model.V_pos] is not None:
-            plt.plot(ts, y_states[:][model.V_pos], 'r', linestyle=targstyle, linewidth=lt, label='target model')
-            plt.legend()
-    plt.ylabel('Voltage (mV)')
-
-    for ion, pos in model.ions_in_state.items():
-        plt.subplot(nb_plots, 1, 2)
-        plt.plot(ts, states[:,pos], linewidth=l)
-        if y_states is not None:
-            if y_states[:][pos] is not None:
-                plt.plot(ts, y_states[:][pos], 'r', linestyle=targstyle, linewidth=lt, label='target model')
-                plt.legend()
-        plt.ylabel('[{}]'.format(ion))
-
-
-    plt.subplot(nb_plots, 1, nb_plots)
-    plt.plot(ts, i_inj, 'b')
-    plt.xlabel('t (ms)')
-    plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
-
-    save_show(show, save, IMG_DIR+'output_%s'%suffix)
-    plt.close()
-
-
 def plots_ica_from_v(ts, V, results, name="ica", show=True, save=False):
-    """plot i_ca and Ca conc depending on the voltage"""
+    """plot i_ca and Ca conc depending on the voltage
+
+    Args:
+      ts: 
+      V: 
+      results: 
+      name:  (Default value = "ica")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+
+    Returns:
+
+    """
     ica = results[:, 0]
     e = results[:, 1]
     f = results[:, 2]
@@ -340,7 +367,19 @@ def plots_ica_from_v(ts, V, results, name="ica", show=True, save=False):
 
 
 def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
-    """plot i_k depending on the voltage"""
+    """plot i_k depending on the voltage
+
+    Args:
+      ts: 
+      V: 
+      results: 
+      name:  (Default value = "ik")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+
+    Returns:
+
+    """
     ik = results[:, 0]
     p = results[:, 1]
     q = results[:, 2]

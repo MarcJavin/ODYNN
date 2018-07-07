@@ -23,9 +23,7 @@ FILE_OBJ = 'tmp/optimized'
 
 
 class Optimized(ABC):
-    """
-    Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit.
-    """
+    """Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit."""
 
     def __init__(self, dt, init_p={}):
         self.dt = dt
@@ -33,35 +31,46 @@ class Optimized(ABC):
 
     @abstractmethod
     def build_graph(self):
-        """
-        Build the tensorflow graph. Take care of the loop and the initial state.
-        Returns
-        -------
-        tf.placeholder, for input current.
-        """
+        """Build the tensorflow graph. Take care of the loop and the initial state."""
         pass
 
     @abstractmethod
     def settings(self):
-        """
-        Return a string describing the parameters of the object
-        """
+        """ """
         pass
 
     @staticmethod
     def plot_vars(var_dic, suffix, show, save):
-        """A function to plot the variables of the optimized object"""
+        """A function to plot the variables of the optimized object
+
+        Args:
+          var_dic: 
+          suffix: 
+          show: 
+          save: 
+
+        Returns:
+
+        """
         pass
 
     def apply_constraints(self, session):
-        """Return a tensorflow operation applying constraints to the variables"""
+        """
+
+        Args:
+          session: 
+
+        Returns:
+          
+
+        """
         pass
 
     def apply_init(self, session):
         pass
 
     def get_params(self):
-        """Return the variables parameters names of the optimized object"""
+        """ """
         return []
 
     def todump(self, sess):
@@ -77,10 +86,10 @@ class Optimizer(ABC):
     def __init__(self, optimized, epochs=500, frequency=10):
         self.start_time = time.time()
         self.optimized = optimized
-        self.parallel = self.optimized.num
+        self._parallel = self.optimized.num
         self.dir = None
-        self.loss = None
-        self._frequency = frequency
+        self._loss = None
+        self.frequency = frequency
         self._test_losses = None
         self._test = False
 
@@ -101,12 +110,12 @@ class Optimizer(ABC):
         tf.summary.scalar("learning rate", self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
-        gvs = opt.compute_gradients(self.loss)
+        gvs = opt.compute_gradients(self._loss)
         grads, vars = zip(*gvs)
 
-        if self.parallel > 1:
+        if self._parallel > 1:
             grads_normed = []
-            for i in range(self.parallel):
+            for i in range(self._parallel):
                 # clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
                 # if isinstance(self.optimized, Circuit.Circuit):
@@ -130,9 +139,20 @@ class Optimizer(ABC):
         self.saver = tf.train.Saver()
 
     def _init(self, dir, suffix, train, test, l_rate, w, yshape):
-        """
-        Initialize directory and the object to be optimized, get the dataset, write settings in the directory
+        """Initialize directory and the object to be optimized, get the dataset, write settings in the directory
         and initialize placeholders for target output and results.
+
+        Args:
+          dir: 
+          suffix: 
+          train: 
+          test: 
+          l_rate: 
+          w: 
+          yshape: 
+
+        Returns:
+
         """
         self.dir = dir
         self.suffix = suffix
@@ -150,18 +170,18 @@ class Optimizer(ABC):
         self.n_batch = self._X.shape[1]
         self.write_settings(w)
 
-        if self.parallel > 1:
+        if self._parallel > 1:
             # add dimension for neurons trained in parallel
             # [time, n_batch, neuron]
-            self._X = np.stack([self._X for _ in range(self.parallel)], axis=self._X.ndim)
-            self._V = np.stack([self._V for _ in range(self.parallel)], axis=self._V.ndim)
-            self._Ca = np.stack([self._Ca for _ in range(self.parallel)], axis=self._Ca.ndim)
+            self._X = np.stack([self._X for _ in range(self._parallel)], axis=self._X.ndim)
+            self._V = np.stack([self._V for _ in range(self._parallel)], axis=self._V.ndim)
+            self._Ca = np.stack([self._Ca for _ in range(self._parallel)], axis=self._Ca.ndim)
 
             if self._test:
-                self._X_test = np.stack([self._X_test for _ in range(self.parallel)], axis=self._X_test.ndim)
-                self._V_test = np.stack([self._V_test for _ in range(self.parallel)], axis=self._V_test.ndim)
-                self._Ca_test = np.stack([self._Ca_test for _ in range(self.parallel)], axis=self._Ca_test.ndim)
-            yshape.append(self.parallel)
+                self._X_test = np.stack([self._X_test for _ in range(self._parallel)], axis=self._X_test.ndim)
+                self._V_test = np.stack([self._V_test for _ in range(self._parallel)], axis=self._V_test.ndim)
+                self._Ca_test = np.stack([self._Ca_test for _ in range(self._parallel)], axis=self._Ca_test.ndim)
+            yshape.append(self._parallel)
 
         self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name="voltage_Ca")
@@ -170,7 +190,14 @@ class Optimizer(ABC):
         print("i : ", self._X.shape)
 
     def write_settings(self, w):
-        """Write the settings of the optimization in a file"""
+        """Write the settings of the optimization in a file
+
+        Args:
+          w: 
+
+        Returns:
+
+        """
         show_shape = self._V
         if self._V is None:
             show_shape = self._Ca
@@ -188,10 +215,21 @@ class Optimizer(ABC):
 
 
     def _plots_dump(self, sess, losses, rates, vars, i):
-        """Plot the variables evolution, the loss and saves it in a file"""
+        """Plot the variables evolution, the loss and saves it in a file
+
+        Args:
+          sess: 
+          losses: 
+          rates: 
+          vars: 
+          i: 
+
+        Returns:
+
+        """
         results = None
         if self._test:
-            test_loss, results = sess.run([self.loss, self.res], feed_dict={
+            test_loss, results = sess.run([self._loss, self.res], feed_dict={
                 self.xs_: self._X_test,
                 self.ys_: np.array([self._V_test, self._Ca_test])
             })
@@ -243,7 +281,7 @@ class Optimizer(ABC):
                                              sess.graph)
 
             sess.run(tf.global_variables_initializer())
-            losses = np.zeros((epochs, self.parallel))
+            losses = np.zeros((epochs, self._parallel))
             rates = np.zeros(epochs)
 
             if reload:
@@ -263,7 +301,7 @@ class Optimizer(ABC):
 
             for j in tqdm(range(epochs)):
                 i = len_prev + j
-                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self.loss], feed_dict={
+                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict={
                     self.xs_: self._X,
                     self.ys_: np.array([Vt, self._Ca])
                 })
@@ -280,13 +318,13 @@ class Optimizer(ABC):
 
                 rates[i] = sess.run(self.learning_rate)
                 losses[i] = train_loss
-                if self.parallel > 1:
+                if self._parallel > 1:
                     train_loss = np.nanmean(train_loss)
                 print("[{}] loss : {}".format(i, train_loss))
 
                 self.plot_out(X, results, res_targ, suffix, step, 'train', i)
 
-                if i % self._frequency == 0 or j == epochs - 1:
+                if i % self.frequency == 0 or j == epochs - 1:
                     res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
                     if res_test is not None:
                         self.plot_out(X, results, res_targ_test, suffix, step, 'test', i)
@@ -303,7 +341,15 @@ class Optimizer(ABC):
 
 
 def get_vars(dir, i=-1):
-    """get dic of vars from dumped file"""
+    """get dic of vars from dumped file
+
+    Args:
+      dir: 
+      i:  (Default value = -1)
+
+    Returns:
+
+    """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         dic = pickle.load(f)[-1]
@@ -312,7 +358,15 @@ def get_vars(dir, i=-1):
 
 
 def get_vars_all(dir, i=-1):
-    """get dic of vars from dumped file"""
+    """get dic of vars from dumped file
+
+    Args:
+      dir: 
+      i:  (Default value = -1)
+
+    Returns:
+
+    """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         dic = pickle.load(f)[-1]
@@ -321,7 +375,16 @@ def get_vars_all(dir, i=-1):
 
 
 def get_best_result(dir, i=-1):
-    """Return parameters of the best optimized model"""
+    """
+
+    Args:
+      dir: 
+      i:  (Default value = -1)
+
+    Returns:
+      
+
+    """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
         l = pickle.load(f)[0]
@@ -332,7 +395,20 @@ def get_best_result(dir, i=-1):
 
 
 def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=False, save=True):
-    """plot loss (log10) and learning rate"""
+    """plot loss (log10) and learning rate
+
+    Args:
+      losses: 
+      rates: 
+      losses_test:  (Default value = None)
+      parallel:  (Default value = 1)
+      suffix:  (Default value = "")
+      show(bool): If True, show the figure (Default value = False)
+      save:  (Default value = True)
+
+    Returns:
+
+    """
     plt.figure()
 
     n_p = 2

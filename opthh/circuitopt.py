@@ -14,9 +14,7 @@ from .neuronopt import NeuronOpt
 
 
 class CircuitOpt(Optimizer):
-    """
-    Class for optimization of a neuron circuit
-    """
+    """Class for optimization of a neuron circuit"""
     dim_batch = 1
 
     def __init__(self, inits_p, conns, epochs=500, fixed=hhmodel.ALL, dt=0.1):
@@ -24,7 +22,12 @@ class CircuitOpt(Optimizer):
         Optimizer.__init__(self, self.circuit, epochs)
 
     def _build_loss(self, w):
-        """Define how to compute the loss"""
+        """Define self._loss
+
+        Args:
+          w(list): weights for the voltage and the ions concentrations
+
+        """
         out, ca = [], []
         for n in self.n_out:
             out.append(self.res[:, self.circuit._neurons.V_pos, :, n])
@@ -34,11 +37,21 @@ class CircuitOpt(Optimizer):
         losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[self.circuit._neurons.V_pos]))
         losses_ca = w[1] * tf.square(tf.subtract(ca, self.ys_[self.circuit._neurons.Ca_pos]))
         losses = losses_v + losses_ca
-        self.loss = tf.reduce_mean(losses, axis=[0, 1, 2])
+        self._loss = tf.reduce_mean(losses, axis=[0, 1, 2])
 
     @staticmethod
     def train_neuron(dir, opt, num, file):
-        """train 1 neuron"""
+        """train 1 neuron
+
+        Args:
+          dir: 
+          opt: 
+          num: 
+          file: 
+
+        Returns:
+
+        """
         wv = 0.2
         wca = 0.8
         suffix = 'neuron%s' % num
@@ -50,7 +63,14 @@ class CircuitOpt(Optimizer):
             opt.optimize(dir, [wv, wca], reload=True, epochs=20, suffix=suffix, step=i + 1, file=file)
 
     def opt_neurons(self, file):
-        """optimize only neurons 1 by 1"""
+        """optimize only neurons 1 by 1
+
+        Args:
+          file: 
+
+        Returns:
+
+        """
         for i in range(self.circuit._neurons.num):
             self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit._neurons.dt), i, file)
 
@@ -61,12 +81,29 @@ class CircuitOpt(Optimizer):
                                               suffix='trace%s%s_%s' % (name, b, i), show=False, save=True)
 
     def opt_circuits(self, subdir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.9, 9, 0.95], suffix='', n_out=[1],):
-        """optimize circuit parameters"""
+        """optimize circuit parameters
+
+        Args:
+          subdir: 
+          train:  (Default value = None)
+          test:  (Default value = None)
+          w:  (Default value = [1)
+          0]: 
+          epochs:  (Default value = 700)
+          l_rate:  (Default value = [0.9)
+          9: 
+          0.95]: 
+          suffix:  (Default value = '')
+          n_out:  (Default value = [1])
+
+        Returns:
+
+        """
         self.n_out = n_out
         yshape = [2, None, None, len(n_out)]
         shapevars = [epochs, self.circuit.n_synapse]
-        if self.parallel > 1:
-            shapevars.append(self.parallel)
+        if self._parallel > 1:
+            shapevars.append(self._parallel)
         Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, shapevars=shapevars)
 
                     #

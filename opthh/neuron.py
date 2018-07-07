@@ -18,9 +18,13 @@ MODEL = config.NEURON_MODEL
 
 
 class NeuronTf(MODEL, Optimized):
-    """
-    Class representing a neuron, implemented using Tensorflow.
+    """Class representing a neuron, implemented using Tensorflow.
     This class allows simulation and optimization
+
+    Args:
+
+    Returns:
+
     """
     nb = -1
 
@@ -56,7 +60,14 @@ class NeuronTf(MODEL, Optimized):
         # print('neuron_params after reset : ', self._param)
 
     def parallelize(self, n):
-        """Add a dimension of size n in the parameters"""
+        """Add a dimension of size n in the parameters
+
+        Args:
+          n: 
+
+        Returns:
+
+        """
         if self.num > 1:
             self.init_p = dict(
                 [(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
@@ -111,10 +122,8 @@ class NeuronTf(MODEL, Optimized):
         return self._param.items()
 
 
-class NeuronLSTM(Optimized, MODEL):
-    """
-    Behavior model of a neuron using an LSTM network
-    """
+class NeuronLSTM(Optimized, Model):
+    """Behavior model of a neuron using an LSTM network"""
     num = 1
 
     _max_cur = 60.
@@ -244,7 +253,14 @@ class NeuronLSTM(Optimized, MODEL):
                 )
 
     def todump(self, sess):
-        """Informations to save to retrieve the object later"""
+        """Informations to save to retrieve the object later
+
+        Args:
+          sess: 
+
+        Returns:
+
+        """
         vars = {v.name: sess.run(v) for v in tf.trainable_variables()}#self._ca_net.trainable_variables+self._volt_net.trainable_variables}
         return {'dt' : self.dt,
                 '_max_cur': self._max_cur,
@@ -258,7 +274,14 @@ class NeuronLSTM(Optimized, MODEL):
                 }
 
     def load(self, load):
-        """Load settings from a past object"""
+        """Load settings from a past object
+
+        Args:
+          load: 
+
+        Returns:
+
+        """
         self.dt = load['dt']
         self._max_cur = load['_max_cur']
         self._rest_v = load['_rest_v']
@@ -271,14 +294,29 @@ class NeuronLSTM(Optimized, MODEL):
         return self.dt
 
     def apply_init(self, sess):
-        """Initialize the variables if loaded object"""
+        """Initialize the variables if loaded object
+
+        Args:
+          sess: 
+
+        Returns:
+
+        """
         sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
+class Neurons():
+    pass
+
+
 class NeuronFix(MODEL):
-    """
-    Class representing a neuron, implemented only in Python
+    """Class representing a neuron, implemented only in Python
     This class allows simulation but not optimization
+
+    Args:
+
+    Returns:
+
     """
 
     def __init__(self, init_p=MODEL.default_params, dt=0.1):

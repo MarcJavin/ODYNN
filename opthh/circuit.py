@@ -17,10 +17,7 @@ from .optimize import Optimized
 
 class Circuit:
 
-    """
-    Circuit of neurons with synapses
-
-    """
+    """Circuit of neurons with synapses"""
     def __init__(self, conns, neurons, tensors=False):
         self._tensors = tensors
         self._neurons = neurons
@@ -30,17 +27,15 @@ class Circuit:
             variables = list(conns[0].values())[0].keys()
             for c in conns:
                 # build dict for each circuit
-                inits_p.append(dict(
-                    [(var, np.array([syn[var] for syn in c.values()], dtype=np.float32)) for var in variables]))
+                inits_p.append({var: np.array([syn[var] for syn in c.values()], dtype=np.float32) for var in variables})
             # merge them all in a new dimension
-            self.init_p = dict([(var, np.stack([mod[var] for mod in inits_p], axis=1)) for var in variables])
+            self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in variables}
             neurons.parallelize(self.num)
             self._connections = list(conns[0].keys())
         else:
             self.num = 1
-            self.init_p = dict(
-                [(var, np.array([p[var] for p in conns.values()], dtype=np.float32)) for var in
-                 list(conns.values())[0].keys()])
+            self.init_p = {var : np.array([p[var] for p in conns.values()], dtype=np.float32) for var in
+                 list(conns.values())[0].keys()}
             self._connections = conns.keys()
         self.init_state = self._neurons._init_state
         self.dt = self._neurons.dt
@@ -53,7 +48,15 @@ class Circuit:
         assert(len(np.unique(np.hstack((self._pres,self._posts)))) == self._neurons.num), "Invalid number of neurons"
 
     def syn_curr(self, vprev, vpost):
-        """synaptic current"""
+        """synaptic current
+
+        Args:
+          vprev: 
+          vpost: 
+
+        Returns:
+
+        """
         G = self._param['G']
         mdp = self._param['mdp']
         scale = self._param['scale']
@@ -64,7 +67,15 @@ class Circuit:
         return g * (self._param['E'] - vpost)
 
     def step(self, hprev, curs):
-        """run one time step"""
+        """run one time step
+
+        Args:
+          hprev(array): previous state vector
+          curs(array): input currents
+
+        Returns:
+            array: updated state vector
+        """
         if self._tensors:
             # update synapses
             #curs : [batch, neuron(, model)]
@@ -143,7 +154,11 @@ class CircuitTf(Circuit, Optimized):
             self.constraints_dic = give_constraints_syn(conns)
 
     def parallelize(self, n):
-        """Add a dimension of size n in the parameters"""
+        """Add a dimension of size n in the parameters
+
+        Args:
+          n: size of the new dimension
+        """
         self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
         self._neurons.parallelize(n)
 
@@ -242,7 +257,14 @@ SYNAPSE_inhib = {
 
 
 def give_constraints_syn(conns):
-    """constraints for synapse parameters"""
+    """constraints for synapse parameters
+
+    Args:
+      conns(dict): dictionnary of synapse parameters
+
+    Returns:
+        dict: constraints
+    """
     scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
     return {'G': np.array([1e-5, np.infty]),
             'scale': scale_con.transpose()}
@@ -264,7 +286,14 @@ MAX_G = 10.
 
 
 def get_syn_rand(exc=True):
-    """Random parameters for a synapse"""
+    """Give random parameters dictionnary for a synapse
+
+    Args:
+      exc(bool): If True, give an excitatory synapse (Default value = True)
+
+    Returns:
+        dict: random parameters for a synapse
+    """
     # scale is negative if inhibitory
     if exc:
         scale = random.uniform(MIN_SCALE, MAX_SCALE)

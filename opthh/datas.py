@@ -43,7 +43,16 @@ def get_data(file='AVAL_test.csv'):
     return T, X, Y
 
 def check_alpha(tinit, i, trace):
-    """study the hill equation"""
+    """study the hill equation
+
+    Args:
+      tinit: 
+      i: 
+      trace: 
+
+    Returns:
+
+    """
     vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
     idx=0
     plt.subplot(211)
@@ -68,7 +77,16 @@ def check_alpha(tinit, i, trace):
     plt.show()
 
 def dump_data(delta=500, final_time=4000., dt=0.2):
-    """dump real data into our format"""
+    """dump real data into our format
+
+    Args:
+      delta:  (Default value = 500)
+      final_time:  (Default value = 4000.)
+      dt:  (Default value = 0.2)
+
+    Returns:
+
+    """
     df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
@@ -112,7 +130,16 @@ DT = 0.1
 
 
 def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
-    """time and currents for optimization"""
+    """time and currents for optimization
+
+    Args:
+      dt:  (Default value = DT)
+      nb_neuron_zero:  (Default value = None)
+      max_t:  (Default value = 1200.)
+
+    Returns:
+
+    """
     t = np.array(sp.arange(0.0, max_t, dt))
     i = 10. * ((t > 100) & (t < 300)) + 20. * ((t > 400) & (t < 600)) + 40. * ((t > 800) & (t < 950))
     i2 = 30. * ((t > 100) & (t < 500)) + 25. * ((t > 800) & (t < 900))
@@ -148,7 +175,14 @@ def give_train2(dt=DT):
 
 
 def give_test(dt=DT):
-    """time and currents for optimization"""
+    """time and currents for optimization
+
+    Args:
+      dt:  (Default value = DT)
+
+    Returns:
+
+    """
     t = np.array(sp.arange(0.0, 1200, dt))
     i1 = (t - 100) * (30. / 100) * ((t > 100) & (t <= 200)) + 30 * ((t > 200) & (t <= 1100)) - (t - 1000) * (
             30. / 100) * ((t > 1000) & (t <= 1100))

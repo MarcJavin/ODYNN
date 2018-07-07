@@ -191,7 +191,9 @@ class HodgkinHuxley(Model):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
     REST_CA = REST_CA
-    ions_in_state = {'$Ca^{2+}$': -1}
+    ions = {'$Ca^{2+}$': -1}
+    Ca_pos = -1
+    """int, Default position of the calcium concentration in state vectors"""
     _init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
@@ -202,18 +204,16 @@ class HodgkinHuxley(Model):
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
-    def inf(self, V, rate):
-        """
-        Compute the steady state value of a gate activation rate
-        Parameters
-        ----------
-        V : float
-            voltage
-        rate : string
-            name of the rate
-        Returns
-        ----------
-        float, value of the rate steady state
+    def _inf(self, V, rate):
+        """Compute the steady state value of a gate activation rate
+
+        Args:
+          V(float): voltage
+          rate(string): 
+
+        Returns:
+
+        
         """
         mdp = self._param['%s__mdp' % rate]
         scale = self._param['%s__scale' % rate]
@@ -224,40 +224,78 @@ class HodgkinHuxley(Model):
         else:
             return 1 / (1 + sp.exp((mdp - V) / scale))
 
-    def h(self, cac):
-        """Channel gating kinetics. Functions of membrane voltage"""
-        q = self.inf(cac, 'h')
+    def _h(self, cac):
+        """Channel gating kinetics. Functions of membrane voltage
+
+        Args:
+          cac: 
+
+        Returns:
+
+        """
+        q = self._inf(cac, 'h')
         return 1 + (q - 1) * self._param['h__alpha']
 
-    def I_Ca(self, V, e, f, h):
-        """Membrane current (in uA/cm^2) for Calcium"""
+    def _i_ca(self, V, e, f, h):
+        """Membrane current (in uA/cm^2) for Calcium
+
+        Args:
+          V: 
+          e: 
+          f: 
+          h: 
+
+        Returns:
+
+        """
         return self._param['g_Ca'] * e ** 2 * f * h * (V - self._param['E_Ca'])
 
-    def I_Kf(self, V, p, q):
-        """Membrane current (in uA/cm^2) for Potassium"""
+    def _i_kf(self, V, p, q):
+        """Membrane current (in uA/cm^2) for Potassium
+
+        Args:
+          V: 
+          p: 
+          q: 
+
+        Returns:
+
+        """
         return self._param['g_Kf'] * p ** 4 * q * (V - self._param['E_K'])
 
-    def I_Ks(self, V, n):
-        """Membrane current (in uA/cm^2) for Potassium"""
+    def _i_ks(self, V, n):
+        """Membrane current (in uA/cm^2) for Potassium
+
+        Args:
+          V: 
+          n: 
+
+        Returns:
+
+        """
         return self._param['g_Ks'] * n * (V - self._param['E_K'])
 
-    def I_L(self, V):
-        """Membrane leak current (in uA/cm^2)"""
+    def _i_leak(self, V):
+        """Membrane leak current (in uA/cm^2)
+
+        Args:
+          V: 
+
+        Returns:
+
+        """
         return self._param['g_L'] * (V - self._param['E_L'])
 
     def step(self, X, i_inj):
-        """
-        Integrate and update voltage after one time step
-        Parameters
-        ----------
-        X : array
-            state vector
-        i_inj : array
-            input current
-        self : neuron object
-        Returns
-        ----------
-        An updated state vector
+        """Integrate and update voltage after one time step
+
+        Args:
+          X(array): state vector
+          i_inj(array): input current
+
+        Returns:
+
+        
         """
         V = X[self.V_pos]
         p = X[1]
@@ -267,24 +305,24 @@ class HodgkinHuxley(Model):
         f = X[5]
         cac = X[self.Ca_pos]
 
-        h = self.h(cac)
+        h = self._h(cac)
         # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
         #     ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
-        V += ((i_inj - self.I_Ca(V, e, f, h) - self.I_Ks(V, n) - self.I_Kf(V, p, q) - self.I_L(V)) / self._param[
+        V += ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) / self._param[
             'C_m']) * self.dt
 
-        cac += (-self.I_Ca(V, e, f, h) * self._param['rho_ca'] - (
+        cac += (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
                     (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
         tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(V, 'p') / tau))
+        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(V, 'p') / tau))
         tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(V, 'q') / tau))
+        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self._inf(V, 'q') / tau))
         tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(V, 'e') / tau))
+        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self._inf(V, 'e') / tau))
         tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(V, 'f') / tau))
+        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self._inf(V, 'f') / tau))
         tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(V, 'n') / tau))
+        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self._inf(V, 'n') / tau))
 
         if self._tensors:
             return tf.stack([V, p, q, n, e, f, cac], 0)
@@ -292,7 +330,20 @@ class HodgkinHuxley(Model):
             return np.array([V, p, q, n, e, f, cac])
 
     def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
-        """plot all dynamics"""
+        """plot all dynamics
+
+        Args:
+          ts: 
+          i_inj_values: 
+          results: 
+          ca_true:  (Default value = None)
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+
+        Returns:
+
+        """
         V = results[:, 0]
         p = results[:, 1]
         q = results[:, 2]
@@ -301,10 +352,10 @@ class HodgkinHuxley(Model):
         f = results[:, 5]
         cac = results[:, 6]
 
-        h = self.h(cac)
-        ica = self.I_Ca(V, e, f, h)
-        ik = self.I_Ks(V, n) + self.I_Kf(V, p, q)
-        il = self.I_L(V)
+        h = self._h(cac)
+        ica = self._i_ca(V, e, f, h)
+        ik = self._i_ks(V, n) + self._i_kf(V, p, q)
+        il = self._i_leak(V)
 
         plt.figure()
 
@@ -357,13 +408,18 @@ class HodgkinHuxley(Model):
         """Returns a dictionnary of random parameters"""
         return give_rand()
 
-    @staticmethod
-    def plot_output(*args, **kwargs):
-        return utils.plots_output_double(HodgkinHuxley, *args, **kwargs)
 
     @staticmethod
     def plot_vars(*args, **kwargs):
-        """Plot functions for the parameters"""
+        """Plot functions for the parameters
+
+        Args:
+          *args: 
+          **kwargs: 
+
+        Returns:
+
+        """
         return utils.plot_vars(*args, **kwargs)
 
     boxplot_vars = utils.boxplot_vars
@@ -380,13 +436,13 @@ class HodgkinHuxley(Model):
         f = X[2]
         cac = X[self.Ca_pos]
 
-        h = self.h(cac)
+        h = self._h(cac)
         tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self.inf(v_fix, 'e') / tau))
+        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self._inf(v_fix, 'e') / tau))
         tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self.inf(v_fix, 'f') / tau))
-        ica = self.I_Ca(v_fix, e, f, h)
-        cac += (-self.I_Ca(v_fix, e, f, h) * self._param['rho_ca'] - (
+        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self._inf(v_fix, 'f') / tau))
+        ica = self._i_ca(v_fix, e, f, h)
+        cac += (-self._i_ca(v_fix, e, f, h) * self._param['rho_ca'] - (
                 (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
 
         if self._tensors:
@@ -401,12 +457,12 @@ class HodgkinHuxley(Model):
         n = X[3]
 
         tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self.inf(v_fix, 'p') / tau))
+        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(v_fix, 'p') / tau))
         tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self.inf(v_fix, 'q') / tau))
+        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self._inf(v_fix, 'q') / tau))
         tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self.inf(v_fix, 'n') / tau))
-        ik = self.I_Kf(v_fix, p, q) + self.I_Ks(v_fix, n)
+        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self._inf(v_fix, 'n') / tau))
+        ik = self._i_kf(v_fix, p, q) + self._i_ks(v_fix, n)
 
         if self._tensors:
             return tf.stack([ik, p, q, n], 0)

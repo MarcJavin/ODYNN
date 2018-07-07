@@ -35,14 +35,14 @@ class TestCircuitOpt(TestCase):
         train = c.simul(n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns_opt, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
-        self.assertEqual(co.loss.shape, ())
+        self.assertEqual(co._loss.shape, ())
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('one target parallel'.center(40, '#'))
         co = CircuitOpt(pars, conns_opt_parallel, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
-        self.assertEqual(co.loss.shape, (10,))
+        self.assertEqual(co._loss.shape, (10,))
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))
 
@@ -51,14 +51,14 @@ class TestCircuitOpt(TestCase):
         train = c.simul(n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
-        self.assertEqual(co.loss.shape, ())
+        self.assertEqual(co._loss.shape, ())
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('several targets parallel'.center(40, '#'))
         co = CircuitOpt(pars, conns_opt_parallel, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
-        self.assertEqual(co.loss.shape, (10,))
+        self.assertEqual(co._loss.shape, (10,))
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))
 
