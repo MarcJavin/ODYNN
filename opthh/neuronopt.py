@@ -53,7 +53,7 @@ class NeuronOpt(Optimizer):
 
 
 
-    def optimize(self, subdir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.1, 9, 0.92], suffix='', step=None,
+    def optimize(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step=None,
                  reload=False, reload_dir=None):
         """Optimize the neuron parameters
 
@@ -61,18 +61,16 @@ class NeuronOpt(Optimizer):
           subdir: 
           train:  (Default value = None)
           test:  (Default value = None)
-          w:  (Default value = [1)
-          0]: 
+          w:  (Default value = [1, 0]:
           epochs:  (Default value = 700)
-          l_rate:  (Default value = [0.1)
-          9: 
-          0.92]: 
+          l_rate:  (Default value = [0.1, 9, 0.92]:
           suffix:  (Default value = '')
           step:  (Default value = None)
           reload:  (Default value = False)
           reload_dir:  (Default value = None)
 
         Returns:
+            object Optimized:
 
         """
         shapevars = (epochs, self._parallel)

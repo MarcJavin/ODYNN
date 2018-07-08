@@ -25,6 +25,8 @@ FILE_OBJ = 'tmp/optimized'
 class Optimized(ABC):
     """Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit."""
 
+    ions = {}
+
     def __init__(self, dt, init_p={}):
         self.dt = dt
         self.init_p = init_p
@@ -36,7 +38,11 @@ class Optimized(ABC):
 
     @abstractmethod
     def settings(self):
-        """ """
+        """
+        Give a string describing the settings
+        Returns(str): description
+
+        """
         pass
 
     @staticmethod
@@ -47,21 +53,17 @@ class Optimized(ABC):
           var_dic: 
           suffix: 
           show: 
-          save: 
-
-        Returns:
+          save:
 
         """
         pass
 
     def apply_constraints(self, session):
         """
+        Apply necessary constraints to the optimized variables
 
         Args:
-          session: 
-
-        Returns:
-          
+          session(tf.Session):
 
         """
         pass
@@ -70,7 +72,6 @@ class Optimized(ABC):
         pass
 
     def get_params(self):
-        """ """
         return []
 
     def todump(self, sess):
@@ -94,16 +95,17 @@ class Optimizer(ABC):
         self._test = False
 
     def _init_l_rate(self):
-        self.global_step = tf.Variable(0, trainable=False)
+        global_step = tf.Variable(0, trainable=False)
         # progressive learning rate
         self.learning_rate = tf.train.exponential_decay(
-            self.start_rate,  # Base learning rate.
-            self.global_step,  # Current index to the dataset.
-            self.decay_step,  # Decay step.
-            self.decay_rate,  # Decay rate.
+            self.l_rate[0],  # Base learning rate.
+            global_step,  # Current index to the dataset.
+            self.l_rate[1],  # Decay step.
+            self.l_rate[2],  # Decay rate.
             staircase=True)
+        return global_step
 
-    def _build_train(self):
+    def _build_train(self, global_step):
         """learning rate and optimization"""
         self._init_l_rate()
         # self.learning_rate = 0.1
@@ -134,7 +136,7 @@ class Optimizer(ABC):
                 grads_normed = tf.unstack(grads_normed, axis=1)
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
-        self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=self.global_step)
+        self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
 
         self.saver = tf.train.Saver()
 
@@ -157,7 +159,7 @@ class Optimizer(ABC):
         self.dir = dir
         self.suffix = suffix
         tf.reset_default_graph()
-        self.start_rate, self.decay_step, self.decay_rate = l_rate
+        self.l_rate = l_rate
 
         self._T, self._X, self._V, self._Ca = train
         if test is not None:
@@ -193,10 +195,7 @@ class Optimizer(ABC):
         """Write the settings of the optimization in a file
 
         Args:
-          w: 
-
-        Returns:
-
+          w(tuple): weights for the loss of voltage and ions concentrations
         """
         show_shape = self._V
         if self._V is None:
@@ -204,8 +203,8 @@ class Optimizer(ABC):
 
         with open(self.dir + OUT_SETTINGS, 'w') as f:
             f.write("Weights (out, cac) : {}".format(w) + "\n" +
-                    "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.start_rate, self.decay_step,
-                                                                               self.decay_rate) + "\n" +
+                    "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
+                                                                               self.l_rate[2]) + "\n" +
                     "Number of batches : {}".format(self.n_batch) + "\n" +
                     "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
                 self._X.shape) +
@@ -218,13 +217,14 @@ class Optimizer(ABC):
         """Plot the variables evolution, the loss and saves it in a file
 
         Args:
-          sess: 
-          losses: 
-          rates: 
-          vars: 
-          i: 
+          sess(tf.Session): tensorflow session
+          losses(array): array of losses
+          rates(array): array containing the registered values of the learning rate
+          vars(dict): dictionary with the registered value of optimized variables
+          i: step in the optimization
 
         Returns:
+            array: results of the test
 
         """
         results = None
@@ -252,13 +252,14 @@ class Optimizer(ABC):
     def plot_out(self, *args, **kwargs):
         pass
 
+    @abstractmethod
     def _build_loss(self, w):
         pass
 
     def optimize(self, dir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.1, 9, 0.92], suffix='', step='',
                  reload=False, reload_dir=None, yshape=None, shapevars=None):
 
-        print(suffix, step)
+        print('Optimization'.center(40,'_'))
         T, X, V, Ca = train
         res_targ = [V, Ca]
         if test is not None:
@@ -269,8 +270,8 @@ class Optimizer(ABC):
             reload_dir = dir
         self._init(dir, suffix, train, test, l_rate, w, yshape)
 
-        self._build_loss(w)
-        self._build_train()
+        global_step = self._build_loss(w)
+        self._build_train(global_step)
         self.summary = tf.summary.merge_all()
 
         with tf.Session() as sess:

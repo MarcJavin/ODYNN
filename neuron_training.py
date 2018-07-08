@@ -12,7 +12,7 @@ import scipy as sp
 from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
-from opthh.neuronsimul import NeuronSimul
+from opthh import neuronsimul as sim
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}
@@ -38,19 +38,16 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     name = 'Classic'
 
     opt = NeuronOpt()
-    sim = NeuronSimul(t=t, i_inj=i_inj)
     base = MODEL.step_model
 
     if (xp == 'ica'):
         name = 'Icafromv'
         opt = NeuronOpt(fixed=CA_CONST)
-        sim = NeuronSimul(t=t, i_inj=i_inj)
         loop_func = MODEL.ica_from_v
 
     elif (xp == 'ik'):
         name = 'Ikfromv'
         opt = NeuronOpt(fixed=K_CONST)
-        sim = NeuronSimul(t=t, i_inj=i_inj)
         loop_func = MODEL.ik_from_v
 
     elif (xp == 'notauca'):
@@ -72,7 +69,7 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     utils.set_dir(dir)
     MODEL.step_model = loop_func
     MODEL.step_model = loop_func
-    train = sim.simul(show=True)
+    train = sim.simul(dt=dt, i_inj=i_inj, show=True)
     opt.optimize(dir, w=[w_v, w_ca], train=train)
     MODEL.step_model = base
     return dir
@@ -85,8 +82,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=CA_VAR)
-    sim = NeuronSimul(init_p=MODEL.default_params, t=t, i_inj=i_inj)
-    train = sim.simul(suffix='step2', show=False)
+    train = sim.simul(p=MODEL.default_params, dt=dt, i_inj=i_inj, suffix='step2', show=False)
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
 
     test_xp(dir)
@@ -99,8 +95,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
     param = utils.get_dic_from_var(dir)
     opt = NeuronOpt(init_p=param, fixed=K_VAR)
-    sim = NeuronSimul(t=t, i_inj=i_inj)
-    train = sim.simul(suffix='step2')
+    train = sim.simul(dt=dt, i_inj=i_inj, suffix='step2')
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
 
     test_xp(dir)
@@ -110,8 +105,7 @@ def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     dir = utils.set_dir(dir)
     param = optimize.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
-        sim = NeuronSimul(init_p=param, t=t, i_inj=i_)
-        sim.comp_pars_targ(param, default, show=show, save=True, suffix='train%s' % j)
+        sim.comp_pars_targ(param, default, dt=dt, i_inj=i_, show=show, save=True, suffix='train%s' % j)
 
     dt = 0.05
     tt = np.array(sp.arange(0.0, 4000, dt))
@@ -125,8 +119,7 @@ def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     is_ = [i1, i2, i3]
     ts_ = [tt, tt, t3]
     for j, i_ in enumerate(is_):
-        sim = NeuronSimul(init_p=param, t=ts_[j], i_inj=i_)
-        sim.comp_pars_targ(param, default, show=show, save=True, suffix='test%s' % j)
+        sim.comp_pars_targ(param, default, dt=dt, i_inj=i_, show=show, save=True, suffix='test%s' % j)
 
 
 def alternate(name='', suffix='', lstm=True):
@@ -142,8 +135,7 @@ def alternate(name='', suffix='', lstm=True):
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
-    sim = NeuronSimul(t=t, i_inj=i_inj)
-    train = sim.simul(show=False, suffix='train')
+    train = sim.simul(dt=dt, i_inj=i_inj, show=False, suffix='train')
     opt.optimize(dir, suffix=suffix, train=train, w=[wv, wca], epochs=300, step=0, l_rate=l_rate)
     for i in range(40):
         wv -= 1./50
@@ -169,10 +161,8 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(init_p=pars, dt=dt)
     utils.set_dir(dir)
-    sim = NeuronSimul(init_p=default, t=t, i_inj=i_inj)
-    train = sim.simul(show=False, suffix='train')
-    sim = NeuronSimul(init_p=default, t=tt, i_inj=it)
-    test= sim.simul(show=False, suffix='test')
+    train = sim.simul(p=default, dt=dt, i_inj=i_inj, show=False, suffix='train')
+    test= sim.simul(p=default, dt=dt, i_inj=it, show=False, suffix='test')
     n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, l_rate=l_rate)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
     comp_pars(dir, n)
     test_xp(dir, default=default)
@@ -193,9 +183,8 @@ def real_data(name, suffix='', lstm=True):
     n = opt.optimize(dir, w=[0, 1], train = train, suffix=suffix, l_rate=l_rate)
     comp_pars(dir, n)
     t, i, v, ca = test
-    sim = NeuronSimul(init_p=optimize.get_best_result(dir), t=t, i_inj=i)
     if not lstm:
-        sim.simul(suffix='test', save=True, ca_true=ca)
+        sim.simul(optimize.get_best_result(dir), dt=dt, i_inj=i_inj, suffix='test', save=True, ca_true=ca)
 
 
 def comp_pars(dir, i=-1):
@@ -221,10 +210,8 @@ def test_lstm():
         load = pickle.load(f)
     n = NeuronLSTM(load=load)
     trace, test = datas.dump_data(dt=n.dt)
-    sim = NeuronSimul(t=test[0], i_inj=test[1])
     trace = np.array(test[2:])
-    print(len(trace[1]))
-    sim.comp_neuron_trace(n, trace, scale=True)
+    sim.comp_neuron_trace(n, trace, i_inj=test[1], scale=True)
     exit(0)
 
 if __name__ == '__main__':

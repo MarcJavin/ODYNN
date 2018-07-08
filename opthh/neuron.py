@@ -10,7 +10,7 @@ import numpy as np
 import tensorflow as tf
 
 from . import config
-from .model import Model
+from .model import NeuronModel
 from .optimize import Optimized
 
 
@@ -121,9 +121,9 @@ class NeuronTf(MODEL, Optimized):
     def get_params(self):
         return self._param.items()
 
-
-class NeuronLSTM(Optimized, Model):
+class NeuronLSTM(Optimized, NeuronModel):
     """Behavior model of a neuron using an LSTM network"""
+    ions = MODEL.ions
     num = 1
 
     _max_cur = 60.

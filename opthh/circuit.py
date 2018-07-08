@@ -126,16 +126,14 @@ class Circuit:
                 curs_post[i] = np.sum(curs_syn[self._posts == i])
             return curs_post
 
-    @staticmethod
-    def plot_vars(*args, **kwargs):
-        return utils.plot_vars_syn(*args, **kwargs)
+    def plot_vars(self, *args, **kwargs):
+        return utils.plot_vars_syn(self, *args, **kwargs)
 
     plot_output = NeuronTf.plot_output
 
-    @staticmethod
-    def study_vars(p):
-        Circuit.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-        Circuit.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
+    def study_vars(self, p):
+        self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+        self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
 
 
 class CircuitTf(Circuit, Optimized):
@@ -178,7 +176,6 @@ class CircuitTf(Circuit, Optimized):
         self.reset()
         xshape = [None]
         initializer = self.init_state
-        print(initializer.shape)
         if batch:
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
@@ -189,8 +186,6 @@ class CircuitTf(Circuit, Optimized):
             #     xshape.append(self.parallel)
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
 
-        print(curs_.shape)
-        print(initializer.shape)
         res = tf.scan(self.step,
                       curs_,
                       initializer=initializer.astype(np.float32))

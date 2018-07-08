@@ -3,7 +3,7 @@ from context import opthh
 from opthh import config, utils, datas
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
-from opthh.neuronsimul import NeuronSimul
+from opthh.neuronsimul import simul
 
 
 class TestNeuronOpt(TestCase):
@@ -14,8 +14,7 @@ class TestNeuronOpt(TestCase):
         t,i = datas.give_train(dt=dt, max_t=5.)
         default = config.NEURON_MODEL.default_params
         pars = config.NEURON_MODEL.get_random()
-        sim = NeuronSimul(init_p=default, t=t, i_inj=i)
-        train = sim.simul(show=False, suffix='train')
+        train = simul(p=default, dt=dt, i_inj=i, show=False, suffix='train')
 
         print('LSTM'.center(40, '#'))
         n = NeuronLSTM(dt=dt)

@@ -56,11 +56,11 @@ class CircuitOpt(Optimizer):
         wca = 0.8
         suffix = 'neuron%s' % num
         file = '%s%s' % (file, num)
-        opt.optimize(dir, [wv, wca], epochs=20, suffix=suffix, step=0, file=file)
+        opt.optimize(dir, (wv, wca), epochs=20, suffix=suffix, step=0, file=file)
         for i in range(10):
             wv = 1 - wv
             wca = 1 - wca
-            opt.optimize(dir, [wv, wca], reload=True, epochs=20, suffix=suffix, step=i + 1, file=file)
+            opt.optimize(dir, (wv, wca), reload=True, epochs=20, suffix=suffix, step=i + 1, file=file)
 
     def opt_neurons(self, file):
         """optimize only neurons 1 by 1
@@ -80,7 +80,7 @@ class CircuitOpt(Optimizer):
             self.circuit._neurons.plot_output(self._T, X[:, b, 0], results[:, :, b, self.n_out], res_t,
                                               suffix='trace%s%s_%s' % (name, b, i), show=False, save=True)
 
-    def opt_circuits(self, subdir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.9, 9, 0.95], suffix='', n_out=[1],):
+    def opt_circuits(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1],):
         """optimize circuit parameters
 
         Args:

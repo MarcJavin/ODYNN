@@ -11,7 +11,7 @@ import random
 import tensorflow as tf
 import scipy as sp
 
-from .model import Model
+from .model import NeuronModel
 from . import utils
 from pylab import plt
 
@@ -187,8 +187,9 @@ def give_rand():
 
 
 
-class HodgkinHuxley(Model):
+class HodgkinHuxley(NeuronModel):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
+
 
     REST_CA = REST_CA
     ions = {'$Ca^{2+}$': -1}
@@ -202,7 +203,7 @@ class HodgkinHuxley(Model):
     """constraints to be applied when optimizing"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
-        Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
+        NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _inf(self, V, rate):
         """Compute the steady state value of a gate activation rate
@@ -290,11 +291,8 @@ class HodgkinHuxley(Model):
         """Integrate and update voltage after one time step
 
         Args:
-          X(array): state vector
-          i_inj(array): input current
-
-        Returns:
-
+          X(np.array or tensor): state vector
+          i_inj(np.array or tensor): input current
         
         """
         V = X[self.V_pos]
@@ -425,10 +423,10 @@ class HodgkinHuxley(Model):
     boxplot_vars = utils.boxplot_vars
     """Plot functions for the parameters"""
 
-    @staticmethod
-    def study_vars(p):
-        HodgkinHuxley.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-        HodgkinHuxley.boxplot_vars(p, suffix='boxes', show=False, save=True)
+    @classmethod
+    def study_vars(cls, p):
+        cls.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+        cls.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
     @staticmethod
     def ica_from_v(X, v_fix, self):

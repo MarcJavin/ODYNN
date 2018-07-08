@@ -8,4 +8,4 @@
 from .hhmodel import HodgkinHuxley
 
 NEURON_MODEL = HodgkinHuxley
-"""Class used for neuron models"""
+"""Class used for biological neuron models"""

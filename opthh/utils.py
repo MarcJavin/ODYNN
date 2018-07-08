@@ -143,11 +143,11 @@ def boxplot_vars(var_dic, suffix="", show=True, save=False):
     save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
     plt.close()
 
-def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
+def plot_vars_syn(self, var_dic, suffix="", show=True, save=False, func=plot):
     """plot variation/comparison/boxplots of synaptic variables
 
     Args:
-      var_dic: 
+      var_dic(dict): synaptic parameters, each value of size [time, n_synapse, parallelization]
       suffix:  (Default value = "")
       show(bool): If True, show the figure (Default value = True)
       save(bool): If True, save the figure (Default value = False)
@@ -156,23 +156,28 @@ def plot_vars_syn(var_dic, suffix="", show=True, save=False, func=plot):
     Returns:
 
     """
-    if(list(var_dic.values())[0].ndim > 2):
-        # TODO
-        var_dic = {var: np.reshape(val, (val.shape[0], -1)) for var, val in var_dic.items()}
-    for i in var_dic['E'].shape[0]:
-        var_d = {var: val[i] for var, val in var_dic.items()}
-        plt.figure()
+    def oneplot(var_d, name):
         labels = ['G', 'mdp', 'E', 'scale']
         if func == box:
             func(var_d, COLORS[:len(labels)], labels)
         else:
-            for i,var in enumerate(labels):
-                plt.subplot(2,2,i+1)
+            for i, var in enumerate(labels):
+                plt.subplot(2, 2, i + 1)
                 func(plt, var_d[var])
                 plt.ylabel(var)
         plt.tight_layout()
-        save_show(show, save, name='Synapses_i{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
         plt.close()
+
+    if(self.num > 1):
+        # if parallelization, compare run on each synapse
+        for i in range(var_dic['E'].shape[0]):
+            var_d = {var: val[i] for var, val in var_dic.items()}
+            oneplot(var_d, 'Synapse_{}'.format(i))
+    else:
+        # if not, compare all synapses together
+        oneplot(var_dic, 'All_Synapses')
+
 
 
 

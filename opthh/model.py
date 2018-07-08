@@ -13,7 +13,7 @@ from . import utils
 
 
 
-class Model(ABC):
+class NeuronModel(ABC):
     """Abstract class to implement for using a new cls
     All methods and class variables have to be implemented in order to have the expected behavior
 
@@ -92,7 +92,7 @@ class Model(ABC):
           ts(array of dimension [time]): time steps of the measurements
           i_inj(array of dimension [time]): 
           states(array of dimension [time, state_var, nb_neuron]): 
-          y_states(array of dimension [time, state_var], optional):  (Default value = None)
+          y_states(list of arrays [time, nb_neuron], optional):  (Default value = None)
           suffix:  (Default value = "")
           show(bool): If True, show the figure (Default value = True)
           save(bool): If True, save the figure (Default value = False)
@@ -115,8 +115,8 @@ class Model(ABC):
         plt.subplot(nb_plots, 1, 1)
         plt.plot(ts, states[:, cls.V_pos], linewidth=l)
         if y_states is not None:
-            if y_states[:][cls.V_pos] is not None:
-                plt.plot(ts, y_states[:][cls.V_pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
+            if y_states[cls.V_pos] is not None:
+                plt.plot(ts, y_states[cls.V_pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
                 plt.legend()
         plt.ylabel('Voltage (mV)')
 
@@ -124,8 +124,8 @@ class Model(ABC):
             plt.subplot(nb_plots, 1, 2)
             plt.plot(ts, states[:, pos], linewidth=l)
             if y_states is not None:
-                if y_states[:][pos] is not None:
-                    plt.plot(ts, y_states[:][pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
+                if y_states[pos] is not None:
+                    plt.plot(ts, y_states[pos], 'r', linestyle=targstyle, linewidth=lt, label='target cls')
                     plt.legend()
             plt.ylabel('[{}]'.format(ion))
 
