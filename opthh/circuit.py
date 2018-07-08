@@ -9,8 +9,9 @@ import random
 import numpy as np
 import scipy as sp
 import tensorflow as tf
+import pylab as plt
 
-from . import utils
+from . import utils, config
 from .neuron import NeuronTf, NeuronFix
 from .optimize import Optimized
 
@@ -126,10 +127,40 @@ class Circuit:
                 curs_post[i] = np.sum(curs_syn[self._posts == i])
             return curs_post
 
-    def plot_vars(self, *args, **kwargs):
-        return utils.plot_vars_syn(self, *args, **kwargs)
+    def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
+        """plot variation/comparison/boxplots of synaptic variables
 
-    plot_output = NeuronTf.plot_output
+        Args:
+          var_dic(dict): synaptic parameters, each value of size [time, n_synapse, parallelization]
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+          func:  (Default value = plot)
+        """
+
+        def oneplot(var_d, name):
+            labels = ['G', 'mdp', 'E', 'scale']
+            if func == utils.box:
+                func(var_d, utils.COLORS[:len(labels)], labels)
+            else:
+                for i, var in enumerate(labels):
+                    plt.subplot(2, 2, i + 1)
+                    func(plt, var_d[var])
+                    plt.ylabel(var)
+            plt.tight_layout()
+            utils.save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
+            plt.close()
+
+        if (self.num > 1):
+            # if parallelization, compare run on each synapse
+            for i in range(var_dic['E'].shape[0]):
+                var_d = {var: val[i] for var, val in var_dic.items()}
+                oneplot(var_d, 'Synapse_{}'.format(i))
+        else:
+            # if not, compare all synapses together
+            oneplot(var_dic, 'All_Synapses')
+
+    plot_output = config.NEURON_MODEL.plot_output
 
     def study_vars(self, p):
         self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)

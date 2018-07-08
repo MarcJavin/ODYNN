@@ -43,7 +43,7 @@ class Optimized(ABC):
         Returns(str): description
 
         """
-        pass
+        return ''
 
     @staticmethod
     def plot_vars(var_dic, suffix, show, save):
@@ -85,6 +85,13 @@ class Optimizer(ABC):
     min_loss = 1.
 
     def __init__(self, optimized, epochs=500, frequency=10):
+        """
+
+        Args:
+            optimized(Optimized):
+            epochs:
+            frequency:
+        """
         self.start_time = time.time()
         self.optimized = optimized
         self._parallel = self.optimized.num
@@ -170,7 +177,9 @@ class Optimizer(ABC):
         assert (self.optimized.dt == self._T[1] - self._T[0])
 
         self.n_batch = self._X.shape[1]
-        self.write_settings(w)
+        sett = self.settings(w)
+        with open(self.dir + OUT_SETTINGS, 'w') as f:
+            f.write(sett)
 
         if self._parallel > 1:
             # add dimension for neurons trained in parallel
@@ -191,25 +200,26 @@ class Optimizer(ABC):
         print("i expected : ", self.xs_.shape)
         print("i : ", self._X.shape)
 
-    def write_settings(self, w):
-        """Write the settings of the optimization in a file
+    def settings(self, w):
+        """Give the settings of the optimization
 
         Args:
           w(tuple): weights for the loss of voltage and ions concentrations
+
+        Returns:
+            str: settings
         """
         show_shape = self._V
         if self._V is None:
             show_shape = self._Ca
-
-        with open(self.dir + OUT_SETTINGS, 'w') as f:
-            f.write("Weights (out, cac) : {}".format(w) + "\n" +
-                    "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
-                                                                               self.l_rate[2]) + "\n" +
-                    "Number of batches : {}".format(self.n_batch) + "\n" +
-                    "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
-                self._X.shape) +
-                    "Output shape : {}".format(show_shape.shape) + "\n" +
-                    self.optimized.settings())
+        return ("Weights (out, cac) : {}".format(w) + "\n" +
+                "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
+                                                                           self.l_rate[2]) + "\n" +
+                "Number of batches : {}".format(self.n_batch) + "\n" +
+                "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
+            self._X.shape) +
+                "Output shape : {}".format(show_shape.shape) + "\n" +
+                self.optimized.settings())
 
 
 
@@ -256,7 +266,7 @@ class Optimizer(ABC):
     def _build_loss(self, w):
         pass
 
-    def optimize(self, dir, train=None, test=None, w=[1, 0], epochs=700, l_rate=[0.1, 9, 0.92], suffix='', step='',
+    def optimize(self, dir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
                  reload=False, reload_dir=None, yshape=None, shapevars=None):
 
         print('Optimization'.center(40,'_'))
@@ -269,6 +279,7 @@ class Optimizer(ABC):
         if reload_dir is None:
             reload_dir = dir
         self._init(dir, suffix, train, test, l_rate, w, yshape)
+        print(self.settings(w))
 
         global_step = self._build_loss(w)
         self._build_train(global_step)

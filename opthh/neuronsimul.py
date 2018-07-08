@@ -126,6 +126,7 @@ def simul(p=None, neuron=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=F
     """
     if(neuron is None):
         neuron = NeuronFix(p, dt=dt)
+    print('Neuron Simulation'.center(40,'_'))
     start = time.time()
 
     #[t,s,batch]

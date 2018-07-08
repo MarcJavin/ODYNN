@@ -8,9 +8,14 @@
 
 import numpy as np
 import random
+
+import pylab as plt
 import tensorflow as tf
 import scipy as sp
+from matplotlib import gridspec as gridspec
+from matplotlib.ticker import FormatStrFormatter
 
+from utils import RATE_COLORS, CONDS, box, MEMB, save_show, plot, GATES
 from .model import NeuronModel
 from . import utils
 from pylab import plt
@@ -406,22 +411,130 @@ class HodgkinHuxley(NeuronModel):
         """Returns a dictionnary of random parameters"""
         return give_rand()
 
-
     @staticmethod
-    def plot_vars(*args, **kwargs):
-        """Plot functions for the parameters
+    def boxplot_vars(var_dic, suffix="", show=True, save=False):
+        plt.figure()
+        plt.subplot(121)
+        cols = [RATE_COLORS['n'], RATE_COLORS['n'], RATE_COLORS['f'], 'k']
+        labels = CONDS
+        box(var_dic, cols, labels)
+        plt.title('Conductances')
+        plt.subplot(122)
+        cols = ['b', RATE_COLORS['n'], RATE_COLORS['f'], 'k']
+        labels = MEMB
+        box(var_dic, cols, labels)
+        plt.title('Membrane')
+        save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
+
+        plt.figure()
+        plt.subplot(211)
+        box(var_dic, ['k'], ['rho_ca'])
+        plt.title('Rho_ca')
+        plt.subplot(212)
+        box(var_dic, ['b'], ['decay_ca'])  # , 'b')
+        plt.title('Decay_ca')
+        plt.tight_layout()
+        save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
+
+        plt.figure()
+        for i, type in enumerate(['mdp', 'scale', 'tau']):
+            plt.subplot(3, 1, i + 1)
+            plt.title(type)
+            labels = ['{}__{}'.format(rate, type) for rate in RATE_COLORS.keys()]
+            cols = RATE_COLORS.values()
+            if (type == 'tau'):
+                labels = ['h__alpha' if x == 'h__tau' else x for x in labels]
+            box(var_dic, cols, labels)
+        save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
+        plt.close()
+
+    @classmethod
+    def plot_vars(cls, var_dic, suffix="", show=True, save=False, func=utils.plot):
+        """plot variation/comparison/boxplots of all variables organized by categories
 
         Args:
-          *args: 
-          **kwargs: 
+          var_dic:
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+          func:  (Default value = plot)
 
         Returns:
 
         """
-        return utils.plot_vars(*args, **kwargs)
+        fig = plt.figure()
+        grid = plt.GridSpec(2, 3)
+        for nb in range(len(GATES)):
+            gate = GATES[nb]
+            cls.plot_vars_gate(gate, var_dic['{}__mdp'.format(gate)], var_dic['{}__scale'.format(gate)],
+                           var_dic['{}__tau'.format(gate)], fig, grid[nb], (nb % 3 == 0), func=func)
+        cls.plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
+                       var_dic['h__alpha'], fig, grid[5], False, func=func)
+        plt.tight_layout()
+        save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
 
-    boxplot_vars = utils.boxplot_vars
-    """Plot functions for the parameters"""
+        fig = plt.figure()
+        grid = plt.GridSpec(1, 2)
+        subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[0], hspace=0.1)
+        for i, var in enumerate(CONDS):
+            ax = plt.Subplot(fig, subgrid[i])
+            func(ax, var_dic[var])  # )
+            ax.set_ylabel(var)
+            if (i == 0):
+                ax.set_title('Conductances')
+            fig.add_subplot(ax)
+        subgrid = gridspec.GridSpecFromSubplotSpec(4, 1, grid[1], hspace=0.1)
+        for i, var in enumerate(MEMB):
+            ax = plt.Subplot(fig, subgrid[i])
+            func(ax, var_dic[var])  # )
+            ax.set_ylabel(var)
+            if (i == 0):
+                ax.set_title('Membrane')
+            ax.yaxis.tick_right()
+            fig.add_subplot(ax)
+        plt.tight_layout()
+        save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
+
+        plt.figure()
+        ax = plt.subplot(211)
+        func(ax, var_dic['rho_ca'])  # , 'r')
+        plt.ylabel('Rho_ca')
+        ax = plt.subplot(212)
+        func(ax, var_dic['decay_ca'])  # , 'b')
+        plt.ylabel('Decay_ca')
+        save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
+
+        plt.close('all')
+
+    @staticmethod
+    def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=utils.plot):
+        """plot the gates variables
+
+        Args:
+          name:
+          mdp:
+          scale:
+          tau:
+          fig:
+          pos:
+          labs:
+          func:  (Default value = plot)
+
+        Returns:
+
+        """
+        subgrid = gridspec.GridSpecFromSubplotSpec(3, 1, pos, hspace=0.1)
+        vars = [('Midpoint', mdp), ('Scale', scale), ('Tau', tau)]
+        for i, var in enumerate(vars):
+            ax = plt.Subplot(fig, subgrid[i])
+            func(ax, var[1])  # , 'r')
+            ax.set_xlabel([])
+            ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+            if (labs):
+                ax.set_ylabel(var[0])
+            if (i == 0):
+                ax.set_title(name)
+            fig.add_subplot(ax)
 
     @classmethod
     def study_vars(cls, p):
@@ -466,3 +579,92 @@ class HodgkinHuxley(NeuronModel):
             return tf.stack([ik, p, q, n], 0)
         else:
             return [ik, p, q, n]
+
+
+def plots_ica_from_v(ts, V, results, name="ica", show=True, save=False):
+    """plot i_ca and Ca conc depending on the voltage
+
+    Args:
+      ts:
+      V:
+      results:
+      name:  (Default value = "ica")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+
+    Returns:
+
+    """
+    ica = results[:, 0]
+    e = results[:, 1]
+    f = results[:, 2]
+    h = results[:, 3]
+    cac = results[:, -1]
+
+    plt.figure()
+
+    plt.subplot(4, 1, 1)
+    plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
+    plt.plot(ts, ica, 'b')
+    plt.ylabel('I_ca')
+
+    plt.subplot(4, 1, 2)
+    plt.plot(ts, cac, 'r')
+    plt.ylabel('$Ca^{2+}$ concentration')
+
+    plt.subplot(4, 1, 3)
+    plt.plot(ts, e, RATE_COLORS['e'], label='e')
+    plt.plot(ts, f, RATE_COLORS['f'], label='f')
+    plt.plot(ts, h, RATE_COLORS['h'], label='h')
+    plt.ylabel('Gating Value')
+    plt.legend()
+
+    plt.subplot(4, 1, 4)
+    plt.plot(ts, V, 'k')
+    plt.ylabel('V (input) (mV)')
+    plt.xlabel('t (ms)')
+
+    save_show(show, save, name)
+    plt.close()
+
+
+def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
+    """plot i_k depending on the voltage
+
+    Args:
+      ts:
+      V:
+      results:
+      name:  (Default value = "ik")
+      show(bool): If True, show the figure (Default value = True)
+      save(bool): If True, save the figure (Default value = False)
+
+    Returns:
+
+    """
+    ik = results[:, 0]
+    p = results[:, 1]
+    q = results[:, 2]
+    n = results[:, 3]
+
+    plt.figure()
+
+    plt.subplot(3, 1, 1)
+    plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
+    plt.plot(ts, ik, 'b')
+    plt.ylabel('I_k')
+
+    plt.subplot(3, 1, 2)
+    plt.plot(ts, p, RATE_COLORS['p'], label='p')
+    plt.plot(ts, q, RATE_COLORS['q'], label='q')
+    plt.plot(ts, n, RATE_COLORS['n'], label='n')
+    plt.ylabel('Gating Value')
+    plt.legend()
+
+    plt.subplot(3, 1, 3)
+    plt.plot(ts, V, 'k')
+    plt.ylabel('V (input) (mV)')
+    plt.xlabel('t (ms)')
+
+    save_show(show, save, name)
+    plt.close()

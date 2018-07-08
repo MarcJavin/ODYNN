@@ -9,6 +9,7 @@ import sys
 import numpy as np
 import scipy as sp
 
+import hhmodel
 from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuronopt import NeuronOpt
@@ -190,8 +191,8 @@ def real_data(name, suffix='', lstm=True):
 def comp_pars(dir, i=-1):
     dir = utils.set_dir(dir)
     p = optimize.get_vars(dir, i)
-    utils.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-    utils.boxplot_vars(p, suffix='boxes', show=False, save=True)
+    hhmodel.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+    hhmodel.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
 
 def add_plots():
