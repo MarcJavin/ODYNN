@@ -305,8 +305,23 @@ class NeuronLSTM(Optimized, NeuronModel):
         sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
-class Neurons():
-    pass
+class Neurons(NeuronModel):
+
+
+    def __init__(self, neurons):
+        self._neurons = neurons
+        self._num = np.sum([n.num for n in neurons])
+
+    def reset(self):
+        for n in self._neurons:
+            n.reset()
+
+    def step(self, X, i):
+        next_state = []
+        idx = 0
+        for n in self._neurons:
+            next_state.append(n.step(X[:,idx:idx+n.num]))
+        return tf.stack(next_state, axis=1)
 
 
 class NeuronFix(MODEL):

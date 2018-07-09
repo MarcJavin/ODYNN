@@ -155,7 +155,7 @@ class NeuronModel(ABC):
         """Iterate over i (current) and return the state variables obtained after each step
 
         Args:
-          i(array): 
+          i(ndarray):
 
         Returns:
 

@@ -28,6 +28,7 @@ class CircuitSimul():
             self.n_batch = i_injs.shape[1]
             i_injs = np.moveaxis(i_injs, 1, 0)
             self.calculate = np.vectorize(self.calculate, signature='(t,n)->(t,s,n),(t,n)')
+        print(len(inits_p), i_injs.shape)
         assert (len(inits_p) == i_injs.shape[-1])
         self.connections = conns
         self.t = t
@@ -37,28 +38,8 @@ class CircuitSimul():
     def circuit_step(self, curs):
         return self.circuit.step(None, curs)
 
-    def calculate(self, i_inj):
-        """Simulate the circuit with a given input current.
 
-        Args:
-            i_inj(array): input current
-
-        Returns:
-            array, array: state vector and synaptical currents
-        """
-        self.circuit.neurons.reset()
-        states = np.zeros((np.hstack((len(self.t), self.circuit.neurons.init_state.shape))))
-        curs = np.zeros(i_inj.shape)
-
-        for t in range(len(self.t)):
-            if t == 0:
-                curs[t, :] = self.circuit_step(curs=i_inj[t, :])
-            else:
-                curs[t, :] = self.circuit_step(curs=i_inj[t, :] + curs[t - 1, :])
-            states[t, :, :] = self.circuit.neurons.state
-        return states, curs
-
-    def simul(self, n_out, dump=False, suffix='', show=False, save=True):
+    def simul(self, n_out=[0], dump=False, suffix='', show=False, save=True):
         """runs the entire simulation
 
         Args:
@@ -74,7 +55,7 @@ class CircuitSimul():
         """
         #[(batch,) time, state, neuron]
         start = time.time()
-        states, curs = self.calculate(self.i_injs)
+        states, curs = self.circuit.calculate(self.i_injs)
         print(time.time() - start)
 
         if self.batch:

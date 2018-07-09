@@ -233,8 +233,8 @@ class Optimizer(ABC):
 
         Args:
           sess(tf.Session): tensorflow session
-          losses(array): array of losses
-          rates(array): array containing the registered values of the learning rate
+          losses(ndarray): array of losses
+          rates(ndarray): array containing the registered values of the learning rate
           vars(dict): dictionary with the registered value of optimized variables
           i: step in the optimization
 

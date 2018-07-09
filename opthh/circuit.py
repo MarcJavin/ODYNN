@@ -46,7 +46,9 @@ class Circuit:
         self._posts = np.array(syns[1], dtype=np.int32)
         self._syns = ['%s-%s' % (a,b) for a,b in zip(self._pres, self._posts)]
         self.n_synapse = len(self._pres)
-        assert(len(np.unique(np.hstack((self._pres,self._posts)))) == self._neurons.num), "Invalid number of neurons"
+        nb_neurons = len(np.unique(np.hstack((self._pres,self._posts))))
+        if nb_neurons != self._neurons.num:
+            raise AttributeError("Invalid number of neurons, got {}, expected {}".format(self._neurons.num, nb_neurons))
 
     @property
     def num(self):
@@ -79,8 +81,8 @@ class Circuit:
         """run one time step
 
         Args:
-          hprev(array): previous state vector
-          curs(array): input currents
+          hprev(ndarray): previous state vector
+          curs(ndarray): input currents
 
         Returns:
             array: updated state vector
@@ -262,6 +264,27 @@ class CircuitFix(Circuit):
         neurons = NeuronFix(inits_p, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=False, neurons=neurons)
         self._param = self.init_p
+
+    def calculate(self, i_inj):
+        """Simulate the circuit with a given input current.
+
+        Args:
+            i_inj(ndarray): input current
+
+        Returns:
+            ndarray, ndarray: state vector and synaptical currents
+        """
+        self.neurons.reset()
+        states = np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
+        curs = np.zeros(i_inj.shape)
+
+        for t in range(len(i_inj)):
+            if t == 0:
+                curs[t, :] = self.step(None, curs=i_inj[t, :])
+            else:
+                curs[t, :] = self.step(None, curs=i_inj[t, :] + curs[t - 1, :])
+            states[t, :, :] = self.neurons.state
+        return states, curs
 
 
 SYNAPSE1 = {

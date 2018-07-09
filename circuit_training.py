@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import scipy as sp
 
-import optimize
+from opthh import optimize
 from opthh import circuit
 from opthh import datas
 from opthh import config, utils
@@ -26,8 +26,8 @@ def inhibit():
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
-    c = CircuitSimul(p, connections, t, i_injs)
-    c.simul()
+    c = CircuitSimul([p,p], connections, t, i_injs)
+    c.simul(show=True, save=False)
 
 
 def opt_neurons():
@@ -115,6 +115,10 @@ def full441():
 
 
 if __name__ == '__main__':
+
+
+    inhibit()
+    exit(0)
 
 
     xp = sys.argv[1]
