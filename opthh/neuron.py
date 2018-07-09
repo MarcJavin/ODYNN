@@ -29,6 +29,14 @@ class NeuronTf(MODEL, Optimized):
     nb = -1
 
     def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
+        """
+
+        Args:
+            init_p:
+            dt:
+            fixed:
+            constraints:
+        """
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
         Optimized.__init__(self, dt=dt, init_p=self._param)
         self._fixed = fixed
@@ -166,8 +174,10 @@ class NeuronLSTM(Optimized, NeuronModel):
     def init(self, batch):
         with tf.variable_scope('Volt'):
             self.vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
+            self.vstate = tf.Variable(self.vstate, trainable=False)
         with tf.variable_scope('Calc'):
             self.castate = self._ca_net.zero_state(batch, dtype=tf.float32)
+            self.castate = tf.Variable(self.castate, trainable=False)
 
     def build_graph(self, batch=1):
         tf.reset_default_graph()
@@ -199,11 +209,18 @@ class NeuronLSTM(Optimized, NeuronModel):
     def step(self, X, i_inj):
         # self.vstate = tf.Print(self.vstate, [self.vstate[0][0].name], 'vstate : ')
         with tf.variable_scope('Voltage'):
-            v, self.vstate = self._volt_net(i_inj, self.vstate)
+            v, vstate = self._volt_net(i_inj, self.vstate)
+            print(vstate)
         with tf.variable_scope('Calc'):
-            ca, self.castate = self._ca_net(v, self.castate)
-        u = np.zeros((5,1))
-        return tf.stack([v, u, u, u, u, u, ca], 0)
+            ca, castate = self._ca_net(v, self.castate)
+
+        print(self._volt_net.state_size)
+        v = tf.assign(self.vstate[0].c, vstate[0].c)# for i in range(4)]
+        ca = tf.assign(self.castate[0].c, castate[0].c)
+        with tf.control_dependencies([v, ca]):
+            u = tf.fill((5,1), self.vstate[0][0][0,0])
+
+        return tf.stack([v, u,u,u,u,u, ca],0)
 
     def calculate(self, i):
         if i.ndim > 1:
@@ -338,6 +355,9 @@ class Neurons(NeuronModel):
 
     def apply_constraints(self, session):
         return [n.apply_constraints(session) for n in self._neurons]
+
+    def apply_init(self, session):
+        [n.apply_init(session) for n in self._neurons]
 
 
 class NeuronFix(MODEL):

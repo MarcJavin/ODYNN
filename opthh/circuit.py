@@ -279,6 +279,9 @@ class CircuitTf(Circuit, Optimized):
         session.run(self.constraints)
         self._neurons.apply_constraints(session)
 
+    def apply_init(self, session):
+        self._neurons.apply_init(session)
+
     def get_params(self):
         return self._param.items()
     

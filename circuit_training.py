@@ -116,7 +116,7 @@ def with_LSTM():
     i_injs = np.stack([i, i_1], axis=2)
     train = sim.simul([p,p], conns, t, i_injs, n_out=[0,1], dump=False, show=False)
 
-    neurons = nr.Neurons([nr.NeuronTf(p, dt=dt), nr.NeuronLSTM(dt=dt)])
+    neurons = nr.Neurons([nr.NeuronTf(p, fixed='all', dt=dt), nr.NeuronLSTM(dt=dt)])
     c = CircuitTf(neurons=neurons, conns=conns_opt)
     co = CircuitOpt(circuit=c)
     co.opt_circuits(dir, train=train, n_out=[0,1])
