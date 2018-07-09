@@ -68,7 +68,7 @@ class NeuronTf(MODEL, Optimized):
         Returns:
 
         """
-        if self.num > 1:
+        if self._num > 1:
             self.init_p = dict(
                 [(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
         else:
@@ -84,8 +84,8 @@ class NeuronTf(MODEL, Optimized):
         if batch is not None:
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
-        if self.num > 1:
-            xshape.append(self.num)
+        if self._num > 1:
+            xshape.append(self._num)
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         res_ = tf.scan(self.step,
                        curs_,
@@ -97,8 +97,8 @@ class NeuronTf(MODEL, Optimized):
             input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
             input_cur, res_ = self.build_graph()
-        if i.ndim < 3 and self.num > 1:
-            i = np.stack([i for _ in range(self.num)], axis=i.ndim)
+        if i.ndim < 3 and self._num > 1:
+            i = np.stack([i for _ in range(self._num)], axis=i.ndim)
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             results = sess.run(res_, feed_dict={
@@ -108,7 +108,7 @@ class NeuronTf(MODEL, Optimized):
 
     def settings(self):
         return ('Neuron optimization'.center(20, '.') + '\n' +
-                'Nb of neurons : {}'.format(self.num) + '\n' +
+                'Nb of neurons : {}'.format(self._num) + '\n' +
                 'Initial neuron params : {}'.format(self.init_p) + '\n' +
                 'Fixed variables : {}'.format([c for c in self._fixed]) + '\n' +
                 'Initial state : {}'.format(self._init_state) + '\n' +
@@ -123,8 +123,8 @@ class NeuronTf(MODEL, Optimized):
 
 class NeuronLSTM(Optimized, NeuronModel):
     """Behavior model of a neuron using an LSTM network"""
-    ions = MODEL.ions
-    num = 1
+    _ions = MODEL.ions
+    _num = 1
 
     _max_cur = 60.
     _rest_v = -50.

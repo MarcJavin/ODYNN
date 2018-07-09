@@ -1,5 +1,5 @@
 """
-.. module:: neuronsimul
+.. module:: neursimul
     :synopsis: Module for simulation of neurons
 
 .. moduleauthor:: Marc Javin
@@ -18,32 +18,35 @@ t = np.array(sp.arange(0.0, t_len, DT))
 i_inj = 10. * ((t > 100) & (t < 750)) + 20. * ((t > 1500) & (t < 2500)) + 40. * ((t > 3000) & (t < 4000))
 
 
-def comp_pars(ps, dt=DT, i_inj=i_inj, show=True, save=False):
+def comp_pars(ps, t=None, dt=DT, i_inj=i_inj, show=True, save=False):
     """Compare different parameter sets on the same experiment
 
     Args:
       ps(list of dict): list of parameters to compare
       dt(float): time step
-      i_inj(array): input currents
+      i_inj(ndarray): input currents
       show(bool): If True, show the figure (Default value = True)
       save(bool): If True, save the figure (Default value = False)
 
     """
     start = time.time()
+    if t is not None:
+        dt = t[1] - t[0]
+    else:
+        t = sp.arange(0, len(i_inj) * dt, dt)
     neurons = NeuronFix(init_p=ps, dt=dt)
     X = neurons.calculate(i_inj)
     print("Simulation time : ", time.time() - start)
-    t = sp.arange(0, len(i_inj)*dt, dt)
     neurons.plot_output(t, i_inj, X, show=show, save=save)
 
-def comp_pars_targ(p, p_targ, dt=DT, i_inj=i_inj, suffix='', save=False, show=True):
+def comp_pars_targ(p, p_targ, t=None, dt=DT, i_inj=i_inj, suffix='', save=False, show=True):
     """Compare parameter sets with a target
 
     Args:
       p(dict or list of dict): parameter(s) to compare with the target
       p_targ(dict): target parameters
       dt(float): time step
-      i_inj(array): input currents
+      i_inj(ndarray): input currents
       suffix(str): suffix for the saved figure (Default value = '')
       save(bool): If True, save the figure (Default value = False)
       show(bool): If True, show the figure (Default value = True)
@@ -53,11 +56,15 @@ def comp_pars_targ(p, p_targ, dt=DT, i_inj=i_inj, suffix='', save=False, show=Tr
         p.append(p_targ)
     else:
         p = [p, p_targ]
+    if t is not None:
+        dt = t[1] - t[0]
+    else:
+        t = sp.arange(0, len(i_inj) * dt, dt)
+
     start = time.time()
     neurons = NeuronFix(init_p=p, dt=dt)
     X = neurons.calculate(i_inj)
     print("Simulation time : ", time.time() - start)
-    t = sp.arange(0, len(i_inj)*dt, dt)
     neurons.plot_output(t, i_inj, X[:, :, :-1], np.moveaxis(X[:, :, -1],1,0), suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
 def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
@@ -66,7 +73,7 @@ def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
     Args:
       neurons(list of object NeuronModel): neurons to compare
       dt(float): time step
-      i_inj(array): input currents
+      i_inj(ndarray): input currents
       show(bool): If True, show the figure (Default value = True)
       save(bool): If True, save the figure (Default value = False)
 
@@ -87,7 +94,7 @@ def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=F
       neuron(NeuronModel object): neuron to compare
       trace: recordings to plot
       dt(float): time step
-      i_inj(array): input currents
+      i_inj(ndarray): input currents
       scale:  (Default value = False)
       show(bool): If True, show the figure (Default value = True)
       save(bool): If True, save the figure (Default value = False)
@@ -105,14 +112,14 @@ def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=F
 
 
 """Runs and plot the neuron"""
-def simul(p=None, neuron=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=False, save=True, ca_true=None):
+def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=False, save=True, ca_true=None):
     """Main demo for the Hodgkin Huxley neuron model
 
     Args:
         p(dict): parameters of the neuron to simulate
         neuron(NeuronModel object): neuron to simulate
         dt(float): time step
-      i_inj(array): input currents
+      i_inj(ndarray): input currents
       dump:  (Default value = False)
       suffix:  (Default value = '')
       show(bool): If True, show the figure (Default value = False)
@@ -124,6 +131,10 @@ def simul(p=None, neuron=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=F
         array: records if dump is False
 
     """
+    if t is not None:
+        dt = t[1] - t[0]
+    else:
+        t = sp.arange(0, len(i_inj) * dt, dt)
     if(neuron is None):
         neuron = NeuronFix(p, dt=dt)
     print('Neuron Simulation'.center(40,'_'))
@@ -133,7 +144,6 @@ def simul(p=None, neuron=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=F
     X = neuron.calculate(i_inj)
 
     print("Simulation time : {}".format(time.time() - start))
-    t = sp.arange(0, len(i_inj)*neuron.dt, neuron.dt)
 
     # if neuron.loop_func == neuron.ica_from_v:
     #     plots_ica_from_v(t, i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
@@ -157,3 +167,6 @@ def simul(p=None, neuron=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=F
         return todump
 
 
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

@@ -14,8 +14,8 @@ import optimize
 from opthh import circuit
 from opthh import datas
 from opthh import config, utils
-from opthh.circuitopt import CircuitOpt
-from opthh.circuitsimul import CircuitSimul
+from opthh.circopt import CircuitOpt
+from opthh.circsimul import CircuitSimul
 
 p = config.NEURON_MODEL.default_params
 

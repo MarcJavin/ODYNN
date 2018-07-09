@@ -9,6 +9,7 @@ import pylab as plt
 from abc import ABC, abstractmethod
 import numpy as np
 from . import utils
+from utils import classproperty
 
 
 
@@ -24,7 +25,7 @@ class NeuronModel(ABC):
     """
     V_pos = 0
     """int, Default position of the voltage in state vectors"""
-    ions = {}
+    _ions = {}
     """dictionnary, name of ions in the vector states and their positions"""
     default_params = None
     """dict, Default set of parameters for the cls"""
@@ -52,13 +53,25 @@ class NeuronModel(ABC):
             init_p = self.default_params
         self._tensors = tensors
         if isinstance(init_p, list):
-            self.num = len(init_p)
+            self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self._init_state = np.stack([self._init_state for _ in range(self.num)], axis=1)
+            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=1)
         else:
-            self.num = 1
+            self._num = 1
         self._param = init_p
         self.dt = dt
+
+    @property
+    def num(self):
+        return self._num
+
+    @property
+    def init_state(self):
+        return self._init_state
+
+    @classproperty
+    def ions(self):
+        return self._ions
 
     @abstractmethod
     def step(self, X, i):
@@ -105,7 +118,7 @@ class NeuronModel(ABC):
 
         """
         plt.figure()
-        nb_plots = len(cls.ions) + 2
+        nb_plots = len(cls._ions) + 2
 
         if (states.ndim > 3):
             states = np.reshape(states, (states.shape[0], states.shape[1], -1))
@@ -120,7 +133,7 @@ class NeuronModel(ABC):
                 plt.legend()
         plt.ylabel('Voltage (mV)')
 
-        for ion, pos in cls.ions.items():
+        for ion, pos in cls._ions.items():
             plt.subplot(nb_plots, 1, 2)
             plt.plot(ts, states[:, pos], linewidth=l)
             if y_states is not None:

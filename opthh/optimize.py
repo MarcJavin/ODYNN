@@ -26,10 +26,15 @@ class Optimized(ABC):
     """Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit."""
 
     ions = {}
+    _num = None
 
     def __init__(self, dt, init_p={}):
         self.dt = dt
         self.init_p = init_p
+
+    @property
+    def num(self):
+        return self._num
 
     @abstractmethod
     def build_graph(self):
@@ -279,7 +284,7 @@ class Optimizer(ABC):
         if reload_dir is None:
             reload_dir = dir
         self._init(dir, suffix, train, test, l_rate, w, yshape)
-        print(self.settings(w))
+        # print(self.settings(w))
 
         global_step = self._build_loss(w)
         self._build_train(global_step)

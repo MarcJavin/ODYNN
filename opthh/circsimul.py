@@ -1,5 +1,5 @@
 """
-.. module:: circuitsimul
+.. module:: circsimul
     :synopsis: Module for simulation of neural circuits
 
 .. moduleauthor:: Marc Javin
@@ -46,8 +46,8 @@ class CircuitSimul():
         Returns:
             array, array: state vector and synaptical currents
         """
-        self.circuit._neurons.reset()
-        states = np.zeros((np.hstack((len(self.t), self.circuit._neurons._init_state.shape))))
+        self.circuit.neurons.reset()
+        states = np.zeros((np.hstack((len(self.t), self.circuit.neurons.init_state.shape))))
         curs = np.zeros(i_inj.shape)
 
         for t in range(len(self.t)):
@@ -55,7 +55,7 @@ class CircuitSimul():
                 curs[t, :] = self.circuit_step(curs=i_inj[t, :])
             else:
                 curs[t, :] = self.circuit_step(curs=i_inj[t, :] + curs[t - 1, :])
-            states[t, :, :] = self.circuit._neurons.state
+            states[t, :, :] = self.circuit.neurons.state
         return states, curs
 
     def simul(self, n_out, dump=False, suffix='', show=False, save=True):
@@ -79,13 +79,13 @@ class CircuitSimul():
 
         if self.batch:
             for i in range(self.i_injs.shape[0]):
-                plots_output_mult(self.t, self.i_injs[i], states[i,:,self.circuit._neurons.V_pos,:], states[i,:,self.circuit._neurons.Ca_pos,:],
+                plots_output_mult(self.t, self.i_injs[i], states[i,:,self.circuit.neurons.V_pos,:], states[i,:,self.circuit.neurons.Ca_pos,:],
                           i_syn=curs[i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i))
             # [t, state, (batch,) neuron]
             states = np.moveaxis(states, 0, -2)
             i_injs = np.moveaxis(self.i_injs, 0, 1)
         else:
-            plots_output_mult(self.t, self.i_injs, states[:,self.circuit._neurons.V_pos,:], states[:,self.circuit._neurons.Ca_pos,:],
+            plots_output_mult(self.t, self.i_injs, states[:,self.circuit.neurons.V_pos,:], states[:,self.circuit.neurons.Ca_pos,:],
                           i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
             #reshape for batch dimension
             states = states[:,:,np.newaxis,:]

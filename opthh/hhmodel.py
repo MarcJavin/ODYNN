@@ -1,5 +1,5 @@
 """
-.. module:: self
+.. module:: hhmodel
     :synopsis: Module defining a self for C. elegans neurons
 
 .. moduleauthor:: Marc Javin
@@ -15,12 +15,21 @@ import scipy as sp
 from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 
-from utils import RATE_COLORS, CONDS, box, MEMB, save_show, plot, GATES
+from .utils import box, save_show
 from .model import NeuronModel
 from . import utils
 from pylab import plt
 
-
+RATE_COLORS = {'p' : '#00ccff',
+               'q' : '#0000ff',
+               'n' : '#cc00ff',
+               'e' : '#b30000',
+               'f' : '#ff9900',
+               'h' : '#ff1a1a'
+                }
+GATES = ['e', 'f', 'n', 'p', 'q']
+CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
+MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 
 REST_CA = 0.
 INITS = {
@@ -197,7 +206,7 @@ class HodgkinHuxley(NeuronModel):
 
 
     REST_CA = REST_CA
-    ions = {'$Ca^{2+}$': -1}
+    _ions = {'$Ca^{2+}$': -1}
     Ca_pos = -1
     """int, Default position of the calcium concentration in state vectors"""
     _init_state = INIT_STATE
@@ -381,19 +390,19 @@ class HodgkinHuxley(NeuronModel):
         plt.ylabel('[$Ca^{2+}$]')
 
         plt.subplot(5, 1, 3)
-        plt.plot(ts, ica, utils.RATE_COLORS['f'], label='$I_{Ca}$')
+        plt.plot(ts, ica, RATE_COLORS['f'], label='$I_{Ca}$')
         plt.plot(ts, ik, 'm', label='$I_{K}$')
         plt.plot(ts, il, 'g', label='$I_{L}$')
         plt.ylabel('Current')
         plt.legend()
 
         plt.subplot(5, 1, 4)
-        plt.plot(ts, p, utils.RATE_COLORS['p'], label='p')
-        plt.plot(ts, q, utils.RATE_COLORS['q'], label='q')
-        plt.plot(ts, n, utils.RATE_COLORS['n'], label='n')
-        plt.plot(ts, e, utils.RATE_COLORS['e'], label='e')
-        plt.plot(ts, f, utils.RATE_COLORS['f'], label='f')
-        plt.plot(ts, h, utils.RATE_COLORS['h'], label='h')
+        plt.plot(ts, p, RATE_COLORS['p'], label='p')
+        plt.plot(ts, q, RATE_COLORS['q'], label='q')
+        plt.plot(ts, n, RATE_COLORS['n'], label='n')
+        plt.plot(ts, e, RATE_COLORS['e'], label='e')
+        plt.plot(ts, f, RATE_COLORS['f'], label='f')
+        plt.plot(ts, h, RATE_COLORS['h'], label='h')
         plt.ylabel('Gating Value')
         plt.legend()
 

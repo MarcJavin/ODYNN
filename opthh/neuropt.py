@@ -1,5 +1,5 @@
 """
-.. module:: neuronopt
+.. module:: neuropt
     :synopsis: Module for optimizing neurons
 
 .. moduleauthor:: Marc Javin

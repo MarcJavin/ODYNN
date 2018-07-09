@@ -1,6 +1,6 @@
 from unittest import TestCase
 from context import opthh
-import opthh.neuronsimul as sim
+import opthh.neursimul as sim
 from opthh import config, datas
 from opthh.neuron import NeuronTf, NeuronFix
 

@@ -2,8 +2,8 @@ from unittest import TestCase
 from context import opthh
 from opthh import config, utils, datas
 from opthh.neuron import NeuronLSTM
-from opthh.neuronopt import NeuronOpt
-from opthh.neuronsimul import simul
+from opthh.neuropt import NeuronOpt
+from opthh.neursimul import simul
 
 
 class TestNeuronOpt(TestCase):

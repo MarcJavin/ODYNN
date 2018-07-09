@@ -9,11 +9,10 @@ import sys
 import numpy as np
 import scipy as sp
 
-import hhmodel
 from opthh import utils, config, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
-from opthh.neuronopt import NeuronOpt
-from opthh import neuronsimul as sim
+from opthh.neuropt import NeuronOpt
+from opthh import neursimul as sim
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}
@@ -67,7 +66,7 @@ def single_exp(xp, w_v, w_ca, suffix=None):
     dir = '%s_v=%s_ca=%s' % (name, w_v, w_ca)
     if (suffix is not None):
         dir = '%s_%s' % (dir, suffix)
-    utils.set_dir(dir)
+    dir = utils.set_dir(dir)
     MODEL.step_model = loop_func
     MODEL.step_model = loop_func
     train = sim.simul(dt=dt, i_inj=i_inj, show=True)
@@ -81,7 +80,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
 
     dir = single_exp('ica', w_v1, w_ca1, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
-    param = utils.get_dic_from_var(dir)
+    param = optimize.get_best_result(dir)
     opt = NeuronOpt(init_p=param, fixed=CA_VAR)
     train = sim.simul(p=MODEL.default_params, dt=dt, i_inj=i_inj, suffix='step2', show=False)
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
@@ -94,7 +93,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
     dir = single_exp('ik', 1, 0, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
-    param = utils.get_dic_from_var(dir)
+    param = optimize.get_best_result(dir)
     opt = NeuronOpt(init_p=param, fixed=K_VAR)
     train = sim.simul(dt=dt, i_inj=i_inj, suffix='step2')
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)

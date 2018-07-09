@@ -23,7 +23,7 @@ class Circuit:
         self._tensors = tensors
         self._neurons = neurons
         if isinstance(conns, list):
-            self.num = len(conns)
+            self._num = len(conns)
             inits_p = []
             variables = list(conns[0].values())[0].keys()
             for c in conns:
@@ -31,14 +31,14 @@ class Circuit:
                 inits_p.append({var: np.array([syn[var] for syn in c.values()], dtype=np.float32) for var in variables})
             # merge them all in a new dimension
             self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in variables}
-            neurons.parallelize(self.num)
+            neurons.parallelize(self._num)
             self._connections = list(conns[0].keys())
         else:
-            self.num = 1
+            self._num = 1
             self.init_p = {var : np.array([p[var] for p in conns.values()], dtype=np.float32) for var in
                  list(conns.values())[0].keys()}
             self._connections = conns.keys()
-        self.init_state = self._neurons._init_state
+        self.init_state = self._neurons.init_state
         self.dt = self._neurons.dt
         self._param = self.init_p
         syns = list(zip(*[k for k in self._connections]))
@@ -47,6 +47,14 @@ class Circuit:
         self._syns = ['%s-%s' % (a,b) for a,b in zip(self._pres, self._posts)]
         self.n_synapse = len(self._pres)
         assert(len(np.unique(np.hstack((self._pres,self._posts)))) == self._neurons.num), "Invalid number of neurons"
+
+    @property
+    def num(self):
+        return self._num
+
+    @property
+    def neurons(self):
+        return self._neurons
 
     def syn_curr(self, vprev, vpost):
         """synaptic current
@@ -151,7 +159,7 @@ class Circuit:
             utils.save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
             plt.close()
 
-        if (self.num > 1):
+        if (self._num > 1):
             # if parallelization, compare run on each synapse
             for i in range(var_dic['E'].shape[0]):
                 var_d = {var: val[i] for var, val in var_dic.items()}
@@ -173,11 +181,11 @@ class CircuitTf(Circuit, Optimized):
         neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Optimized.__init__(self, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
-        if self.num > 1:
+        if self._num > 1:
             constraints_dic = give_constraints_syn(conns[0])
             #update constraint size for parallelization
             self.constraints_dic = dict(
-                [(var, np.stack([val for _ in range(self.num)], axis=val.ndim)) if val.ndim > 1 else (var, val) for var, val in
+                [(var, np.stack([val for _ in range(self._num)], axis=val.ndim)) if val.ndim > 1 else (var, val) for var, val in
                  constraints_dic.items()])
         else:
             self.constraints_dic = give_constraints_syn(conns)
@@ -211,8 +219,8 @@ class CircuitTf(Circuit, Optimized):
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
         xshape.append(self._neurons.num)
-        if self.num > 1:
-            xshape.append(self.num)
+        if self._num > 1:
+            xshape.append(self._num)
             # if self.parallel is not None:
             #     xshape.append(self.parallel)
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
@@ -224,7 +232,7 @@ class CircuitTf(Circuit, Optimized):
         return curs_, res
 
     def calculate(self, i):
-        if i.ndim > 1 and self.num == 1 or i.ndim > 2 and self.num > 1:
+        if i.ndim > 1 and self._num == 1 or i.ndim > 2 and self._num > 1:
             input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
         else:
             input_cur, res_ = self.build_graph()

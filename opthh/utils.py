@@ -30,16 +30,14 @@ OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
 REGEX_VARS = '(.*) : (.*)'
 
-RATE_COLORS = {'p' : '#00ccff',
-               'q' : '#0000ff',
-               'n' : '#cc00ff',
-               'e' : '#b30000',
-               'f' : '#ff9900',
-               'h' : '#ff1a1a'
-                }
-GATES = ['e', 'f', 'n', 'p', 'q']
-CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
-MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
+
+class classproperty(object):
+
+    def __init__(self, fget):
+        self.fget = fget
+
+    def __get__(self, owner_self, owner_cls):
+        return self.fget(owner_cls)
 
 
 

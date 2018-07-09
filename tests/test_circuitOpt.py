@@ -4,8 +4,8 @@ import opthh.circuit
 import opthh.datas
 from opthh import hhmodel, utils
 import numpy as np
-from opthh.circuitopt import CircuitOpt
-from opthh.circuitsimul import CircuitSimul
+from opthh.circopt import CircuitOpt
+from opthh.circsimul import CircuitSimul
 from opthh.utils import set_dir
 
 
