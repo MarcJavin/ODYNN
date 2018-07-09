@@ -33,7 +33,7 @@ class NeuronModel(ABC):
     """dict, Constraints to be applied during optimization
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
     """
-    _init_state = None
+    default_init_state = None
     """array, Initial values for the vector of state variables"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
@@ -55,9 +55,10 @@ class NeuronModel(ABC):
         if isinstance(init_p, list):
             self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=1)
+            self._init_state = np.stack([self.default_init_state for _ in range(self._num)], axis=1)
         else:
             self._num = 1
+            self._init_state = self.default_init_state
         self._param = init_p
         self.dt = dt
 

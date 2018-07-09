@@ -38,7 +38,7 @@ class Circuit:
             self.init_p = {var : np.array([p[var] for p in conns.values()], dtype=np.float32) for var in
                  list(conns.values())[0].keys()}
             self._connections = conns.keys()
-        self.init_state = self._neurons.init_state
+        self._init_state = self._neurons.init_state
         self.dt = self._neurons.dt
         self._param = self.init_p
         syns = list(zip(*[k for k in self._connections]))
@@ -57,6 +57,10 @@ class Circuit:
     @property
     def neurons(self):
         return self._neurons
+
+    @property
+    def init_state(self):
+        return self._init_state
 
     def syn_curr(self, vprev, vpost):
         """synaptic current
@@ -79,6 +83,9 @@ class Circuit:
 
     def step(self, hprev, curs):
         """run one time step
+
+        For tensor :
+
 
         Args:
           hprev(ndarray): previous state vector
@@ -178,10 +185,24 @@ class Circuit:
 
 
 class CircuitTf(Circuit, Optimized):
+    """
+    Circuit using tensorflow
+    """
 
-    def __init__(self, inits_p, conns, fixed='all', constraints_n=None, dt=0.1):
-        neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
-        Optimized.__init__(self, dt=dt)
+    def __init__(self, conns, neurons=None, inits_p=None, fixed='all', constraints_n=None, dt=0.1):
+        """
+
+        Args:
+            conns(dict): initial parameters for the synapses
+            neurons(NeuronModel): if not None, all other parameters except conns are ignores
+            inits_p(list of dict): initial parameters for the contained neurons
+            fixed(list): fixed parameters for the neurons
+            constraints_n(dict): constraints for the neurons
+            dt(float): time step
+        """
+        if neurons is None:
+            neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
+        Optimized.__init__(self, dt=neurons.dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
         if self._num > 1:
             constraints_dic = give_constraints_syn(conns[0])
@@ -202,7 +223,7 @@ class CircuitTf(Circuit, Optimized):
         self._neurons.parallelize(n)
 
     def reset(self):
-        """build tf graph"""
+        """prepare the variables as tensors, prepare the constraints, call reset for self._neurons"""
         self._param = {}
         self.constraints = []
         for var, val in self.init_p.items():
@@ -211,15 +232,18 @@ class CircuitTf(Circuit, Optimized):
                 # add dimension for later
                 con = self.constraints_dic[var]
                 self.constraints.append(tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
-        self._neurons._reset()
+        self._neurons.reset()
+        self._init_state = self._neurons.init_state
 
     def build_graph(self, batch=None):
         self.reset()
         xshape = [None]
-        initializer = self.init_state
-        if batch:
+        initializer = self._init_state
+        if batch is not None:
             xshape.append(None)
+            print('init shape :', initializer.shape)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
+            self._neurons.init(batch)
         xshape.append(self._neurons.num)
         if self._num > 1:
             xshape.append(self._num)
@@ -232,6 +256,7 @@ class CircuitTf(Circuit, Optimized):
                       initializer=initializer.astype(np.float32))
 
         return curs_, res
+
 
     def calculate(self, i):
         if i.ndim > 1 and self._num == 1 or i.ndim > 2 and self._num > 1:
@@ -275,16 +300,16 @@ class CircuitFix(Circuit):
             ndarray, ndarray: state vector and synaptical currents
         """
         self.neurons.reset()
-        states = np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
-        curs = np.zeros(i_inj.shape)
+        states = []#np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
+        curs = []#np.zeros(i_inj.shape)
 
         for t in range(len(i_inj)):
             if t == 0:
-                curs[t, :] = self.step(None, curs=i_inj[t, :])
+                curs.append(self.step(None, curs=i_inj[t]))
             else:
-                curs[t, :] = self.step(None, curs=i_inj[t, :] + curs[t - 1, :])
-            states[t, :, :] = self.neurons.state
-        return states, curs
+                curs.append(self.step(None, curs=i_inj[t] + curs[t - 1]))
+            states.append(self.neurons.state)
+        return np.stack(states, axis=0), np.stack(curs, axis=0)
 
 
 SYNAPSE1 = {

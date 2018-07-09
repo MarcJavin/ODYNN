@@ -209,7 +209,7 @@ class HodgkinHuxley(NeuronModel):
     _ions = {'$Ca^{2+}$': -1}
     Ca_pos = -1
     """int, Default position of the calcium concentration in state vectors"""
-    _init_state = INIT_STATE
+    default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
     """default parameters as a dictionnary"""
@@ -320,10 +320,10 @@ class HodgkinHuxley(NeuronModel):
         h = self._h(cac)
         # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
         #     ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
-        V += ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) / self._param[
+        V = V + ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) / self._param[
             'C_m']) * self.dt
 
-        cac += (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
+        cac = cac + (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
                     (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
         tau = self._param['p__tau']
         p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(V, 'p') / tau))

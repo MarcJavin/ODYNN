@@ -17,8 +17,20 @@ class CircuitOpt(Optimizer):
     """Class for optimization of a neuron circuit"""
     dim_batch = 1
 
-    def __init__(self, inits_p, conns, epochs=500, fixed=hhmodel.ALL, dt=0.1):
-        self.circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
+    def __init__(self, inits_p=None, conns=None, epochs=500, fixed=hhmodel.ALL, dt=0.1, circuit=None):
+        """
+
+        Args:
+            inits_p:
+            conns:
+            epochs:
+            fixed:
+            dt:
+            circuit: If not None, all other arguments are ignored
+        """
+        if circuit is None:
+            circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
+        self.circuit = circuit
         Optimizer.__init__(self, self.circuit, epochs)
 
     def _build_loss(self, w):

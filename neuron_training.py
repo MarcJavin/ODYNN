@@ -216,6 +216,8 @@ def test_lstm():
 
 if __name__ == '__main__':
 
+    test_lstm(); exit(0)
+
     xp = sys.argv[1]
     if len(sys.argv)>3:
         suf = sys.argv[3]

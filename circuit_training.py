@@ -10,12 +10,12 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import optimize
+from opthh import neuron as nr
 from opthh import circuit
 from opthh import datas
 from opthh import config, utils
-from opthh.circopt import CircuitOpt
-from opthh.circsimul import CircuitSimul
+from opthh.circopt import CircuitOpt, CircuitTf
+import opthh.circsimul as sim
 
 p = config.NEURON_MODEL.default_params
 
@@ -26,8 +26,7 @@ def inhibit():
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
-    c = CircuitSimul([p,p], connections, t, i_injs)
-    c.simul(show=True, save=False)
+    sim.simul([p,p], connections, t, i_injs, show=True, save=False)
 
 
 def opt_neurons():
@@ -37,28 +36,20 @@ def opt_neurons():
     i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1]).transpose()
-    c = CircuitSimul([p, p], connections, t, i_injs)
-    f = c.simul(dump=True)
+    f = sim.simul([p, p], connections, t, i_injs, dump=True)
     c = CircuitOpt([p, p], connections)
     c.opt_neurons(f)
 
-def comp_pars(dir):
-    dir = utils.set_dir(dir)
-    p = optimize.get_vars(dir)
-
-    utils.plot_vars_syn(p, func=utils.bar, suffix='compared', show=False, save=True)
-    utils.plot_vars_syn(p, func=utils.boxplot, suffix='boxes', show=False, save=True)
 
 
 def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     pars = [p for _ in range(nb_neuron)]
-    utils.set_dir(dir)
+    dir = utils.set_dir(dir)
+    print("Feed with current of shape : ", i_injs.shape)
 
-    c = CircuitSimul(pars, conns, t, i_injs)
-    file = c.simul(n_out=n_out, dump=True, show=False)
-    c = CircuitOpt(pars, conns_opt)
-    c.opt_circuits(dir, n_out=n_out, file=file)
-    comp_pars(dir)
+    train = sim.simul(pars, conns, t, i_injs, n_out=n_out, dump=False, show=False)
+    c = CircuitOpt(pars, conns_opt, dt=t[1]-t[0])
+    c.opt_circuits(dir, n_out=n_out, train=train)
 
 def full4to1():
     t,i =datas.full4()
@@ -114,12 +105,27 @@ def full441():
     exit(0)
 
 
+def with_LSTM():
+    dir = utils.set_dir('withLSTM')
+    conns = {(0, 1): circuit.SYNAPSE}
+    conns_opt = {(0, 1): circuit.get_syn_rand(True)}
+
+    dt = 0.5
+    t, i = datas.give_train(dt=dt)
+    i_1 = np.zeros(i.shape)
+    i_injs = np.stack([i, i_1], axis=2)
+    train = sim.simul([p,p], conns, t, i_injs, n_out=[0,1], dump=False, show=False)
+
+    neurons = nr.Neurons([nr.NeuronTf(p, dt=dt), nr.NeuronLSTM(dt=dt)])
+    c = CircuitTf(neurons=neurons, conns=conns_opt)
+    co = CircuitOpt(circuit=c)
+    co.opt_circuits(dir, train=train, n_out=[0,1])
+
+
 if __name__ == '__main__':
 
-
-    inhibit()
+    with_LSTM()
     exit(0)
-
 
     xp = sys.argv[1]
     if(xp == '21exc'):

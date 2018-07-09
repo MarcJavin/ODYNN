@@ -43,7 +43,7 @@ class NeuronTf(MODEL, Optimized):
         cls.nb += 1
         return str(cls.nb)
 
-    def _reset(self):
+    def reset(self):
         """rebuild tf variable graph"""
         with(tf.variable_scope(self.id)):
             self._param = {}
@@ -76,9 +76,12 @@ class NeuronTf(MODEL, Optimized):
                 [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self.init_p.items()])
         self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
 
+    def init(self, batch):
+        pass
+
     def build_graph(self, batch=None):
         tf.reset_default_graph()
-        self._reset()
+        self.reset()
         xshape = [None]
         initializer = self._init_state
         if batch is not None:
@@ -124,7 +127,8 @@ class NeuronTf(MODEL, Optimized):
 class NeuronLSTM(Optimized, NeuronModel):
     """Behavior model of a neuron using an LSTM network"""
     _ions = MODEL.ions
-    _num = 1
+    Ca_pos = MODEL.Ca_pos
+    default_init_state = MODEL.default_init_state
 
     _max_cur = 60.
     _rest_v = -50.
@@ -141,7 +145,10 @@ class NeuronLSTM(Optimized, NeuronModel):
             self._extra_ca = extra_ca
             self._volt_net = None
             self._ca_net = None
+        self.vstate = None
+        self.castate = None
         Optimized.__init__(self, dt=dt)
+        NeuronModel.__init__(self, dt=dt)
 
     def reset(self):
         num_units1 = [self._hidden_layer_size for _ in range(self._hidden_layer_nb)]
@@ -156,51 +163,16 @@ class NeuronLSTM(Optimized, NeuronModel):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
             self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
+    def init(self, batch):
+        with tf.variable_scope('Volt'):
+            self.vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
+        with tf.variable_scope('Calc'):
+            self.castate = self._ca_net.zero_state(batch, dtype=tf.float32)
 
-    def build_graph(self, batch=None):
-        tf.reset_default_graph()
-        xshape = [None, None]
-        if batch is None:
-            batch = 1
-
-        curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
-        with tf.variable_scope('prelayer'):
-            input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
-
-        for layer in range(self._hidden_layer_nb):
-            input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(layer))
-
-        v_outputs, v_states = self._lstm_cell(1, input, batch, 'post_V')
-        input = v_outputs
-
-        if self._extra_ca > 0:
-            for layer in range(self._extra_ca):
-                input, st = self._lstm_cell(self._hidden_layer_size, input, batch, '{}'.format(self._hidden_layer_nb+layer+1))
-
-        ca_outputs, ca_states = self._lstm_cell(1, input, batch, 'post_Ca')
-
-
-        with tf.name_scope('Scale'):
-            V = v_outputs[:, :, 0] * self._scale_v + self._rest_v
-            Ca = ca_outputs[:, :, -1] * self._scale_ca
-            results = tf.stack([V, Ca], axis=1)
-
-        return curs_, results
-
-    @staticmethod
-    def _lstm_cell(size, input, batch, scope):
-        with tf.variable_scope(scope):
-            cell = tf.nn.rnn_cell.LSTMCell(size, use_peepholes=True, state_is_tuple=True)
-            initializer = cell.zero_state(batch, dtype=tf.float32)
-            return tf.nn.dynamic_rnn(cell, inputs=input, initial_state=initializer, time_major=True)
-
-
-    def build_graph2(self, batch=None):
+    def build_graph(self, batch=1):
         tf.reset_default_graph()
         self.reset()
         xshape = [None, None]
-        if batch is None:
-            batch = 1
 
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
         with tf.variable_scope('prelayer'):
@@ -208,13 +180,13 @@ class NeuronLSTM(Optimized, NeuronModel):
 
         with tf.variable_scope('Volt'):
             initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
-            self.vstate = initializer
             v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
+            self.vstate = initializer
 
         with tf.variable_scope('Calc'):
             initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
-            self.castate = initializer
             ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
+            self.castate = initializer
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
@@ -223,10 +195,15 @@ class NeuronLSTM(Optimized, NeuronModel):
 
         return curs_, results
 
+
     def step(self, X, i_inj):
-        v, self.vstate = self._volt_net(i_inj, self.vstate)
-        ca, self.castate = self._ca_net(v, self.castate)
-        return v, ca
+        # self.vstate = tf.Print(self.vstate, [self.vstate[0][0].name], 'vstate : ')
+        with tf.variable_scope('Voltage'):
+            v, self.vstate = self._volt_net(i_inj, self.vstate)
+        with tf.variable_scope('Calc'):
+            ca, self.castate = self._ca_net(v, self.castate)
+        u = np.zeros((5,1))
+        return tf.stack([v, u, u, u, u, u, ca], 0)
 
     def calculate(self, i):
         if i.ndim > 1:
@@ -307,21 +284,60 @@ class NeuronLSTM(Optimized, NeuronModel):
 
 class Neurons(NeuronModel):
 
+    Ca_pos = MODEL.Ca_pos
+
 
     def __init__(self, neurons):
+        """
+
+        Args:
+            neurons(list): list of neurons objects
+
+        Raises:
+            AttributeError: If all neurons don't share the same dt
+        """
+        if len(set([n.dt for n in neurons])) > 1:
+            raise AttributeError('All neurons must have the save time step')
         self._neurons = neurons
         self._num = np.sum([n.num for n in neurons])
+        self._init_state = np.stack([n.init_state for n in neurons], axis=1)
+        self.dt = neurons[0].dt
 
     def reset(self):
         for n in self._neurons:
             n.reset()
+        self._init_state = np.stack([n.init_state for n in self._neurons], axis=1)
+
+    def init(self, batch):
+        for n in self._neurons:
+            n.init(batch)
 
     def step(self, X, i):
+        """
+        Share the state and the input current into its embedded neurons
+
+        Args:
+            X:
+            i:
+
+        Returns:
+
+        """
         next_state = []
         idx = 0
-        for n in self._neurons:
-            next_state.append(n.step(X[:,idx:idx+n.num]))
-        return tf.stack(next_state, axis=1)
+        for j, n in enumerate(self._neurons):
+            next_state.append(n.step(X[:,:,idx:idx+n.num], i[:,idx:idx+n.num]))
+            idx += n.num
+        return tf.concat(next_state, axis=2)
+
+    def calculate(self, i):
+        pass
+
+    def settings(self):
+        return 'Ensemble neurons : '.join(['\n' + n.settings() for n in self._neurons])
+
+    def apply_constraints(self, session):
+        return [n.apply_constraints(session) for n in self._neurons]
 
 
 class NeuronFix(MODEL):
