@@ -2,7 +2,7 @@ from unittest import TestCase
 from context import opthh
 import opthh.neursimul as sim
 from opthh import config, datas
-from opthh.neuron import NeuronTf, NeuronFix
+from opthh.neuron import BioNeuronTf, BioNeuronFix
 
 
 class TestNeuronSimul(TestCase):
@@ -22,5 +22,5 @@ class TestNeuronSimul(TestCase):
 
     def test_Sim(self):
         sim.simul()
-        nfix = NeuronFix(self.pars)
+        nfix = BioNeuronFix(self.pars)
         resfix = sim.simul(neuron=nfix, dt=self.dt, i_inj=self.i, dump=False)

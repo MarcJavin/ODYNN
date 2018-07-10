@@ -5,7 +5,7 @@ import opthh.datas
 from opthh import hhmodel, utils
 import numpy as np
 from opthh.circopt import CircuitOpt
-from opthh.circsimul import CircuitSimul
+import opthh.circsimul as csim
 from opthh.utils import set_dir
 
 
@@ -31,8 +31,7 @@ class TestCircuitOpt(TestCase):
 
         print('one target'.center(40, '#'))
         n_out = [1]
-        c = CircuitSimul(pars, conns, t, i_injs, dt=0.5)
-        train = c.simul(n_out=n_out,  show=False)
+        train = csim.simul(pars, conns, t, i_injs, n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns_opt, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
         self.assertEqual(co._loss.shape, ())
@@ -48,7 +47,7 @@ class TestCircuitOpt(TestCase):
 
         print('several targets'.center(40, '#'))
         n_out = [0,1]
-        train = c.simul(n_out=n_out,  show=False)
+        train = csim.simul(pars, conns, t, i_injs, n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns, dt=0.5)
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
         self.assertEqual(co._loss.shape, ())

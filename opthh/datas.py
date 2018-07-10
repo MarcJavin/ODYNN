@@ -82,7 +82,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     Args:
       delta:  (Default value = 500)
       final_time:  (Default value = 4000.)
-      dt:  (Default value = 0.2)
+      dt(float): time step (Default value = 0.2)
 
     Returns:
 
@@ -133,7 +133,7 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     """time and currents for optimization
 
     Args:
-      dt:  (Default value = DT)
+      dt(float): time step (Default value = DT)
       nb_neuron_zero:  (Default value = None)
       max_t:  (Default value = 1200.)
 
@@ -178,7 +178,7 @@ def give_test(dt=DT):
     """time and currents for optimization
 
     Args:
-      dt:  (Default value = DT)
+      dt(float): time step (Default value = DT)
 
     Returns:
 

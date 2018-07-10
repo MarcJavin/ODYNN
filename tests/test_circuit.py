@@ -4,11 +4,11 @@ import opthh.circuit
 from opthh import hhmodel
 from opthh.circuit import Circuit
 import numpy as np
-from opthh.neuron import NeuronTf
+from opthh.neuron import BioNeuronTf
 
 
 class TestCircuit(TestCase):
-    neuron = NeuronTf([hhmodel.DEFAULT for _ in range(5)])
+    neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
     conns = {(0, 4): opthh.circuit.SYNAPSE,
              (1, 4): opthh.circuit.SYNAPSE,
              (2, 4): opthh.circuit.SYNAPSE,
@@ -24,7 +24,7 @@ class TestCircuit(TestCase):
     circ2 = Circuit(conns2, neuron)
 
     def test_init(self):
-        neuron_bad = NeuronTf([hhmodel.DEFAULT for _ in range(3)])
+        neuron_bad = BioNeuronTf([hhmodel.DEFAULT for _ in range(3)])
 
         self.circ = Circuit(self.conns, self.neuron)
         self.assertEqual(self.circ.num, 1)
@@ -44,9 +44,9 @@ class TestCircuit(TestCase):
         self.assertEqual(self.circ2._neurons.init_state.shape[-1], self.circ2.num)
         self.assertEqual(self.circ2._neurons.init_state.all(), self.circ2.init_state.all())
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(AttributeError):
             cbad = Circuit(self.conns, neuron_bad)
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(AttributeError):
             cbad = Circuit(self.conns2, neuron_bad)
 
 

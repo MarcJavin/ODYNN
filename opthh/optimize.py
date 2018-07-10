@@ -87,7 +87,6 @@ class Optimized(ABC):
 
 
 class Optimizer(ABC):
-    min_loss = 1.
 
     def __init__(self, optimized, epochs=500, frequency=10):
         """

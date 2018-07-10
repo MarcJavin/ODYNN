@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from .hhmodel import HodgkinHuxley
+from .hhmodel import CElegansNeuron
 
-NEURON_MODEL = HodgkinHuxley
+NEURON_MODEL = CElegansNeuron
 """Class used for biological neuron models"""

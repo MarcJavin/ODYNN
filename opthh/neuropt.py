@@ -8,14 +8,13 @@
 import tensorflow as tf
 
 from . import hhmodel
-from .neuron import NeuronTf
+from .neuron import BioNeuronTf
 from .optimize import Optimizer
 
 
 class NeuronOpt(Optimizer):
     """Class for optimization of a neuron"""
 
-    dim_batch = 1
     yshape = [2, None, None]
 
     def __init__(self, neuron=None, epochs=500, init_p=hhmodel.give_rand(), fixed=[], constraints=hhmodel.CONSTRAINTS,
@@ -23,7 +22,7 @@ class NeuronOpt(Optimizer):
         if neuron is not None:
             self.neuron = neuron
         else:
-            self.neuron = NeuronTf(init_p, dt=dt, fixed=fixed, constraints=constraints)
+            self.neuron = BioNeuronTf(init_p, dt=dt, fixed=fixed, constraints=constraints)
         Optimizer.__init__(self, self.neuron, epochs)
 
     def _build_loss(self, w):

@@ -16,8 +16,7 @@ from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 
 from .utils import box, save_show
-from .model import NeuronModel
-from . import utils
+from . import utils, model
 from pylab import plt
 
 RATE_COLORS = {'p' : '#00ccff',
@@ -201,7 +200,7 @@ def give_rand():
 
 
 
-class HodgkinHuxley(NeuronModel):
+class CElegansNeuron(model.BioNeuron):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
 
@@ -217,7 +216,7 @@ class HodgkinHuxley(NeuronModel):
     """constraints to be applied when optimizing"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
-        NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
+        model.BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _inf(self, V, rate):
         """Compute the steady state value of a gate activation rate

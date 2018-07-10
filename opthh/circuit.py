@@ -12,7 +12,7 @@ import tensorflow as tf
 import pylab as plt
 
 from . import utils, config
-from .neuron import NeuronTf, NeuronFix
+from .neuron import BioNeuronTf, BioNeuronFix
 from .optimize import Optimized
 
 
@@ -52,10 +52,12 @@ class Circuit:
 
     @property
     def num(self):
+        """Number of circuits contained in the object, used to train in parallel"""
         return self._num
 
     @property
     def neurons(self):
+        """Neurons contained in the circuit"""
         return self._neurons
 
     @property
@@ -63,13 +65,15 @@ class Circuit:
         return self._init_state
 
     def syn_curr(self, vprev, vpost):
-        """synaptic current
+        """
+        Compute the synaptic current
 
         Args:
-          vprev: 
-          vpost: 
+          vprev(ndarray or tf.Tensor): presynaptic voltages
+          vpost(ndarray or tf.Tensor): postsynaptic voltages
 
         Returns:
+            ndarray of tf.Tensor: synaptic currents
 
         """
         G = self._param['G']
@@ -88,11 +92,11 @@ class Circuit:
 
 
         Args:
-          hprev(ndarray): previous state vector
-          curs(ndarray): input currents
+          hprev(ndarray or tf.Tensor): previous state vector
+          curs(ndarray or tf.Tensor): input currents
 
         Returns:
-            array: updated state vector
+            ndarray or tf.Tensor: updated state vector
         """
         if self._tensors:
             # update synapses
@@ -131,10 +135,10 @@ class Circuit:
             return h
         else:
             # update neurons
-            self._neurons.step_fix(curs)
+            h = self._neurons.step(hprev, curs)
             # update synapses
-            vpres = self._neurons.state[0, self._pres]
-            vposts = self._neurons.state[0, self._posts]
+            vpres = h[0, self._pres]
+            vposts = h[0, self._posts]
             curs_syn = self.syn_curr(vpres, vposts)
             curs_post = np.zeros(curs.shape)
             for i in range(self._neurons.num):
@@ -142,46 +146,11 @@ class Circuit:
                     curs_post[i] = 0
                     continue
                 curs_post[i] = np.sum(curs_syn[self._posts == i])
-            return curs_post
+            return h, curs_post
 
-    def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
-        """plot variation/comparison/boxplots of synaptic variables
 
-        Args:
-          var_dic(dict): synaptic parameters, each value of size [time, n_synapse, parallelization]
-          suffix:  (Default value = "")
-          show(bool): If True, show the figure (Default value = True)
-          save(bool): If True, save the figure (Default value = False)
-          func:  (Default value = plot)
-        """
-
-        def oneplot(var_d, name):
-            labels = ['G', 'mdp', 'E', 'scale']
-            if func == utils.box:
-                func(var_d, utils.COLORS[:len(labels)], labels)
-            else:
-                for i, var in enumerate(labels):
-                    plt.subplot(2, 2, i + 1)
-                    func(plt, var_d[var])
-                    plt.ylabel(var)
-            plt.tight_layout()
-            utils.save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
-            plt.close()
-
-        if (self._num > 1):
-            # if parallelization, compare run on each synapse
-            for i in range(var_dic['E'].shape[0]):
-                var_d = {var: val[i] for var, val in var_dic.items()}
-                oneplot(var_d, 'Synapse_{}'.format(i))
-        else:
-            # if not, compare all synapses together
-            oneplot(var_dic, 'All_Synapses')
 
     plot_output = config.NEURON_MODEL.plot_output
-
-    def study_vars(self, p):
-        self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-        self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
 
 
 class CircuitTf(Circuit, Optimized):
@@ -189,7 +158,7 @@ class CircuitTf(Circuit, Optimized):
     Circuit using tensorflow
     """
 
-    def __init__(self, conns, neurons=None, inits_p=None, fixed='all', constraints_n=None, dt=0.1):
+    def __init__(self, inits_p=None, conns=None, neurons=None, fixed='all', constraints_n=None, dt=0.1):
         """
 
         Args:
@@ -201,7 +170,7 @@ class CircuitTf(Circuit, Optimized):
             dt(float): time step
         """
         if neurons is None:
-            neurons = NeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
+            neurons = BioNeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Optimized.__init__(self, dt=neurons.dt)
         Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
         if self._num > 1:
@@ -241,7 +210,7 @@ class CircuitTf(Circuit, Optimized):
         initializer = self._init_state
         if batch is not None:
             xshape.append(None)
-            print('init shape :', initializer.shape)
+            # print('init shape :', initializer.shape)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
             self._neurons.init(batch)
         xshape.append(self._neurons.num)
@@ -259,6 +228,15 @@ class CircuitTf(Circuit, Optimized):
 
 
     def calculate(self, i):
+        """
+        Iterate over i (current) and return the state variables obtained after each step
+
+        Args:
+          i(ndarray): input current
+
+        Returns:
+            ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
+        """
         if i.ndim > 1 and self._num == 1 or i.ndim > 2 and self._num > 1:
             input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
         else:
@@ -284,17 +262,55 @@ class CircuitTf(Circuit, Optimized):
 
     def get_params(self):
         return self._param.items()
+
+    def study_vars(self, p):
+        self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+        self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
+
+    def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
+        """plot variation/comparison/boxplots of synaptic variables
+
+        Args:
+          var_dic(dict): synaptic parameters, each value of size [time, n_synapse, parallelization]
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+          func:  (Default value = plot)
+        """
+
+        def oneplot(var_d, name):
+            labels = ['G', 'mdp', 'E', 'scale']
+            if func == utils.box:
+                func(var_d, utils.COLORS[:len(labels)], labels)
+            else:
+                for i, var in enumerate(labels):
+                    plt.subplot(2, 2, i + 1)
+                    func(plt, var_d[var])
+                    plt.ylabel(var)
+            plt.tight_layout()
+            utils.save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
+            plt.close()
+
+        if (self._num > 1):
+            # if parallelization, compare run on each synapse
+            for i in range(var_dic['E'].shape[0]):
+                var_d = {var: val[i] for var, val in var_dic.items()}
+                oneplot(var_d, 'Synapse_{}'.format(i))
+        else:
+            # if not, compare all synapses together
+            oneplot(var_dic, 'All_Synapses')
     
 
 class CircuitFix(Circuit):
 
     def __init__(self, inits_p, conns, dt=0.1):
-        neurons = NeuronFix(inits_p, dt=dt)
+        neurons = BioNeuronFix(inits_p, dt=dt)
         Circuit.__init__(self, conns=conns, tensors=False, neurons=neurons)
         self._param = self.init_p
 
     def calculate(self, i_inj):
-        """Simulate the circuit with a given input current.
+        """
+        Simulate the circuit with a given input current.
 
         Args:
             i_inj(ndarray): input current
@@ -302,16 +318,17 @@ class CircuitFix(Circuit):
         Returns:
             ndarray, ndarray: state vector and synaptical currents
         """
-        self.neurons.reset()
         states = []#np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
         curs = []#np.zeros(i_inj.shape)
+        h = self._neurons.init_state
 
         for t in range(len(i_inj)):
             if t == 0:
-                curs.append(self.step(None, curs=i_inj[t]))
+                h, c = self.step(h, curs=i_inj[t])
             else:
-                curs.append(self.step(None, curs=i_inj[t] + curs[t - 1]))
-            states.append(self.neurons.state)
+                h, c = self.step(h, curs=i_inj[t] + curs[t - 1])
+            curs.append(c)
+            states.append(h)
         return np.stack(states, axis=0), np.stack(curs, axis=0)
 
 

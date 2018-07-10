@@ -15,7 +15,6 @@ from .neuropt import NeuronOpt
 
 class CircuitOpt(Optimizer):
     """Class for optimization of a neuron circuit"""
-    dim_batch = 1
 
     def __init__(self, inits_p=None, conns=None, epochs=500, fixed=hhmodel.ALL, dt=0.1, circuit=None):
         """

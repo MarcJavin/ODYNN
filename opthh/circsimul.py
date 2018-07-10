@@ -14,22 +14,6 @@ import time
 
 
 
-# def __init__(self, inits_p, conns, t, i_injs, dt=0.1):
-#     assert(dt == t[1] - t[0])
-#     circuit = CircuitFix(inits_p=inits_p, conns=conns, dt=dt)
-#     self.batch = False
-#     if i_injs.ndim > 2:
-#         self.batch = True
-#         self.n_batch = i_injs.shape[1]
-#         i_injs = np.moveaxis(i_injs, 1, 0)
-#         self.calculate = np.vectorize(self.calculate, signature='(t,n)->(t,s,n),(t,n)')
-#     print(len(inits_p), i_injs.shape)
-#     assert (len(inits_p) == i_injs.shape[-1])
-#     self.connections = conns
-#     t = t
-#     #[(batch,) t, neuron]
-#     i_injs = i_injs
-
 def simul(pars, conns, t, i_injs, circuit=None, n_out=[0], dump=False, suffix='', show=False, save=True):
     """runs the entire simulation
 

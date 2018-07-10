@@ -52,7 +52,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     # 'nbsphinx',
-    'numpydoc'
+    # 'numpydoc'
 ]
 
 napoleon_include_init_with_doc=True

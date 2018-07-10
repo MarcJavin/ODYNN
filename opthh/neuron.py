@@ -10,32 +10,45 @@ import numpy as np
 import tensorflow as tf
 
 from . import config
-from .model import NeuronModel
+from .model import Neuron
 from .optimize import Optimized
 
 
 MODEL = config.NEURON_MODEL
 
 
-class NeuronTf(MODEL, Optimized):
-    """Class representing a neuron, implemented using Tensorflow.
-    This class allows simulation and optimization
+class NeuronTf(Neuron, Optimized):
+    """
+    Abstract class whose implementation allow single optimization as well as in a Circuit
+    """
 
-    Args:
+    _ions = MODEL.ions
+    Ca_pos = MODEL.Ca_pos
+    default_init_state = MODEL.default_init_state
 
-    Returns:
+    def __init__(self, dt=0.1):
+        Neuron.__init__(self, dt=dt)
+        Optimized.__init__(self, dt=dt)
 
+class BioNeuronTf(MODEL, NeuronTf):
+    """
+    Class representing a neuron, implemented using Tensorflow.
+    This class allows simulation and optimization, alone and in a Circuit.
+    It can contain several neurons at the same time. Which in turn can be optimized in parallel, or be used to
+    represent the entire neurons in a Circuit.
     """
     nb = -1
 
     def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
         """
-
+        Initializer
         Args:
-            init_p:
-            dt:
-            fixed:
-            constraints:
+            init_p(dict or list of dict): initial parameters of the neuron(s). If init_p is a list, then this object
+                will model n = len(init_p) neurons
+            dt(float): time step
+            fixed(set): parameters that are fixed and will stay constant in case of optimization.
+                if fixed == 'all', all parameters will be constant
+            constraints(dict of ndarray): keys as parameters name, and values as [lower_bound, upper_bound]
         """
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
         Optimized.__init__(self, dt=dt, init_p=self._param)
@@ -68,13 +81,10 @@ class NeuronTf(MODEL, Optimized):
         # print('neuron_params after reset : ', self._param)
 
     def parallelize(self, n):
-        """Add a dimension of size n in the parameters
+        """Add a dimension of size n in the initial parameters and initial state
 
         Args:
-          n: 
-
-        Returns:
-
+          n(int): size of the new dimension
         """
         if self._num > 1:
             self.init_p = dict(
@@ -88,6 +98,14 @@ class NeuronTf(MODEL, Optimized):
         pass
 
     def build_graph(self, batch=None):
+        """
+        Build a tensorflow graph for running the neuron(s) on a series of input
+        Args:
+            batch(int): dimension of the batch
+
+        Returns:
+            tf.placeholder, tf.Tensor: input placeholder and results of the run
+        """
         tf.reset_default_graph()
         self.reset()
         xshape = [None]
@@ -104,6 +122,15 @@ class NeuronTf(MODEL, Optimized):
         return curs_, res_
 
     def calculate(self, i):
+        """
+        Iterate over i (current) and return the state variables obtained after each step
+
+        Args:
+          i(ndarray): input current
+
+        Returns:
+            ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
+        """
         if i.ndim > 1:
             input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
@@ -132,11 +159,8 @@ class NeuronTf(MODEL, Optimized):
     def get_params(self):
         return self._param.items()
 
-class NeuronLSTM(Optimized, NeuronModel):
+class NeuronLSTM(NeuronTf):
     """Behavior model of a neuron using an LSTM network"""
-    _ions = MODEL.ions
-    Ca_pos = MODEL.Ca_pos
-    default_init_state = MODEL.default_init_state
 
     _max_cur = 60.
     _rest_v = -50.
@@ -155,15 +179,18 @@ class NeuronLSTM(Optimized, NeuronModel):
             self._ca_net = None
         self.vstate = None
         self.castate = None
-        Optimized.__init__(self, dt=dt)
-        NeuronModel.__init__(self, dt=dt)
+        NeuronTf.__init__(self, dt=dt)
+
+    @property
+    def num(self):
+        return 1
 
     def reset(self):
         num_units1 = [self._hidden_layer_size for _ in range(self._hidden_layer_nb)]
         num_units1.append(1)
         with tf.variable_scope('Volt'):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
-            self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
+            self._volt_net = tf.nn.rnn_cell.LSTMCell(50, use_peepholes=True, state_is_tuple=True)#tf.nn.rnn_cell.MultiRNNCell(cells)
 
         num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
         num_units2.append(1)
@@ -173,11 +200,10 @@ class NeuronLSTM(Optimized, NeuronModel):
 
     def init(self, batch):
         with tf.variable_scope('Volt'):
-            self.vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
-            self.vstate = tf.Variable(self.vstate, trainable=False)
+            vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
+            self.vstate = tf.Variable(vstate, trainable=False)
         with tf.variable_scope('Calc'):
-            self.castate = self._ca_net.zero_state(batch, dtype=tf.float32)
-            self.castate = tf.Variable(self.castate, trainable=False)
+            castate = self._ca_net.zero_state(batch, dtype=tf.float32)
 
     def build_graph(self, batch=1):
         tf.reset_default_graph()
@@ -191,12 +217,10 @@ class NeuronLSTM(Optimized, NeuronModel):
         with tf.variable_scope('Volt'):
             initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
             v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
-            self.vstate = initializer
 
         with tf.variable_scope('Calc'):
             initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
             ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
-            self.castate = initializer
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
@@ -206,23 +230,53 @@ class NeuronLSTM(Optimized, NeuronModel):
         return curs_, results
 
 
+
+
+
     def step(self, X, i_inj):
-        # self.vstate = tf.Print(self.vstate, [self.vstate[0][0].name], 'vstate : ')
+        """
+        Function called recursively in the way tf.scan does
+        I want to find a way to remember the state of the lstm network between two uses of this function
+        LSTMStateTuple seems not to support assignment,
+        I need to make it a variable (for this I can't use a MultiRNN object though and have to make one Variable for
+        each layer..)
+        However, I can't give a Variable as a parameter to the __call__ function of the LSTM network :
+        "TypeError: 'Variable' object is not iterable." is the error raised when I try to do so
+
+        Args:
+            X(Tensor): not used here
+            i_inj(Tensor): array of input currents, dimension [batch]
+
+        Returns:
+            Tensor: Tensor containing the voltages in the first position
+        """
         with tf.variable_scope('Voltage'):
+            # apply lstm network (self._volt_net) with i_inj as input, using the previous state
             v, vstate = self._volt_net(i_inj, self.vstate)
-            print(vstate)
-        with tf.variable_scope('Calc'):
-            ca, castate = self._ca_net(v, self.castate)
 
-        print(self._volt_net.state_size)
-        v = tf.assign(self.vstate[0].c, vstate[0].c)# for i in range(4)]
-        ca = tf.assign(self.castate[0].c, castate[0].c)
-        with tf.control_dependencies([v, ca]):
-            u = tf.fill((5,1), self.vstate[0][0][0,0])
+        # Add the state update to the graph
+        update_state = [self.vstate[k].c.assign(vstate[k].c) for k,c in enumerate(self.vstate)]
+        with tf.control_dependencies([update_state]):
+            # not relevant for the problem
+            u = tf.fill((tf.shape(i_inj)[0],1), 0)
 
-        return tf.stack([v, u,u,u,u,u, ca],0)
+        return tf.stack([v,u,u,u,u,u,v])
+
+
+
+
+
 
     def calculate(self, i):
+        """
+        Iterate over i (current) and return the state variables obtained after each step
+
+        Args:
+          i(ndarray): input current
+
+        Returns:
+            ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
+        """
         if i.ndim > 1:
             input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
@@ -250,9 +304,10 @@ class NeuronLSTM(Optimized, NeuronModel):
         """Informations to save to retrieve the object later
 
         Args:
-          sess: 
+          sess: tensorflow Session
 
         Returns:
+            dict: dictionary of objects to dump
 
         """
         vars = {v.name: sess.run(v) for v in tf.trainable_variables()}#self._ca_net.trainable_variables+self._volt_net.trainable_variables}
@@ -271,10 +326,10 @@ class NeuronLSTM(Optimized, NeuronModel):
         """Load settings from a past object
 
         Args:
-          load: 
+          load(dict): containing object having been dumped before
 
         Returns:
-
+            float: dt
         """
         self.dt = load['dt']
         self._max_cur = load['_max_cur']
@@ -291,24 +346,20 @@ class NeuronLSTM(Optimized, NeuronModel):
         """Initialize the variables if loaded object
 
         Args:
-          sess: 
-
-        Returns:
-
+          sess: tf.Session
         """
         sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
-class Neurons(NeuronModel):
-
-    Ca_pos = MODEL.Ca_pos
-
+class Neurons(NeuronTf):
+    """
+    This class allow to use neurons from different classes inheriting NeuronTf in a same Circuit
+    """
 
     def __init__(self, neurons):
         """
-
         Args:
-            neurons(list): list of neurons objects
+            neurons(list): list of NeuronTf objects
 
         Raises:
             AttributeError: If all neurons don't share the same dt
@@ -318,7 +369,7 @@ class Neurons(NeuronModel):
         self._neurons = neurons
         self._num = np.sum([n.num for n in neurons])
         self._init_state = np.stack([n.init_state for n in neurons], axis=1)
-        self.dt = neurons[0].dt
+        NeuronTf.__init__(self, dt=neurons[0].dt)
 
     def reset(self):
         for n in self._neurons:
@@ -334,10 +385,11 @@ class Neurons(NeuronModel):
         Share the state and the input current into its embedded neurons
 
         Args:
-            X:
-            i:
+            X(tf.Tensor): precedent state vector
+            i(tf.Tensor): input current
 
         Returns:
+            ndarray: next state vector
 
         """
         next_state = []
@@ -345,9 +397,18 @@ class Neurons(NeuronModel):
         for j, n in enumerate(self._neurons):
             next_state.append(n.step(X[:,:,idx:idx+n.num], i[:,idx:idx+n.num]))
             idx += n.num
-        return tf.concat(next_state, axis=2)
+        return next_state
 
     def calculate(self, i):
+        """
+        Iterate over i (current) and return the state variables obtained after each step
+
+        Args:
+          i(ndarray): input current
+
+        Returns:
+            ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
+        """
         pass
 
     def settings(self):
@@ -360,33 +421,20 @@ class Neurons(NeuronModel):
         [n.apply_init(session) for n in self._neurons]
 
 
-class NeuronFix(MODEL):
+class BioNeuronFix(MODEL):
     """Class representing a neuron, implemented only in Python
     This class allows simulation but not optimization
 
     Args:
 
     Returns:
-
     """
 
     def __init__(self, init_p=MODEL.default_params, dt=0.1):
         MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
-        self.state = self._init_state
-
-    def init_batch(self, n):
-        self._init_state = np.stack([self._init_state for _ in range(n)], axis=1)
-
-    def step_fix(self, i):
-        self.state = self.step(self.state, i)
-        return self.state
 
     def calculate(self, i_inj, currents=False):
-        X = []
-        self.reset()
+        X = [self._init_state]
         for i in i_inj:
-            X.append(self.step_fix(i))
-        return np.array(X)
-
-    def reset(self):
-        self.state = self._init_state
+            X.append(self.step(X[-1], i))
+        return np.array(X[1:])

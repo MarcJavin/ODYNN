@@ -50,10 +50,5 @@ TODO
 ---------------
 
 - Run one step LSTM
-- Refactor simulations
-- Refactor optimizations
 - inhibitory synapses : default and constraints
-- plots circuitopt
 - heatmaps
-- refactor plots
-
