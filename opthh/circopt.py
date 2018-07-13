@@ -54,8 +54,7 @@ class CircuitOpt(Optimizer):
         """train 1 neuron
 
         Args:
-          dir: 
-          opt: 
+          dir(str): path to the directory          opt:
           num: 
           file: 
 

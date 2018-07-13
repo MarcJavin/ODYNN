@@ -45,8 +45,7 @@ def set_dir(subdir):
     """Set directory to save files
 
     Args:
-      subdir: 
-
+      subdir(str): path to the directory
     Returns:
 
     """
@@ -64,8 +63,7 @@ def get_dic_from_var(dir, name=""):
     """Get variables values into a dictionnary
 
     Args:
-      dir: 
-      name:  (Default value = "")
+      dir(str): path to the directory      name:  (Default value = "")
 
     Returns:
 

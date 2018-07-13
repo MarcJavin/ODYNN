@@ -25,10 +25,17 @@ class NeuronTf(Neuron, Optimized):
     _ions = MODEL.ions
     Ca_pos = MODEL.Ca_pos
     default_init_state = MODEL.default_init_state
+    nb = 0
 
     def __init__(self, dt=0.1):
         Neuron.__init__(self, dt=dt)
         Optimized.__init__(self, dt=dt)
+        self.id = self.give_id()
+
+    @classmethod
+    def give_id(cls):
+        cls.nb += 1
+        return str(cls.nb - 1)
 
     @property
     def hidden_init_state(self):
@@ -43,7 +50,6 @@ class BioNeuronTf(MODEL, NeuronTf):
     It can contain several neurons at the same time. Which in turn can be optimized in parallel, or be used to
     represent the entire neurons in a Circuit.
     """
-    nb = -1
 
     def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None):
         """
@@ -56,19 +62,13 @@ class BioNeuronTf(MODEL, NeuronTf):
                 if fixed == 'all', all parameters will be constant
             constraints(dict of ndarray): keys as parameters name, and values as [lower_bound, upper_bound]
         """
+        NeuronTf.__init__(self, dt=dt)
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
-        Optimized.__init__(self, dt=dt, init_p=self._param)
         self._fixed = fixed
         if(fixed == 'all'):
             self._fixed = set(self.init_p.keys())
         if(constraints is not None):
             self._constraints_dic = constraints
-        self.id = self.give_id()
-
-    @classmethod
-    def give_id(cls):
-        cls.nb += 1
-        return str(cls.nb)
 
     def reset(self):
         """rebuild tf variable graph"""
@@ -204,20 +204,20 @@ class NeuronLSTM(NeuronTf):
     def reset(self):
         num_units1 = [self._hidden_layer_size for _ in range(self._hidden_layer_nb)]
         num_units1.append(1)
-        with tf.variable_scope('Volt'):
+        with tf.variable_scope(self.id+'Volt'):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
             self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
         num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
         num_units2.append(1)
-        with tf.variable_scope('Calc'):
+        with tf.variable_scope(self.id+'Calc'):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
             self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
     def init(self, batch):
-        with tf.variable_scope('Volt'):
+        with tf.variable_scope(self.id+'Volt'):
             init_vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
-        with tf.variable_scope('Calc'):
+        with tf.variable_scope(self.id+'Calc'):
             init_castate = self._ca_net.zero_state(batch, dtype=tf.float32)
         self._hidden_init_state = (init_vstate, init_castate)
 
@@ -230,11 +230,11 @@ class NeuronLSTM(NeuronTf):
         with tf.variable_scope('prelayer'):
             input = tf.expand_dims(curs_ / self._max_cur, axis=len(xshape))
 
-        with tf.variable_scope('Volt'):
+        with tf.variable_scope(self.id+'Volt'):
             initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
             v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
 
-        with tf.variable_scope('Calc'):
+        with tf.variable_scope(self.id+'Calc'):
             initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
             ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
 
@@ -257,12 +257,12 @@ class NeuronLSTM(NeuronTf):
         Returns:
             Tensor: Tensor containing the voltages in the first position
         """
-        with tf.variable_scope('Voltage'):
+        with tf.variable_scope(self.id+'Volt'):
             # apply lstm network (self._volt_net) with i_inj as input, using the previous state
             v, vstate = self._volt_net(i_inj, hprev[0])
             v = v * self._scale_v + self._rest_v
 
-        with tf.variable_scope('Calcium'):
+        with tf.variable_scope(self.id+'Calc'):
             ca, castate = self._ca_net(v, hprev[1])
             ca = ca * self._scale_ca
 

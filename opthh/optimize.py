@@ -27,10 +27,10 @@ class Optimized(ABC):
 
     ions = {}
     _num = None
+    init_p = {}
 
-    def __init__(self, dt, init_p={}):
+    def __init__(self, dt):
         self.dt = dt
-        self.init_p = init_p
 
     @property
     def num(self):
@@ -156,15 +156,15 @@ class Optimizer(ABC):
         and initialize placeholders for target output and results.
 
         Args:
-          dir: 
-          suffix: 
+          dir(str): path to the directory          suffix:
           train: 
           test: 
           l_rate: 
           w: 
-          yshape: 
+          yshape:
 
-        Returns:
+        Raises:
+            ValueError: if the timestep of the optimized object is different than the one in train or test
 
         """
         self.dir = dir
@@ -177,8 +177,13 @@ class Optimizer(ABC):
             self._test = True
             self._test_losses = []
             self._T_test, self._X_test, self._V_test, self._Ca_test = test
-            assert (self.optimized.dt == self._T_test[1] - self._T_test[0])
-        assert (self.optimized.dt == self._T[1] - self._T[0])
+            if self.optimized.dt != self._T_test[1] - self._T_test[0]:
+                raise ValueError('The expected time step from the optimized object is {}, but got {} in the test data'
+                                 .format(self.optimized.dt, self._T_test[1] - self._T_test[0]))
+        if self.optimized.dt != self._T[1] - self._T[0]:
+            raise ValueError(
+                'The expected time step from the optimized object is {}, but got {} in the train data'.format(
+                    self.optimized.dt, self._T[1] - self._T[0]))
 
         self.n_batch = self._X.shape[1]
         sett = self.settings(w)
@@ -364,8 +369,7 @@ def get_vars(dir, i=-1):
     """get dic of vars from dumped file
 
     Args:
-      dir: 
-      i:  (Default value = -1)
+      dir(str): path to the directory      i:  (Default value = -1)
 
     Returns:
 
@@ -381,8 +385,7 @@ def get_vars_all(dir, i=-1):
     """get dic of vars from dumped file
 
     Args:
-      dir: 
-      i:  (Default value = -1)
+      dir(str): path to the directory      i:  (Default value = -1)
 
     Returns:
 
@@ -398,8 +401,7 @@ def get_best_result(dir, i=-1):
     """
 
     Args:
-      dir: 
-      i:  (Default value = -1)
+      dir(str): path to the directory      i:  (Default value = -1)
 
     Returns:
       
