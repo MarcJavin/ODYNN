@@ -127,8 +127,9 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix=''
       ca_true:  (Default value = None)
 
     Returns:
+        ndarray: records if dump is False
         str: If dump is True, name of the file where the records have been dumped
-        array: records if dump is False
+
 
     """
     if t is not None:

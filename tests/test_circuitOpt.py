@@ -28,19 +28,20 @@ class TestCircuitOpt(TestCase):
 
         p = hhmodel.give_rand()
         pars = [p for _ in range(n_neuron)]
+        plot = False
 
         print('one target'.center(40, '#'))
         n_out = [1]
         train = csim.simul(pars, conns, t, i_injs, n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns_opt, dt=0.5)
-        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
+        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('one target parallel'.center(40, '#'))
         co = CircuitOpt(pars, conns_opt_parallel, dt=0.5)
-        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
+        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))
@@ -49,14 +50,14 @@ class TestCircuitOpt(TestCase):
         n_out = [0,1]
         train = csim.simul(pars, conns, t, i_injs, n_out=n_out,  show=False)
         co = CircuitOpt(pars, conns, dt=0.5)
-        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
+        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('several targets parallel'.center(40, '#'))
         co = CircuitOpt(pars, conns_opt_parallel, dt=0.5)
-        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1)
+        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
         self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
         self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))

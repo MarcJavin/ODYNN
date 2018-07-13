@@ -30,6 +30,12 @@ class NeuronTf(Neuron, Optimized):
         Neuron.__init__(self, dt=dt)
         Optimized.__init__(self, dt=dt)
 
+    @property
+    def hidden_init_state(self):
+        """For behavioral models eg LSTM"""
+        return None
+
+
 class BioNeuronTf(MODEL, NeuronTf):
     """
     Class representing a neuron, implemented using Tensorflow.
@@ -159,6 +165,7 @@ class BioNeuronTf(MODEL, NeuronTf):
     def get_params(self):
         return self._param.items()
 
+
 class NeuronLSTM(NeuronTf):
     """Behavior model of a neuron using an LSTM network"""
 
@@ -180,6 +187,15 @@ class NeuronLSTM(NeuronTf):
         self.vstate = None
         self.castate = None
         NeuronTf.__init__(self, dt=dt)
+        self._hidden_init_state = None
+
+    @property
+    def hidden_init_state(self):
+        """Give the initial state needed for the LSTM network"""
+        if self._hidden_init_state is None:
+            raise ReferenceError("The LSTM cell has not yet been iniatialized")
+        else:
+            return self._hidden_init_state
 
     @property
     def num(self):
@@ -191,7 +207,6 @@ class NeuronLSTM(NeuronTf):
         with tf.variable_scope('Volt'):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
             self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
-            #tf.nn.rnn_cell.LSTMCell(50, use_peepholes=True, state_is_tuple=True)
 
         num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
         num_units2.append(1)
@@ -201,10 +216,10 @@ class NeuronLSTM(NeuronTf):
 
     def init(self, batch):
         with tf.variable_scope('Volt'):
-            self.vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
-            print(self.vstate)
+            init_vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
         with tf.variable_scope('Calc'):
-            castate = self._ca_net.zero_state(batch, dtype=tf.float32)
+            init_castate = self._ca_net.zero_state(batch, dtype=tf.float32)
+        self._hidden_init_state = (init_vstate, init_castate)
 
     def build_graph(self, batch=1):
         tf.reset_default_graph()
@@ -232,16 +247,11 @@ class NeuronLSTM(NeuronTf):
 
     def step(self, X, hprev, i_inj):
         """
-        Function called recursively in the way tf.scan does
-        I want to find a way to remember the state of the lstm network between two uses of this function
-        LSTMStateTuple seems not to support assignment,
-        I need to make it a variable (for this I can't use a MultiRNN object though and have to make one Variable for
-        each layer..)
-        However, I can't give a Variable as a parameter to the __call__ function of the LSTM network :
-        "TypeError: 'Variable' object is not iterable." is the error raised when I try to do so
+        Update function
 
         Args:
-            X(Tensor): not used here
+            X(Tensor): not used here, classical state
+            hprev(tuple of LSTMStateTuple): previous LSTM state
             i_inj(Tensor): array of input currents, dimension [batch]
 
         Returns:
@@ -249,13 +259,17 @@ class NeuronLSTM(NeuronTf):
         """
         with tf.variable_scope('Voltage'):
             # apply lstm network (self._volt_net) with i_inj as input, using the previous state
-            v, vstate = self._volt_net(i_inj, hprev)
+            v, vstate = self._volt_net(i_inj, hprev[0])
+            v = v * self._scale_v + self._rest_v
 
-        # Add the state update to the graph
-        # not relevant for the problem
+        with tf.variable_scope('Calcium'):
+            ca, castate = self._ca_net(v, hprev[1])
+            ca = ca * self._scale_ca
+
+        # Fill with void to mimic classical state
         u = tf.fill(tf.shape(i_inj), 0.)
 
-        return tf.stack([v,u,u,u,u,u,v]), vstate
+        return tf.stack([v,u,u,u,u,u,ca]), (vstate, castate)
 
     def calculate(self, i):
         """
@@ -370,10 +384,14 @@ class Neurons(NeuronTf):
             n.init(batch)
             self._init_state = np.stack([n.init_state for n in self._neurons], axis=1).astype(np.float32)
 
+    @property
+    def hidden_init_state(self):
+        return [n.hidden_init_state if n.hidden_init_state is not None else 0. for n in self._neurons]
+
     def build_graph(self):
         raise AttributeError('Nope')
 
-    def step(self, X, extra, i):
+    def step(self, X, hidden, i):
         """
         Share the state and the input current into its embedded neurons
 
@@ -388,23 +406,20 @@ class Neurons(NeuronTf):
         next_state = []
         idx = 0
         extras = []
-        idx_ex = 0
-        # for t in extra[0]:
-        #     print(t)
-        # print(X)
         for j, n in enumerate(self._neurons):
-            try:
+            if n.hidden_init_state is None:
                 nt = n.step(X[:,:,idx:idx+n.num], i[:,idx:idx+n.num])
-            except:
-                nt, extr = n.step(X[:,:,idx:idx+n.num], extra[idx_ex], i[:,idx:idx+n.num])
-                extras.append(extr)
-                idx_ex += 1
+                extr = hidden[j]
+            else:
+                nt, extr = n.step(X[:,:,idx:idx+n.num], hidden[j], i[:, idx:idx + n.num])
+            extras.append(extr)
             next_state.append(nt)
             idx += n.num
         # for t in extras[0]:
         #     print(t)
         # print(tf.concat(next_state, axis=-1))
-        return (tf.concat(next_state, axis=-1), extras)
+        with tf.variable_scope('1state'):
+            return (tf.concat(next_state, axis=-1), extras)
 
     def calculate(self, i):
         """

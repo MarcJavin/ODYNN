@@ -85,7 +85,7 @@ class Circuit:
             g = G / (1 + sp.exp((mdp - vprev) / scale))
         return g * (self._param['E'] - vpost)
 
-    def step(self, hprev, curs, i=None):
+    def step(self, hprev, curs):
         """run one time step
 
         For tensor :
@@ -103,20 +103,9 @@ class Circuit:
             #curs : [batch, neuron(, model)]
             #hprev : [state, batch, neuron(, model)] -> [state, neuron, batch(, model)]
 
-            # if use while loop
-            if i is not None:
-                k = curs
-                curs = curs[i]
-                i += 1
+            # if use extra init parameters
             try:
-                print('begin step')
-                hprevs, extra = hprev
-                hprev = hprevs[-1]
-                print(hprev)
-                for t in extra[0]:
-                    print(t)
-                # print('hprev in step ', hprev, 'input cur : ', curs)
-                # print('extras : ', extra)
+                hprev, extra = hprev
             except:
                 extra = None
             try:
@@ -152,10 +141,7 @@ class Circuit:
                 h = self._neurons.step(hprev, final_curs)
             except:
                 h = self._neurons.step(hprev, extra, final_curs)
-                print('end step')
-                hn, extra = h
-                hgather = tf.concat([hprevs, [hn]], axis=0)
-            return (hgather, extra), k, i
+            return h
         else:
             # update neurons
             h = self._neurons.step(hprev, curs)
@@ -170,7 +156,6 @@ class Circuit:
                     continue
                 curs_post[i] = np.sum(curs_syn[self._posts == i])
             return h, curs_post
-
 
 
     plot_output = config.NEURON_MODEL.plot_output
@@ -227,36 +212,34 @@ class CircuitTf(Circuit, Optimized):
         self._neurons.reset()
         self._init_state = self._neurons.init_state
 
-    def build_graph(self, batch=None):
+    def build_graph(self, batch=1):
         self.reset()
         xshape = [None]
-        initializer = self._init_state
-        if batch is not None:
+        initializer = self._init_state.astype(np.float32)
+        if batch != 1:
             xshape.append(None)
             # print('init shape :', initializer.shape)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
-            self._neurons.init(batch)
-            initializer = (np.stack([initializer ** ]), [self._neurons._neurons[-1].vstate])
+        self._neurons.init(batch)
         xshape.append(self._neurons.num)
         if self._num > 1:
             xshape.append(self._num)
             # if self.parallel is not None:
             #     xshape.append(self.parallel)
+        extra_state = self._neurons.hidden_init_state
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
+        infer_shape = True
+        if extra_state is not None:
+            initializer = (initializer, extra_state)
+            infer_shape = False
 
-        i = tf.constant(0)
-        cond = lambda hprev, curs_, i: tf.less(i, tf.shape(curs_)[0])
-        res = tf.while_loop(cond,
-                            body=self.step,
-                            loop_vars=[initializer, curs_, i])
-        for r in res:
-            print(r)
-        res = tf.stack([r[0] for r in res], axis=0)
-        print('res', res)
+        res = tf.scan(self.step,
+                      curs_,
+                      infer_shape=infer_shape,
+                      initializer=initializer)
 
-        # res = tf.scan(self.step,
-        #               curs_,
-        #               initializer=initializer)
+        if extra_state is not None:
+            res = res[0]
 
         return curs_, res
 

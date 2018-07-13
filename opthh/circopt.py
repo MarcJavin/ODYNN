@@ -90,7 +90,7 @@ class CircuitOpt(Optimizer):
             self.circuit.neurons.plot_output(self._T, X[:, b, 0], results[:, :, b, self.n_out], res_t,
                                               suffix='trace%s%s_%s' % (name, b, i), show=False, save=True)
 
-    def opt_circuits(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1],):
+    def opt_circuits(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1], plot=True):
         """Optimize the neuron parameters
 
         Args:
@@ -117,7 +117,7 @@ class CircuitOpt(Optimizer):
         shapevars = [epochs, self.circuit.n_synapse]
         if self._parallel > 1:
             shapevars.append(self._parallel)
-        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, shapevars=shapevars)
+        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, shapevars=shapevars, plot=plot)
 
                     #
                     # for b in range(self.n_batch):

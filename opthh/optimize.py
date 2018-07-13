@@ -227,7 +227,7 @@ class Optimizer(ABC):
 
 
 
-    def _plots_dump(self, sess, losses, rates, vars, i):
+    def _plots_dump(self, sess, losses, rates, vars, i, plot):
         """Plot the variables evolution, the loss and saves it in a file
 
         Args:
@@ -255,10 +255,12 @@ class Optimizer(ABC):
         with open(self.dir + FILE_OBJ + self.suffix, 'wb') as f:
             pickle.dump(self.optimized.todump(sess), f)
 
-        plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False, save=True)
         self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
 
-        self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
+        if plot:
+            plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False,
+                           save=True)
+            self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + "evolution", show=False,
                                  save=True)
         return results
@@ -271,7 +273,7 @@ class Optimizer(ABC):
         pass
 
     def optimize(self, dir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
-                 reload=False, reload_dir=None, yshape=None, shapevars=None):
+                 reload=False, reload_dir=None, yshape=None, shapevars=None, plot=True):
 
         print('Optimization'.center(40,'_'))
         T, X, V, Ca = train
@@ -338,10 +340,11 @@ class Optimizer(ABC):
                     train_loss = np.nanmean(train_loss)
                 print("[{}] loss : {}".format(i, train_loss))
 
-                self.plot_out(X, results, res_targ, suffix, step, 'train', i)
+                if plot:
+                    self.plot_out(X, results, res_targ, suffix, step, 'train', i)
 
                 if i % self.frequency == 0 or j == epochs - 1:
-                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i)
+                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i, plot)
                     if res_test is not None:
                         self.plot_out(X, results, res_targ_test, suffix, step, 'test', i)
 
@@ -350,7 +353,8 @@ class Optimizer(ABC):
 
         # plot evolution of variables
         p = get_vars(self.dir)
-        self.optimized.study_vars(p)
+        if plot:
+            self.optimized.study_vars(p)
         return self.optimized
 
 
