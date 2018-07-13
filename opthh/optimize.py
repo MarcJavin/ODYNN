@@ -88,7 +88,7 @@ class Optimized(ABC):
 
 class Optimizer(ABC):
 
-    def __init__(self, optimized, epochs=500, frequency=10):
+    def __init__(self, optimized, frequency=10):
         """
 
         Args:

@@ -14,23 +14,22 @@ from .neuropt import NeuronOpt
 
 
 class CircuitOpt(Optimizer):
-    """Class for optimization of a neuron circuit"""
+    """Class for optimization of a neuronal circuit"""
 
-    def __init__(self, inits_p=None, conns=None, epochs=500, fixed=hhmodel.ALL, dt=0.1, circuit=None):
+    def __init__(self, inits_p=None, conns=None, fixed='all', dt=0.1, circuit=None):
         """
 
         Args:
-            inits_p:
-            conns:
-            epochs:
+            inits_p(list): see CircuitTf (Default value = None)
+            conns: see CircuitTf (Default value = None)
             fixed:
             dt:
-            circuit: If not None, all other arguments are ignored
+            circuit (:obj:`CircuitTf`): If not None, all other arguments are ignored
         """
         if circuit is None:
             circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
         self.circuit = circuit
-        Optimizer.__init__(self, self.circuit, epochs)
+        Optimizer.__init__(self, self.circuit)
 
     def _build_loss(self, w):
         """Define self._loss
@@ -92,22 +91,25 @@ class CircuitOpt(Optimizer):
                                               suffix='trace%s%s_%s' % (name, b, i), show=False, save=True)
 
     def opt_circuits(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1],):
-        """optimize circuit parameters
+        """Optimize the neuron parameters
 
         Args:
-          subdir: 
-          train:  (Default value = None)
-          test:  (Default value = None)
-          w:  (Default value = [1)
-          0]: 
-          epochs:  (Default value = 700)
-          l_rate:  (Default value = [0.9)
-          9: 
-          0.95]: 
-          suffix:  (Default value = '')
-          n_out:  (Default value = [1])
+          dir(str): path to the directory for the saved files
+          train(list of ndarray): list containing [time, input, voltage, ion_concentration] that will be used fitted
+            dimensions : - time : [time]
+                        - input, voltage and concentration : [time, batch, neuron]
+          test(list of ndarray): same as train for the dimensions
+            These arrays will be used fo testing the model (Default value = None)
+          w(list): list of weights for the loss, the first value is for the voltage and the following ones for the ion concentrations
+            defined in the model. (Default value = [1, 0]:
+          epochs(int): Number of training steps (Default value = 700)
+          l_rate(tuple): Parameters for an exponential decreasing learning rate : (start, number of constant steps, exponent)
+            (Default value = [0.1, 9, 0.92]:
+          suffix(str): suffix for the saved files (Default value = '')
+          n_out(list of int): list of neurons corresponding to the data in train and test
 
         Returns:
+            NeuronTf: neuron attribute after optimization
 
         """
         self.n_out = n_out

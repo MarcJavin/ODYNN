@@ -9,7 +9,7 @@ import pylab as plt
 from abc import ABC, abstractmethod
 import numpy as np
 from . import utils
-from utils import classproperty
+from .utils import classproperty
 
 
 class Neuron(ABC):
@@ -147,14 +147,16 @@ class BioNeuron(Neuron):
         """
         if(init_p is None):
             init_p = self.default_params
-        self._tensors = tensors
-        if isinstance(init_p, list):
+        elif(init_p == 'random'):
+            init_p = self.get_random()
+        elif isinstance(init_p, list):
             self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
             self._init_state = np.stack([self.default_init_state for _ in range(self._num)], axis=1)
         else:
             self._num = 1
             self._init_state = self.default_init_state
+        self._tensors = tensors
         self._param = init_p
         self.dt = dt
 

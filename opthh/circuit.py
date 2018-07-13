@@ -85,7 +85,7 @@ class Circuit:
             g = G / (1 + sp.exp((mdp - vprev) / scale))
         return g * (self._param['E'] - vpost)
 
-    def step(self, hprev, curs):
+    def step(self, hprev, curs, i=None):
         """run one time step
 
         For tensor :
@@ -102,6 +102,23 @@ class Circuit:
             # update synapses
             #curs : [batch, neuron(, model)]
             #hprev : [state, batch, neuron(, model)] -> [state, neuron, batch(, model)]
+
+            # if use while loop
+            if i is not None:
+                k = curs
+                curs = curs[i]
+                i += 1
+            try:
+                print('begin step')
+                hprevs, extra = hprev
+                hprev = hprevs[-1]
+                print(hprev)
+                for t in extra[0]:
+                    print(t)
+                # print('hprev in step ', hprev, 'input cur : ', curs)
+                # print('extras : ', extra)
+            except:
+                extra = None
             try:
                 hprev_swap = tf.transpose(hprev, [0,2,1])
             except:
@@ -131,8 +148,14 @@ class Circuit:
                 #[batch(, model)]
                 curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self._posts == i)), axis=0))
             final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
-            h = self._neurons.step(hprev, final_curs)
-            return h
+            try:
+                h = self._neurons.step(hprev, final_curs)
+            except:
+                h = self._neurons.step(hprev, extra, final_curs)
+                print('end step')
+                hn, extra = h
+                hgather = tf.concat([hprevs, [hn]], axis=0)
+            return (hgather, extra), k, i
         else:
             # update neurons
             h = self._neurons.step(hprev, curs)
@@ -213,6 +236,7 @@ class CircuitTf(Circuit, Optimized):
             # print('init shape :', initializer.shape)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
             self._neurons.init(batch)
+            initializer = (np.stack([initializer ** ]), [self._neurons._neurons[-1].vstate])
         xshape.append(self._neurons.num)
         if self._num > 1:
             xshape.append(self._num)
@@ -220,9 +244,19 @@ class CircuitTf(Circuit, Optimized):
             #     xshape.append(self.parallel)
         curs_ = tf.placeholder(shape=xshape, dtype=tf.float32, name='input_current')
 
-        res = tf.scan(self.step,
-                      curs_,
-                      initializer=initializer.astype(np.float32))
+        i = tf.constant(0)
+        cond = lambda hprev, curs_, i: tf.less(i, tf.shape(curs_)[0])
+        res = tf.while_loop(cond,
+                            body=self.step,
+                            loop_vars=[initializer, curs_, i])
+        for r in res:
+            print(r)
+        res = tf.stack([r[0] for r in res], axis=0)
+        print('res', res)
+
+        # res = tf.scan(self.step,
+        #               curs_,
+        #               initializer=initializer)
 
         return curs_, res
 

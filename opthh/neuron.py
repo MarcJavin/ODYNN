@@ -39,7 +39,7 @@ class BioNeuronTf(MODEL, NeuronTf):
     """
     nb = -1
 
-    def __init__(self, init_p=None, dt=0.1, fixed=[], constraints=None):
+    def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None):
         """
         Initializer
         Args:
@@ -190,7 +190,8 @@ class NeuronLSTM(NeuronTf):
         num_units1.append(1)
         with tf.variable_scope('Volt'):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
-            self._volt_net = tf.nn.rnn_cell.LSTMCell(50, use_peepholes=True, state_is_tuple=True)#tf.nn.rnn_cell.MultiRNNCell(cells)
+            self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
+            #tf.nn.rnn_cell.LSTMCell(50, use_peepholes=True, state_is_tuple=True)
 
         num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
         num_units2.append(1)
@@ -200,8 +201,8 @@ class NeuronLSTM(NeuronTf):
 
     def init(self, batch):
         with tf.variable_scope('Volt'):
-            vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
-            self.vstate = tf.Variable(vstate, trainable=False)
+            self.vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
+            print(self.vstate)
         with tf.variable_scope('Calc'):
             castate = self._ca_net.zero_state(batch, dtype=tf.float32)
 
@@ -229,11 +230,7 @@ class NeuronLSTM(NeuronTf):
 
         return curs_, results
 
-
-
-
-
-    def step(self, X, i_inj):
+    def step(self, X, hprev, i_inj):
         """
         Function called recursively in the way tf.scan does
         I want to find a way to remember the state of the lstm network between two uses of this function
@@ -252,20 +249,13 @@ class NeuronLSTM(NeuronTf):
         """
         with tf.variable_scope('Voltage'):
             # apply lstm network (self._volt_net) with i_inj as input, using the previous state
-            v, vstate = self._volt_net(i_inj, self.vstate)
+            v, vstate = self._volt_net(i_inj, hprev)
 
         # Add the state update to the graph
-        update_state = [self.vstate[k].c.assign(vstate[k].c) for k,c in enumerate(self.vstate)]
-        with tf.control_dependencies([update_state]):
-            # not relevant for the problem
-            u = tf.fill((tf.shape(i_inj)[0],1), 0)
+        # not relevant for the problem
+        u = tf.fill(tf.shape(i_inj), 0.)
 
-        return tf.stack([v,u,u,u,u,u,v])
-
-
-
-
-
+        return tf.stack([v,u,u,u,u,u,v]), vstate
 
     def calculate(self, i):
         """
@@ -289,7 +279,6 @@ class NeuronLSTM(NeuronTf):
                 input_cur: i
             })
         return results
-
 
     def settings(self):
         return ('Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
@@ -374,13 +363,17 @@ class Neurons(NeuronTf):
     def reset(self):
         for n in self._neurons:
             n.reset()
-        self._init_state = np.stack([n.init_state for n in self._neurons], axis=1)
+        self._init_state = np.stack([n.init_state for n in self._neurons], axis=1).astype(np.float32)
 
     def init(self, batch):
         for n in self._neurons:
             n.init(batch)
+            self._init_state = np.stack([n.init_state for n in self._neurons], axis=1).astype(np.float32)
 
-    def step(self, X, i):
+    def build_graph(self):
+        raise AttributeError('Nope')
+
+    def step(self, X, extra, i):
         """
         Share the state and the input current into its embedded neurons
 
@@ -394,10 +387,24 @@ class Neurons(NeuronTf):
         """
         next_state = []
         idx = 0
+        extras = []
+        idx_ex = 0
+        # for t in extra[0]:
+        #     print(t)
+        # print(X)
         for j, n in enumerate(self._neurons):
-            next_state.append(n.step(X[:,:,idx:idx+n.num], i[:,idx:idx+n.num]))
+            try:
+                nt = n.step(X[:,:,idx:idx+n.num], i[:,idx:idx+n.num])
+            except:
+                nt, extr = n.step(X[:,:,idx:idx+n.num], extra[idx_ex], i[:,idx:idx+n.num])
+                extras.append(extr)
+                idx_ex += 1
+            next_state.append(nt)
             idx += n.num
-        return next_state
+        # for t in extras[0]:
+        #     print(t)
+        # print(tf.concat(next_state, axis=-1))
+        return (tf.concat(next_state, axis=-1), extras)
 
     def calculate(self, i):
         """

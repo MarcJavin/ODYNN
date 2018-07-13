@@ -50,5 +50,9 @@ TODO
 ---------------
 
 - Run one step LSTM
+- implement LSTM
 - inhibitory synapses : default and constraints
-- heatmaps
+- heatmaps for circuit
+- documentation
+- tutorial
+
