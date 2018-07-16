@@ -1,14 +1,14 @@
 from unittest import TestCase
 from context import opthh
 import opthh.neursimul as sim
-from opthh import config, datas
+from opthh import config_model, datas
 from opthh.neuron import BioNeuronTf, BioNeuronFix
 
 
 class TestNeuronSimul(TestCase):
 
-    pars = config.NEURON_MODEL.default_params
-    pars5 = [config.NEURON_MODEL.default_params for _ in range(5)]
+    pars = config_model.NEURON_MODEL.default_params
+    pars5 = [config_model.NEURON_MODEL.default_params for _ in range(5)]
     dt = 0.5
     t, i = datas.give_train(dt=dt, max_t=5.)
     i = i[:,4]

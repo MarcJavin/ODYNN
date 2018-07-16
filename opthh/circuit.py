@@ -11,7 +11,7 @@ import scipy as sp
 import tensorflow as tf
 import pylab as plt
 
-from . import utils, config
+from . import utils, config_model
 from .neuron import BioNeuronTf, BioNeuronFix
 from .optimize import Optimized
 
@@ -158,7 +158,7 @@ class Circuit:
             return h, curs_post
 
 
-    plot_output = config.NEURON_MODEL.plot_output
+    plot_output = config_model.NEURON_MODEL.plot_output
 
 
 class CircuitTf(Circuit, Optimized):
@@ -218,10 +218,10 @@ class CircuitTf(Circuit, Optimized):
         initializer = self._init_state.astype(np.float32)
         if batch != 1:
             xshape.append(None)
-            # print('init shape :', initializer.shape)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
         self._neurons.init(batch)
         xshape.append(self._neurons.num)
+        print("num neurons : ", self._neurons.num)
         if self._num > 1:
             xshape.append(self._num)
             # if self.parallel is not None:

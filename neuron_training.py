@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import utils, config, hhmodel, datas, optimize
+from opthh import utils, config_model, hhmodel, datas, optimize
 from opthh.neuron import NeuronLSTM
 from opthh.neuropt import NeuronOpt
 from opthh import neursimul as sim
@@ -22,7 +22,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = hhmodel.ALL - CA_VAR
 K_CONST = hhmodel.ALL - K_VAR
 
-MODEL = config.NEURON_MODEL
+MODEL = config_model.NEURON_MODEL
 
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)

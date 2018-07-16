@@ -9,12 +9,12 @@
 import numpy as np
 import tensorflow as tf
 
-from . import config
+from . import config_model
 from .model import Neuron
 from .optimize import Optimized
 
 
-MODEL = config.NEURON_MODEL
+MODEL = config_model.NEURON_MODEL
 
 
 class NeuronTf(Neuron, Optimized):
@@ -368,21 +368,20 @@ class Neurons(NeuronTf):
             AttributeError: If all neurons don't share the same dt
         """
         if len(set([n.dt for n in neurons])) > 1:
-            raise AttributeError('All neurons must have the save time step')
+            raise AttributeError('All neurons must have the same time step, got : {}'.format([n.dt for n in neurons]))
+        NeuronTf.__init__(self, dt=neurons[0].dt)
         self._neurons = neurons
         self._num = np.sum([n.num for n in neurons])
-        self._init_state = np.stack([n.init_state for n in neurons], axis=1)
-        NeuronTf.__init__(self, dt=neurons[0].dt)
+        self._init_state = np.concatenate([n.init_state if n.init_state.ndim == 2 else n.init_state[:,np.newaxis] for n in neurons], axis=1)
+
 
     def reset(self):
         for n in self._neurons:
             n.reset()
-        self._init_state = np.stack([n.init_state for n in self._neurons], axis=1).astype(np.float32)
 
     def init(self, batch):
         for n in self._neurons:
             n.init(batch)
-            self._init_state = np.stack([n.init_state for n in self._neurons], axis=1).astype(np.float32)
 
     @property
     def hidden_init_state(self):

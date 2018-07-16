@@ -63,6 +63,9 @@ class Optimized(ABC):
         """
         pass
 
+    def reset(self):
+        pass
+
     def apply_constraints(self, session):
         """
         Apply necessary constraints to the optimized variables

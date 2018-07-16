@@ -2,7 +2,7 @@ from unittest import TestCase
 from context import opthh
 import opthh.circuit as cr
 import opthh.datas
-from opthh import hhmodel, utils, config
+from opthh import hhmodel, utils, config_model
 import numpy as np
 from opthh.circopt import CircuitOpt
 import opthh.circsimul as csim
@@ -26,6 +26,7 @@ class TestCircuitOpt(TestCase):
         length = int(5./0.5)
         i_1 = np.zeros(i.shape)
         i_injs = np.stack([i, i_1], axis=2)
+        i_injs3 = np.stack([i, i_1, i_1], axis=2)
 
         p = hhmodel.give_rand()
         pars = [p for _ in range(n_neuron)]
@@ -76,4 +77,19 @@ class TestCircuitOpt(TestCase):
         c = cr.CircuitTf(neurons=neurons, conns=conns_opt)
         co = CircuitOpt(circuit=c)
         co.opt_circuits(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot)
+
+        conns_opt[(0, 2)] = opthh.circuit.get_syn_rand()
+        with self.assertRaises(AttributeError):
+            c = cr.CircuitTf(neurons=neurons, conns=conns_opt)
+            co = CircuitOpt(circuit=c)
+            co.opt_circuits(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot)
+
+        print('2 bio + 1 LSTM'.center(40, '#'))
+        neurons = nr.Neurons(
+            [nr.BioNeuronTf(init_p=[p for _ in range(2)], dt=dt), nr.NeuronLSTM(dt=dt)])
+        c = cr.CircuitTf(neurons=neurons, conns=conns_opt)
+        co = CircuitOpt(circuit=c)
+        train[1] = i_injs3
+        co.opt_circuits(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot)
+
 
