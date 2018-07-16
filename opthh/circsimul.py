@@ -9,12 +9,13 @@ import numpy as np
 from .circuit import CircuitFix
 from .utils import plots_output_mult
 from .datas import DUMP_FILE
+from . import neuron as nr
 import pickle
 import time
 
 
 
-def simul(pars, conns, t, i_injs, circuit=None, n_out=[0], dump=False, suffix='', show=False, save=True):
+def simul(pars, conns, t, i_injs, gaps={}, circuit=None, n_out=[0], dump=False, suffix='', show=False, save=True):
     """runs the entire simulation
 
     Args:
@@ -29,7 +30,8 @@ def simul(pars, conns, t, i_injs, circuit=None, n_out=[0], dump=False, suffix=''
         otherwise, return the measurements as a list [time, input, voltage, calcium]
     """
     if circuit is None:
-        circuit = CircuitFix(pars, conns, dt=t[1]-t[0])
+        print(conns)
+        circuit = CircuitFix(nr.BioNeuronFix(pars, dt=t[1]-t[0]), synapses=conns, gaps=gaps)
 
     #[(batch,) time, state, neuron]
     print('Circuit Simulation'.center(40, '_'))

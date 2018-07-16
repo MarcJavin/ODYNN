@@ -1,7 +1,7 @@
 from unittest import TestCase
 from context import opthh
 from opthh import config_model, utils, datas
-from opthh.neuron import NeuronLSTM
+from opthh.neuron import NeuronLSTM, BioNeuronTf
 from opthh.neuropt import NeuronOpt
 from opthh.neursimul import simul
 
@@ -24,7 +24,7 @@ class TestNeuronOpt(TestCase):
         n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)
 
         print('One neuron'.center(40, '#'))
-        opt = NeuronOpt(init_p=pars, dt=dt)
+        opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))
         self.assertEqual(opt._parallel, 1)
         n = opt.optimize(dir, w=[1,1],  train=train, epochs=1, plot=plot)
         print('One neuron reload'.center(40, '#'))
@@ -35,7 +35,7 @@ class TestNeuronOpt(TestCase):
 
         print('Parallel'.center(40, '#'))
         pars = [config_model.NEURON_MODEL.get_random() for _ in range(2)]
-        opt = NeuronOpt(init_p=pars, dt=dt)
+        opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))
         self.assertEqual(opt._parallel, 2)
         n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)
         self.assertEqual(opt._loss.shape[0], opt._parallel)

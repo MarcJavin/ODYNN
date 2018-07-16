@@ -15,37 +15,148 @@ from . import utils, config_model
 from .neuron import BioNeuronTf, BioNeuronFix
 from .optimize import Optimized
 
+SYNAPSE1 = {
+    'G': 1.,
+    'mdp': -30.,
+    'scale': 2.,
+    'E': 20.
+}
+SYNAPSE2 = {
+    'G': 10.,
+    'mdp': 0.,
+    'scale': 5.,
+    'E': -10.
+}
+SYNAPSE = {
+    'G': 5.,
+    'mdp': -25.,
+    'scale': 2.,
+    'E': 0.
+}
+SYNAPSE_inhib = {
+    'G': 1.,
+    'mdp': -35.,
+    'scale': -2.,
+    'E': 20.
+}
+GAP = {'G_gap': 1.}
+
+def give_constraints(conns):
+    return {**give_constraints_syn(conns), **give_constraints_gap()}
+
+def give_constraints_gap():
+    return {'G_gap': np.array([1e-5, np.infty])}
+
+def give_constraints_syn(conns):
+    """constraints for synapse parameters
+
+    Args:
+      conns(dict): dictionnary of synapse parameters
+
+    Returns:
+        dict: constraints
+    """
+    scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
+    return {'G': np.array([1e-5, np.infty]),
+            'scale': scale_con.transpose()}
+
+
+def const_scale(exc=True):
+    if exc:
+        return [1e-3, np.infty]
+    else:
+        return [-np.infty, -1e-3]
+
+
+MAX_TAU = 200.
+MIN_SCALE = 1.
+MAX_SCALE = 50.
+MIN_MDP = -40.
+MAX_MDP = 30.
+MAX_G = 10.
+
+
+def get_syn_rand(exc=True):
+    """Give random parameters dictionnary for a synapse
+
+    Args:
+      exc(bool): If True, give an excitatory synapse (Default value = True)
+
+    Returns:
+        dict: random parameters for a synapse
+    """
+    # scale is negative if inhibitory
+    if exc:
+        scale = random.uniform(MIN_SCALE, MAX_SCALE)
+    else:
+        scale = random.uniform(-MAX_SCALE, -MIN_SCALE)
+    return {
+        'G': random.uniform(0.01, MAX_G),
+        'mdp': random.uniform(MIN_MDP, MAX_MDP),
+        'scale': scale,
+        'E': random.uniform(-20., 50.),
+    }
+
+VARS_SYN = list(SYNAPSE1.keys())
+VARS_GAP = list(GAP.keys())
 
 class Circuit:
 
     """Circuit of neurons with synapses"""
-    def __init__(self, conns, neurons, tensors=False):
+
+    def __init__(self, neurons, synapses={}, gaps={}, tensors=False):
         self._tensors = tensors
         self._neurons = neurons
-        if isinstance(conns, list):
-            self._num = len(conns)
+        if isinstance(synapses, list) or isinstance(gaps, list):
+            if gaps == {}:
+                gaps = [{} for _ in range(len(synapses))]
+                vars = VARS_SYN
+            elif synapses == {}:
+                synapses = [{} for _ in range(len(gaps))]
+                vars = VARS_GAP
+            else:
+                vars = VARS_SYN + VARS_GAP
+            if not isinstance(gaps, list) or not isinstance(synapses, list):
+                raise AttributeError('Attributes conns and gaps should be of the same type')
+            self._num = len(synapses)
+            if len(gaps) != len(synapses):
+                raise AttributeError('Attribute conns and gaps should have the same lengths, got {} and {}'.format(self._num, len(gaps)))
             inits_p = []
-            variables = list(conns[0].values())[0].keys()
-            for c in conns:
+            for i in range(self._num):
                 # build dict for each circuit
-                inits_p.append({var: np.array([syn[var] for syn in c.values()], dtype=np.float32) for var in variables})
+                init_p = {var: np.array([p[var] for p in synapses[i].values()], dtype=np.float32) for var in VARS_SYN}
+                init_gap = {var: np.array([p[var] for p in gaps[i].values()], dtype=np.float32) for var in VARS_GAP}
+                init_p.update(init_gap)
+                inits_p.append(init_p)
             # merge them all in a new dimension
-            self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in variables}
+            self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in vars}
             neurons.parallelize(self._num)
-            self._connections = list(conns[0].keys())
+            self._connections = list(synapses[0].keys())
+            self._gaps = list(gaps[0].keys())
+
         else:
             self._num = 1
-            self.init_p = {var : np.array([p[var] for p in conns.values()], dtype=np.float32) for var in
-                 list(conns.values())[0].keys()}
-            self._connections = conns.keys()
+            self.init_p = {var : np.array([p[var] for p in synapses.values()], dtype=np.float32) for var in VARS_SYN}
+            init_gap = {var : np.array([p[var] for p in gaps.values()], dtype=np.float32) for var in VARS_GAP}
+            self.init_p.update(init_gap)
+            self._connections = synapses.keys()
+            self._gaps = gaps.keys()
         self._init_state = self._neurons.init_state
         self.dt = self._neurons.dt
         self._param = self.init_p
         syns = list(zip(*[k for k in self._connections]))
-        self._pres = np.array(syns[0], dtype=np.int32)
-        self._posts = np.array(syns[1], dtype=np.int32)
-        self._syns = ['%s-%s' % (a,b) for a,b in zip(self._pres, self._posts)]
-        self.n_synapse = len(self._pres)
+        gaps_c = list(zip(*[k for k in self._gaps]))
+        print('syn & gap', syns, gaps_c)
+        if len(gaps_c)==0:
+            gaps_c = [[], []]
+        if len(syns)==0:
+            syns = [[], []]
+        print('syn & gap', syns, gaps_c)
+        self._pres = np.hstack((syns[0], gaps_c[0], gaps_c[1])).astype(np.int32)
+        self._posts = np.hstack((syns[1], gaps_c[1], gaps_c[0])).astype(np.int32)
+        self.n_synapse = len(syns[0])
+        self.n_gap = len(gaps_c[0])
+
         nb_neurons = len(np.unique(np.hstack((self._pres,self._posts))))
         if nb_neurons != self._neurons.num:
             raise AttributeError("Invalid number of neurons, got {}, expected {}".format(self._neurons.num, nb_neurons))
@@ -63,6 +174,10 @@ class Circuit:
     @property
     def init_state(self):
         return self._init_state
+
+    def gap_curr(self, vprev, vpost):
+        G = self._param['G_gap']
+        return G * (vpost - vprev)
 
     def syn_curr(self, vprev, vpost):
         """
@@ -84,6 +199,19 @@ class Circuit:
         else:
             g = G / (1 + sp.exp((mdp - vprev) / scale))
         return g * (self._param['E'] - vpost)
+
+    def inter_curr(self, vprev, vpost):
+        if(self.n_synapse == 0):
+            return self.gap_curr(vprev, vpost)
+        elif(self.n_gap == 0):
+            return self.syn_curr(vprev, vpost)
+        syns = self.syn_curr(vprev[:self.n_synapse], vpost[:,self.n_synapse])
+        gaps = self.gap_curr(vprev[self.n_synapse:], vpost[self.n_synapse:])
+        print(syns.shape)
+        if self._tensors:
+            return tf.concat([syns, gaps])
+        else:
+            return np.concatenate((syns, gaps))
 
     def step(self, hprev, curs):
         """run one time step
@@ -108,34 +236,33 @@ class Circuit:
                 hprev, extra = hprev
             except:
                 extra = None
-            try:
-                hprev_swap = tf.transpose(hprev, [0,2,1])
-            except:
-                hprev_swap = tf.transpose(hprev, [0, 2, 1, 3])
-            idx_pres = np.stack((np.zeros(self._pres.shape, dtype=np.int32), self._pres), axis=1)#transpose()
-            idx_post = np.stack((np.zeros(self._pres.shape, dtype=np.int32), self._posts), axis=1)#.transpose()
+            ndim = 3 if self._num == 1 else 4
+            perm_h = [0, 2, 1, 3][:ndim]
+            print(perm_h, 'perm_h')
+            print(self._num)
+            perm_v = [1, 0, 2][:ndim-1]
+
+            hprev_swap = tf.transpose(hprev, perm_h)
+            idx_pres = np.stack((np.zeros(self._pres.shape, dtype=np.int32), self._pres), axis=1)
+            idx_post = np.stack((np.zeros(self._pres.shape, dtype=np.int32), self._posts), axis=1)
             #[neuron, batch(, model)] -> [batch, neuron(, model)]
-            try:
-                vpres = tf.transpose(tf.gather_nd(hprev_swap, idx_pres), perm=[1,0])
-                vposts = tf.transpose(tf.gather_nd(hprev_swap, idx_post), perm=[1,0])
-            except:
-                vpres = tf.transpose(tf.gather_nd(hprev_swap, idx_pres), perm=[1, 0, 2])
-                vposts = tf.transpose(tf.gather_nd(hprev_swap, idx_post), perm=[1, 0, 2])
+
+            vpres = tf.transpose(tf.gather_nd(hprev_swap, idx_pres), perm=perm_v)
+            vposts = tf.transpose(tf.gather_nd(hprev_swap, idx_post), perm=perm_v)
+
             #voltage of the presynaptic cells
-            curs_syn = self.syn_curr(vpres, vposts)
+            curs_intern = self.inter_curr(vpres, vposts)
             # [batch, neuron(, model)] -> [neuron, batch(, model)]
-            try:
-                curs_syn = tf.transpose(curs_syn, perm=[1,0])
-            except:
-                curs_syn = tf.transpose(curs_syn, perm=[1,0,2])
+            curs_intern = tf.transpose(curs_intern, perm=perm_v)
             curs_post = []
             for i in range(self._neurons.num):
-                if i not in self._posts:
-                    #0 synaptic current if no synapse coming in
-                    curs_post.append(tf.reduce_sum(tf.zeros(tf.shape(curs)), axis=1))
-                    continue
-                #[batch(, model)]
-                curs_post.append(tf.reduce_sum(tf.gather_nd(curs_syn, np.argwhere(self._posts == i)), axis=0))
+                # 0 synaptic current if no synapse coming in
+                if i in self._posts:
+                    # [batch(, model)]
+                    current_in = tf.reduce_sum(tf.gather_nd(curs_intern, np.argwhere(self._posts == i)), axis=0)
+                else:
+                    current_in = tf.reduce_sum(tf.zeros(tf.shape(curs)), axis=1)
+                curs_post.append(current_in)
             final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
             try:
                 h = self._neurons.step(hprev, final_curs)
@@ -148,13 +275,13 @@ class Circuit:
             # update synapses
             vpres = h[0, self._pres]
             vposts = h[0, self._posts]
-            curs_syn = self.syn_curr(vpres, vposts)
+            curs_intern = self.syn_curr(vpres, vposts)
             curs_post = np.zeros(curs.shape)
             for i in range(self._neurons.num):
                 if i not in self._posts:
                     curs_post[i] = 0
                     continue
-                curs_post[i] = np.sum(curs_syn[self._posts == i])
+                curs_post[i] = np.sum(curs_intern[self._posts == i])
             return h, curs_post
 
 
@@ -166,29 +293,23 @@ class CircuitTf(Circuit, Optimized):
     Circuit using tensorflow
     """
 
-    def __init__(self, inits_p=None, conns=None, neurons=None, fixed='all', constraints_n=None, dt=0.1):
+    def __init__(self, neurons, synapses={}, gaps={}, tensors=False):
         """
 
         Args:
-            conns(dict): initial parameters for the synapses
+            synapses(dict): initial parameters for the synapses
             neurons(NeuronModel): if not None, all other parameters except conns are ignores
-            inits_p(list of dict): initial parameters for the contained neurons
-            fixed(list): fixed parameters for the neurons
-            constraints_n(dict): constraints for the neurons
-            dt(float): time step
         """
-        if neurons is None:
-            neurons = BioNeuronTf(inits_p, fixed=fixed, constraints=constraints_n, dt=dt)
         Optimized.__init__(self, dt=neurons.dt)
-        Circuit.__init__(self, conns=conns, tensors=True, neurons=neurons)
+        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=True)
         if self._num > 1:
-            constraints_dic = give_constraints_syn(conns[0])
+            constraints_dic = give_constraints(synapses[0])
             #update constraint size for parallelization
             self.constraints_dic = dict(
                 [(var, np.stack([val for _ in range(self._num)], axis=val.ndim)) if val.ndim > 1 else (var, val) for var, val in
                  constraints_dic.items()])
         else:
-            self.constraints_dic = give_constraints_syn(conns)
+            self.constraints_dic = give_constraints(synapses)
 
     def parallelize(self, n):
         """Add a dimension of size n in the parameters
@@ -320,9 +441,8 @@ class CircuitTf(Circuit, Optimized):
 
 class CircuitFix(Circuit):
 
-    def __init__(self, inits_p, conns, dt=0.1):
-        neurons = BioNeuronFix(inits_p, dt=dt)
-        Circuit.__init__(self, conns=conns, tensors=False, neurons=neurons)
+    def __init__(self, neurons, synapses={}, gaps={}):
+        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=False)
         self._param = self.init_p
 
     def calculate(self, i_inj):
@@ -349,78 +469,3 @@ class CircuitFix(Circuit):
         return np.stack(states, axis=0), np.stack(curs, axis=0)
 
 
-SYNAPSE1 = {
-    'G': 1.,
-    'mdp': -30.,
-    'scale': 2.,
-    'E': 20.
-}
-SYNAPSE2 = {
-    'G': 10.,
-    'mdp': 0.,
-    'scale': 5.,
-    'E': -10.
-}
-SYNAPSE = {
-    'G': 5.,
-    'mdp': -25.,
-    'scale': 2.,
-    'E': 0.
-}
-SYNAPSE_inhib = {
-    'G': 1.,
-    'mdp': -35.,
-    'scale': -2.,
-    'E': 20.
-}
-
-
-def give_constraints_syn(conns):
-    """constraints for synapse parameters
-
-    Args:
-      conns(dict): dictionnary of synapse parameters
-
-    Returns:
-        dict: constraints
-    """
-    scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
-    return {'G': np.array([1e-5, np.infty]),
-            'scale': scale_con.transpose()}
-
-
-def const_scale(exc=True):
-    if exc:
-        return [1e-3, np.infty]
-    else:
-        return [-np.infty, -1e-3]
-
-
-MAX_TAU = 200.
-MIN_SCALE = 1.
-MAX_SCALE = 50.
-MIN_MDP = -40.
-MAX_MDP = 30.
-MAX_G = 10.
-
-
-def get_syn_rand(exc=True):
-    """Give random parameters dictionnary for a synapse
-
-    Args:
-      exc(bool): If True, give an excitatory synapse (Default value = True)
-
-    Returns:
-        dict: random parameters for a synapse
-    """
-    # scale is negative if inhibitory
-    if exc:
-        scale = random.uniform(MIN_SCALE, MAX_SCALE)
-    else:
-        scale = random.uniform(-MAX_SCALE, -MIN_SCALE)
-    return {
-        'G': random.uniform(0.01, MAX_G),
-        'mdp': random.uniform(MIN_MDP, MAX_MDP),
-        'scale': scale,
-        'E': random.uniform(-20., 50.),
-    }

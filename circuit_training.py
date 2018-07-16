@@ -48,7 +48,9 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     print("Feed with current of shape : ", i_injs.shape)
 
     train = sim.simul(pars, conns, t, i_injs, n_out=n_out, dump=False, show=False)
-    c = CircuitOpt(pars, conns_opt, dt=t[1]-t[0])
+    n = nr.BioNeuronTf(init_p=pars, fixed='all')
+    cr = CircuitTf(n, synapses=conns_opt)
+    c = CircuitOpt(cr)
     c.opt_circuits(dir, n_out=n_out, train=train)
 
 def full4to1():
@@ -117,7 +119,7 @@ def with_LSTM():
     train = sim.simul([p,p], conns, t, i_injs, n_out=[0,1], dump=False, show=False)
 
     neurons = nr.Neurons([nr.BioNeuronTf(config_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
-    c = CircuitTf(neurons=neurons, conns=conns_opt)
+    c = CircuitTf(neurons=neurons, synapses=conns_opt)
     co = CircuitOpt(circuit=c)
     co.opt_circuits(dir, train=train, n_out=[0,1], l_rate=(0.01,9,0.95))
 

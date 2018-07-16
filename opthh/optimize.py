@@ -281,7 +281,7 @@ class Optimizer(ABC):
         pass
 
     def optimize(self, dir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
-                 reload=False, reload_dir=None, yshape=None, shapevars=None, plot=True):
+                 reload=False, reload_dir=None, yshape=None, plot=True):
 
         print('Optimization'.center(40,'_'))
         T, X, V, Ca = train
@@ -320,10 +320,10 @@ class Optimizer(ABC):
                 # sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
-                vars = {var : [val] for var, val in self.optimized.init_p.items()}
+                vars = {var : np.array([val]) for var, val in self.optimized.init_p.items()}
                 len_prev = 0
 
-            vars = dict([(var, np.vstack((val, np.zeros(shapevars)))) for var, val in vars.items()])
+            vars = {var: np.vstack((val, np.zeros([epochs] + list(val.shape)[1:]))) for var, val in vars.items()}
 
             for j in tqdm(range(epochs)):
                 i = len_prev + j

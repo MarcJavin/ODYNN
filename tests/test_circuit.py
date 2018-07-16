@@ -14,40 +14,50 @@ class TestCircuit(TestCase):
              (2, 4): opthh.circuit.SYNAPSE,
              (3, 2): opthh.circuit.SYNAPSE,
              }
-    circ = Circuit(conns, neuron)
+    circ = Circuit(neuron, conns)
 
     conns2 = [{(0, 4): opthh.circuit.SYNAPSE,
              (1, 4): opthh.circuit.SYNAPSE,
              (2, 4): opthh.circuit.SYNAPSE,
              (3, 2): opthh.circuit.SYNAPSE,
              } for _ in range(7)]
-    circ2 = Circuit(conns2, neuron)
+    circ2 = Circuit(neuron, conns2)
 
     def test_init(self):
         neuron_bad = BioNeuronTf([hhmodel.DEFAULT for _ in range(3)])
 
-        self.circ = Circuit(self.conns, self.neuron)
         self.assertEqual(self.circ.num, 1)
         self.assertEqual(self.circ._pres.all(), np.array([0, 1, 2, 3]).all())
         self.assertEqual(self.circ._posts.all(), np.array([4, 4, 4, 2]).all())
         self.assertIsInstance(self.circ._param, dict)
-        self.assertEqual(self.circ._param.keys(), opthh.circuit.SYNAPSE.keys())
         self.assertEqual(self.circ._neurons.num, 5)
         self.assertEqual(self.circ._neurons.init_state.all(), self.circ.init_state.all())
+        self.assertEqual(self.circ.n_gap, 0)
+        self.assertEqual(self.circ.n_synapse, 4)
 
         self.assertEqual(self.circ2.num, 7)
         self.assertEqual(self.circ2._pres.all(), np.array([0, 1, 2, 3]).all())
         self.assertEqual(self.circ2._posts.all(), np.array([4, 4, 4, 2]).all())
         self.assertIsInstance(self.circ2._param, dict)
-        self.assertEqual(self.circ2._param.keys(), opthh.circuit.SYNAPSE.keys())
         self.assertEqual(self.circ2._neurons.num, 5)
         self.assertEqual(self.circ2._neurons.init_state.shape[-1], self.circ2.num)
         self.assertEqual(self.circ2._neurons.init_state.all(), self.circ2.init_state.all())
+        self.assertEqual(self.circ2.n_gap, 0)
+        self.assertEqual(self.circ2.n_synapse, 4)
 
         with self.assertRaises(AttributeError):
-            cbad = Circuit(self.conns, neuron_bad)
+            cbad = Circuit(neuron_bad, self.conns)
         with self.assertRaises(AttributeError):
-            cbad = Circuit(self.conns2, neuron_bad)
+            cbad = Circuit(neuron_bad, self.conns2)
+
+    def test_gap(self):
+
+        circ = Circuit(self.neuron, self.conns, gaps={(0, 1): opthh.circuit.GAP})
+        self.assertEqual(circ.n_gap, 1)
+        self.assertEqual(circ.n_synapse, 4)
+        circ = Circuit(self.neuron, {}, gaps={(0, 1): opthh.circuit.GAP, (2, 3): opthh.circuit.GAP, (0,4): opthh.circuit.GAP})
+        self.assertEqual(circ.n_gap, 3)
+        self.assertEqual(circ.n_synapse, 0)
 
 
 

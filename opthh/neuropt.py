@@ -16,24 +16,16 @@ class NeuronOpt(Optimizer):
 
     yshape = [2, None, None]
 
-    def __init__(self, init_p='random', fixed=(), constraints=None,
-                 dt=0.1, neuron=None):
+    def __init__(self, neuron):
         """
-        Initializer, takes a NeuronTf object as argument, or alternatively the parameters to create a BioNeuronTf instance
+        Initializer, takes a NeuronTf object as argument
 
         Args:
-            init_p: parameters for the neuron (Default value = 'random')
-            fixed: constant parameters (Default value = ())
-            constraints: constraints to be applied (Default value = None)
-            dt: time step (Default value = 0.1)
-            neuron(:obj:`NeuronTf`): Neuron to be optimized, if not none, other parameters are ignored (Default value = None)
+            neuron(:obj:`NeuronTf`): Neuron to be optimized
         """
-        if neuron is not None:
-            self.neuron = neuron
-            if not isinstance(neuron, NeuronTf):
-                raise TypeError('The neuron attribute should be a NeuronTf instance')
-        else:
-            self.neuron = BioNeuronTf(init_p, dt=dt, fixed=fixed, constraints=constraints)
+        self.neuron = neuron
+        if not isinstance(neuron, NeuronTf):
+            raise TypeError('The neuron attribute should be a NeuronTf instance')
         Optimizer.__init__(self, self.neuron)
 
     def _build_loss(self, w):
@@ -88,7 +80,6 @@ class NeuronOpt(Optimizer):
             :obj:`NeuronTf`: neuron attribute after optimization
 
         """
-        shapevars = (epochs, self._parallel)
         Optimizer.optimize(self, dir, train, test, w, epochs, l_rate, suffix, step, reload, reload_dir, yshape=self.yshape,
-                           shapevars=shapevars, plot=plot)
+                           plot=plot)
 

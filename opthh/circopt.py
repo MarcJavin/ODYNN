@@ -16,18 +16,12 @@ from .neuropt import NeuronOpt
 class CircuitOpt(Optimizer):
     """Class for optimization of a neuronal circuit"""
 
-    def __init__(self, inits_p=None, conns=None, fixed='all', dt=0.1, circuit=None):
+    def __init__(self, circuit):
         """
 
         Args:
-            inits_p(list): see CircuitTf (Default value = None)
-            conns: see CircuitTf (Default value = None)
-            fixed:
-            dt:
-            circuit (:obj:`CircuitTf`): If not None, all other arguments are ignored
+            circuit (:obj:`CircuitTf`): Circuit to be optimized
         """
-        if circuit is None:
-            circuit = CircuitTf(inits_p, conns=conns, fixed=fixed, dt=dt)
         self.circuit = circuit
         Optimizer.__init__(self, self.circuit)
 
@@ -113,10 +107,7 @@ class CircuitOpt(Optimizer):
         """
         self.n_out = n_out
         yshape = [2, None, None, len(n_out)]
-        shapevars = [epochs, self.circuit.n_synapse]
-        if self._parallel > 1:
-            shapevars.append(self._parallel)
-        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, shapevars=shapevars, plot=plot)
+        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, plot=plot)
 
                     #
                     # for b in range(self.n_batch):
