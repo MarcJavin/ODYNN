@@ -208,9 +208,9 @@ def full4(dt=DT, nb_neuron_zero=None):
     i3 = np.sum([(22. - (n * 1 / 100)) * ((t > n) & (t < n + 50)) for n in range(120, 1100, 100)], axis=0)
     i4 = np.sum([(10. + (n * 2 / 100)) * ((t > n) & (t < n + 20)) for n in range(100, 1100, 80)], axis=0)
     is_3 = np.stack([i1, i2, i3, i4], axis=1)
-    i_fin = np.stack([is_, is_3], axis=1)
+    i_fin = np.stack([is_, is_2, is_3], axis=1)
     if nb_neuron_zero is not None:
-        i_zeros = np.zeros((len(t), i_fin.shape[1], 6))
+        i_zeros = np.zeros((len(t), i_fin.shape[1], nb_neuron_zero))
         i_fin = np.append(i_fin, i_zeros, axis=2)
     return t, i_fin
 

@@ -9,13 +9,12 @@ import numpy as np
 from .circuit import CircuitFix
 from .utils import plots_output_mult
 from .datas import DUMP_FILE
-from . import neuron as nr
 import pickle
 import time
 
 
 
-def simul(pars, conns, t, i_injs, gaps={}, circuit=None, n_out=[0], dump=False, suffix='', show=False, save=True):
+def simul(t, i_injs, pars=None, conns={}, gaps={}, circuit=None, n_out=[0], dump=False, suffix='', show=False, save=True, labels=None):
     """runs the entire simulation
 
     Args:
@@ -30,8 +29,9 @@ def simul(pars, conns, t, i_injs, gaps={}, circuit=None, n_out=[0], dump=False, 
         otherwise, return the measurements as a list [time, input, voltage, calcium]
     """
     if circuit is None:
-        print(conns)
-        circuit = CircuitFix(nr.BioNeuronFix(pars, dt=t[1]-t[0]), synapses=conns, gaps=gaps)
+        circuit = CircuitFix(pars, dt=t[1] - t[0], synapses=conns, gaps=gaps, labels=labels)
+    else:
+        labels = circuit.labels
 
     #[(batch,) time, state, neuron]
     print('Circuit Simulation'.center(40, '_'))
@@ -42,11 +42,11 @@ def simul(pars, conns, t, i_injs, gaps={}, circuit=None, n_out=[0], dump=False, 
     if states.ndim > 3:
         for i in range(i_injs.shape[1]):
             plots_output_mult(t, i_injs[:,i], states[:,circuit.neurons.V_pos,i,:], states[:,circuit.neurons.Ca_pos,i,:],
-                      i_syn=curs[:,i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i))
+                      i_syn=curs[:,i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i), labels=labels)
         # [t, state, (batch,) neuron]
     else:
         plots_output_mult(t, i_injs, states[:,circuit.neurons.V_pos,:], states[:,circuit.neurons.Ca_pos,:],
-                      i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
+                      i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix, labels=labels)
         #reshape for batch dimension
         states = states[:,:,np.newaxis,:]
         i_injs = i_injs[:,np.newaxis,:]

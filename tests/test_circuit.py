@@ -55,7 +55,8 @@ class TestCircuit(TestCase):
         circ = Circuit(self.neuron, self.conns, gaps={(0, 1): opthh.circuit.GAP})
         self.assertEqual(circ.n_gap, 1)
         self.assertEqual(circ.n_synapse, 4)
-        circ = Circuit(self.neuron, {}, gaps={(0, 1): opthh.circuit.GAP, (2, 3): opthh.circuit.GAP, (0,4): opthh.circuit.GAP})
+        circ = Circuit(self.neuron, {},
+                       gaps={(0, 1): opthh.circuit.GAP, (2, 3): opthh.circuit.GAP, (0, 4): opthh.circuit.GAP})
         self.assertEqual(circ.n_gap, 3)
         self.assertEqual(circ.n_synapse, 0)
 

@@ -26,7 +26,7 @@ def inhibit():
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
-    sim.simul([p,p], connections, t, i_injs, show=True, save=False)
+    sim.simul(t, i_injs, [p,p], connections, show=True, save=False)
 
 
 def opt_neurons():
@@ -36,7 +36,7 @@ def opt_neurons():
     i0 = 10. * ((t > 200) & (t < 400)) + 30. * ((t > 500) & (t < 600))
     i1 = 30. * ((t > 700) & (t < 800))
     i_injs = np.array([i0, i1]).transpose()
-    f = sim.simul([p, p], connections, t, i_injs, dump=True)
+    f = sim.simul(t, i_injs, [p, p], connections, dump=True)
     c = CircuitOpt([p, p], connections)
     c.opt_neurons(f)
 
@@ -47,16 +47,14 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     dir = utils.set_dir(dir)
     print("Feed with current of shape : ", i_injs.shape)
 
-    train = sim.simul(pars, conns, t, i_injs, n_out=n_out, dump=False, show=False)
-    n = nr.BioNeuronTf(init_p=pars, fixed='all')
+    train = sim.simul(t, i_injs, pars, conns, n_out=n_out, dump=False, show=False)
+    n = nr.BioNeuronTf(init_p=pars, fixed='all', dt=t[1]-t[0])
     cr = CircuitTf(n, synapses=conns_opt)
     c = CircuitOpt(cr)
     c.opt_circuits(dir, n_out=n_out, train=train)
 
 def full4to1():
-    t,i =datas.full4()
-    i_1 = np.zeros((i.shape[0],1))
-    i = np.append(i, i_1, axis=1)
+    t,i = datas.full4(nb_neuron_zero=1)
     n_neuron = 5
     conns = {(0, 4):circuit.SYNAPSE,
              (1, 4):circuit.SYNAPSE,
@@ -116,7 +114,7 @@ def with_LSTM():
     t, i = datas.give_train(dt=dt)
     i_1 = np.zeros(i.shape)
     i_injs = np.stack([i, i_1], axis=2)
-    train = sim.simul([p,p], conns, t, i_injs, n_out=[0,1], dump=False, show=False)
+    train = sim.simul(t, i_injs, [p,p], conns, n_out=[0,1], dump=False, show=False)
 
     neurons = nr.Neurons([nr.BioNeuronTf(config_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
     c = CircuitTf(neurons=neurons, synapses=conns_opt)
@@ -124,10 +122,67 @@ def with_LSTM():
     co.opt_circuits(dir, train=train, n_out=[0,1], l_rate=(0.01,9,0.95))
 
 
+def tap_with():
+
+    syns = {(0, 1): circuit.SYNAPSE_inhib,
+            (0, 2): circuit.SYNAPSE_inhib,
+            (0, 4): circuit.SYNAPSE_inhib,
+            (1, 3): circuit.SYNAPSE_inhib,
+            (1, 4): circuit.SYNAPSE_inhib,
+            (1, 6): circuit.SYNAPSE_inhib,
+            (2, 0): circuit.SYNAPSE,
+            (2, 4): circuit.SYNAPSE,
+            (2, 5): circuit.SYNAPSE,
+            (3, 2): circuit.SYNAPSE_inhib,
+            (3, 4): circuit.SYNAPSE_inhib,
+            (3, 5): circuit.SYNAPSE_inhib,
+            (4, 2): circuit.SYNAPSE_inhib,
+            (4, 5): circuit.SYNAPSE_inhib,
+            (4, 6): circuit.SYNAPSE_inhib,
+            (5, 4): circuit.SYNAPSE_inhib,
+            (5, 6): circuit.SYNAPSE_inhib,
+            (6, 4): circuit.SYNAPSE,
+            (6, 5): circuit.SYNAPSE,
+            (7, 2): circuit.SYNAPSE_inhib,
+            (7, 5): circuit.SYNAPSE_inhib,
+            (8, 2): circuit.SYNAPSE_inhib,
+            (8, 6): circuit.SYNAPSE_inhib,
+            }
+    gaps = {(1, 2): circuit.GAP,
+            (2, 3): circuit.GAP,
+            (2, 4): circuit.GAP,
+            (3, 5): circuit.GAP,
+            (6, 7): circuit.GAP,
+            (7, 8): circuit.GAP,
+            }
+    labels = {0: 'PVD',
+              1: 'PLM',
+              2: 'PVC',
+              3: 'DVA',
+              4: 'AVA',
+              5: 'AVB',
+              6: 'AVD',
+              7: 'AVM',
+              8: 'ALM'}
+    # plt.rcParams['figure.facecolor'] = 'Indigo'
+
+    c = circuit.CircuitFix([p for _ in range(9)], synapses=syns, gaps=gaps, labels=labels)
+    c.plot()
+
+    t, i = datas.full4(dt=0.1, nb_neuron_zero=5)
+    i[:,:,:] = i[:,:,[0,1,7,8,2,3,4,5,6]]
+
+
+    dir = utils.set_dir('Tapwith')
+    return sim.simul(circuit=c, t=t, i_injs=i, n_out=list(range(9)))
+
+
+
 if __name__ == '__main__':
 
-    with_LSTM()
+    tap_with()
     exit(0)
+
 
     xp = sys.argv[1]
     if(xp == '21exc'):

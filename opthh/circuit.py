@@ -10,9 +10,12 @@ import numpy as np
 import scipy as sp
 import tensorflow as tf
 import pylab as plt
+import networkx as nx
+import matplotlib.pyplot as plt
+from matplotlib.patches import ArrowStyle
 
-from . import utils, config_model
-from .neuron import BioNeuronTf, BioNeuronFix
+from . import utils, model, neuron
+
 from .optimize import Optimized
 
 SYNAPSE1 = {
@@ -104,9 +107,13 @@ class Circuit:
 
     """Circuit of neurons with synapses"""
 
-    def __init__(self, neurons, synapses={}, gaps={}, tensors=False):
+    def __init__(self, neurons, synapses={}, gaps={}, tensors=False, labels=None):
         self._tensors = tensors
         self._neurons = neurons
+        if labels is None:
+            self.labels = list(range(neurons.num))
+        else:
+            self.labels = labels
         if isinstance(synapses, list) or isinstance(gaps, list):
             if gaps == {}:
                 gaps = [{} for _ in range(len(synapses))]
@@ -125,33 +132,31 @@ class Circuit:
             for i in range(self._num):
                 # build dict for each circuit
                 init_p = {var: np.array([p[var] for p in synapses[i].values()], dtype=np.float32) for var in VARS_SYN}
-                init_gap = {var: np.array([p[var] for p in gaps[i].values()], dtype=np.float32) for var in VARS_GAP}
+                init_gap = {var: np.tile(np.array([p[var] for p in gaps[i].values()], dtype=np.float32), 2) for var in VARS_GAP}
                 init_p.update(init_gap)
                 inits_p.append(init_p)
             # merge them all in a new dimension
             self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in vars}
             neurons.parallelize(self._num)
-            self._connections = list(synapses[0].keys())
-            self._gaps = list(gaps[0].keys())
+            self.synapses = synapses[0]
+            self.gaps = gaps[0]
 
         else:
             self._num = 1
             self.init_p = {var : np.array([p[var] for p in synapses.values()], dtype=np.float32) for var in VARS_SYN}
-            init_gap = {var : np.array([p[var] for p in gaps.values()], dtype=np.float32) for var in VARS_GAP}
+            init_gap = {var : np.tile(np.array([p[var] for p in gaps.values()], dtype=np.float32), 2) for var in VARS_GAP}
             self.init_p.update(init_gap)
-            self._connections = synapses.keys()
-            self._gaps = gaps.keys()
+            self.synapses = synapses
+            self.gaps = gaps
         self._init_state = self._neurons.init_state
         self.dt = self._neurons.dt
         self._param = self.init_p
-        syns = list(zip(*[k for k in self._connections]))
-        gaps_c = list(zip(*[k for k in self._gaps]))
-        print('syn & gap', syns, gaps_c)
+        syns = list(zip(*[k for k in self.synapses.keys()]))
+        gaps_c = list(zip(*[k for k in self.gaps.keys()]))
         if len(gaps_c)==0:
             gaps_c = [[], []]
         if len(syns)==0:
             syns = [[], []]
-        print('syn & gap', syns, gaps_c)
         self._pres = np.hstack((syns[0], gaps_c[0], gaps_c[1])).astype(np.int32)
         self._posts = np.hstack((syns[1], gaps_c[1], gaps_c[0])).astype(np.int32)
         self.n_synapse = len(syns[0])
@@ -177,7 +182,7 @@ class Circuit:
 
     def gap_curr(self, vprev, vpost):
         G = self._param['G_gap']
-        return G * (vpost - vprev)
+        return G * (vprev - vpost)
 
     def syn_curr(self, vprev, vpost):
         """
@@ -205,13 +210,12 @@ class Circuit:
             return self.gap_curr(vprev, vpost)
         elif(self.n_gap == 0):
             return self.syn_curr(vprev, vpost)
-        syns = self.syn_curr(vprev[:self.n_synapse], vpost[:,self.n_synapse])
-        gaps = self.gap_curr(vprev[self.n_synapse:], vpost[self.n_synapse:])
-        print(syns.shape)
+        syns = self.syn_curr(vprev[...,:self.n_synapse], vpost[...,:self.n_synapse])
+        gaps = self.gap_curr(vprev[...,self.n_synapse:], vpost[...,self.n_synapse:])
         if self._tensors:
-            return tf.concat([syns, gaps])
+            return tf.concat([syns, gaps], axis=-1)
         else:
-            return np.concatenate((syns, gaps))
+            return np.concatenate((syns, gaps), axis=-1)
 
     def step(self, hprev, curs):
         """run one time step
@@ -238,8 +242,6 @@ class Circuit:
                 extra = None
             ndim = 3 if self._num == 1 else 4
             perm_h = [0, 2, 1, 3][:ndim]
-            print(perm_h, 'perm_h')
-            print(self._num)
             perm_v = [1, 0, 2][:ndim-1]
 
             hprev_swap = tf.transpose(hprev, perm_h)
@@ -272,20 +274,69 @@ class Circuit:
         else:
             # update neurons
             h = self._neurons.step(hprev, curs)
-            # update synapses
-            vpres = h[0, self._pres]
-            vposts = h[0, self._posts]
-            curs_intern = self.syn_curr(vpres, vposts)
+
+            if h.ndim > 2:
+                hs = np.swapaxes(h, 1, 2)
+                vpres = np.swapaxes(hs[0, self._pres], 0, 1)
+                vposts = np.swapaxes(hs[0, self._posts], 0, 1)
+                curs_intern = np.swapaxes(self.inter_curr(vpres, vposts), 0, 1)
+            else:
+                # update synapses
+                vpres = h[0, self._pres]
+                vposts = h[0, self._posts]
+                curs_intern = self.inter_curr(vpres, vposts)
             curs_post = np.zeros(curs.shape)
             for i in range(self._neurons.num):
                 if i not in self._posts:
-                    curs_post[i] = 0
+                    curs_post[...,i] = 0
                     continue
-                curs_post[i] = np.sum(curs_intern[self._posts == i])
+                curs_post[...,i] = np.sum(curs_intern[self._posts == i], axis=0)
             return h, curs_post
 
+    def plot(self, show=True, save=False):
+        G = nx.MultiDiGraph()
+        exc = 'Crimson'
+        inh = 'green'
+        gap = 'Gold'
+        synplot = [(k[0], k[1], {'color': inh}) if v['scale'] > 0 else (k[0], k[1], {'color': exc}) for k, v in
+                   self.synapses.items()]
+        G.add_edges_from(synplot)
+        G.add_edges_from([(k[0], k[1], {'color': gap}) for k in self.gaps.keys()])
+        G.add_edges_from([(k[1], k[0], {'color': gap}) for k in self.gaps.keys()])
+        G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
+        pos = nx.layout.circular_layout(G)
+        sensors = [0, 1, 7, 8]
+        inter = [2, 3, 6]
+        command = [4, 5]
+        colors = []
+        for i in range(9):
+            edges = G.out_edges(i, data='color')
+            cols = [e[-1] for e in edges if e[-1] != gap]
+            colors.append(max(set(cols), key=cols.count))
+        nx.draw_networkx_nodes(G, pos, node_shape='v', node_color=[colors[i] for i in sensors], nodelist=sensors,
+                               node_size=2000, alpha=1)
+        nx.draw_networkx_nodes(G, pos, node_shape='o', node_color=[colors[i] for i in inter], nodelist=inter,
+                               node_size=2000, alpha=1)
+        nx.draw_networkx_nodes(G, pos, node_shape='H', node_color=[colors[i] for i in command], nodelist=command,
+                               node_size=2000, alpha=1)
+        nx.draw_networkx_labels(G, pos, self.labels, font_color='white', font_weight='bold')
+        edges_exc = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == inh]
+        edges_inh = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == exc]
+        edges_gap = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == gap]
+        style = ArrowStyle("wedge", tail_width=2., shrink_factor=0.2)
+        styleg = ArrowStyle("wedge", tail_width=0.6, shrink_factor=0.4)
+        nx.draw_networkx_edges(G, pos, arrowstyle=style, edgelist=edges_exc, edge_color='Chartreuse',
+                               arrowsize=10, alpha=1, width=1)
+        nx.draw_networkx_edges(G, pos, arrowstyle=style, edgelist=edges_inh, edge_color='red',
+                               arrowsize=10, alpha=0.4, width=1)
+        nx.draw_networkx_edges(G, pos, arrowstyle=styleg, edgelist=edges_gap, edge_color=gap,
+                               arrowsize=10, alpha=1, width=0.1, style='dotted')
+        plt.axis('off')
+        utils.save_show(show, save, name='Circuit')
 
-    plot_output = config_model.NEURON_MODEL.plot_output
+
+    def plot_output(self, *args, **kwargs):
+        return model.Neuron.plot_output(*args, **kwargs)
 
 
 class CircuitTf(Circuit, Optimized):
@@ -293,15 +344,16 @@ class CircuitTf(Circuit, Optimized):
     Circuit using tensorflow
     """
 
-    def __init__(self, neurons, synapses={}, gaps={}, tensors=False):
+    def __init__(self, neurons, synapses={}, gaps={}, labels=None):
         """
 
         Args:
+            labels: 
             synapses(dict): initial parameters for the synapses
             neurons(NeuronModel): if not None, all other parameters except conns are ignores
         """
         Optimized.__init__(self, dt=neurons.dt)
-        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=True)
+        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=True, labels=labels)
         if self._num > 1:
             constraints_dic = give_constraints(synapses[0])
             #update constraint size for parallelization
@@ -334,6 +386,7 @@ class CircuitTf(Circuit, Optimized):
         self._init_state = self._neurons.init_state
 
     def build_graph(self, batch=1):
+        tf.reset_default_graph()
         self.reset()
         xshape = [None]
         initializer = self._init_state.astype(np.float32)
@@ -380,6 +433,7 @@ class CircuitTf(Circuit, Optimized):
         else:
             input_cur, res_ = self.build_graph()
         with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
             results = sess.run(res_, feed_dict={
                 input_cur: i
             })
@@ -388,7 +442,7 @@ class CircuitTf(Circuit, Optimized):
     def settings(self):
         return ('Circuit optimization'.center(20, '.') + '\n' +
                 'Connections : \n %s \n %s' % (self._pres, self._posts) + '\n' +
-                'Initial synaptic params : %s' % self._connections + '\n' +
+                'Initial synaptic params : %s' % self.init_p + '\n' +
                 self._neurons.settings())
 
     def apply_constraints(self, session):
@@ -419,9 +473,9 @@ class CircuitTf(Circuit, Optimized):
         def oneplot(var_d, name):
             labels = ['G', 'mdp', 'E', 'scale']
             if func == utils.box:
-                func(var_d, utils.COLORS[:len(labels)], labels)
+                func(var_d, utils.COLORS[:len(labels=None)], labels=None)
             else:
-                for i, var in enumerate(labels):
+                for i, var in enumerate(labels=None):
                     plt.subplot(2, 2, i + 1)
                     func(plt, var_d[var])
                     plt.ylabel(var)
@@ -441,8 +495,8 @@ class CircuitTf(Circuit, Optimized):
 
 class CircuitFix(Circuit):
 
-    def __init__(self, neurons, synapses={}, gaps={}):
-        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=False)
+    def __init__(self, pars, dt=0.1, synapses={}, gaps={}, labels=None):
+        Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps, tensors=False, labels=labels)
         self._param = self.init_p
 
     def calculate(self, i_inj):
