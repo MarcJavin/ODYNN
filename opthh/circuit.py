@@ -105,15 +105,17 @@ VARS_GAP = list(GAP.keys())
 
 class Circuit:
 
-    """Circuit of neurons with synapses"""
+    """Circuit of neurons with synapses and gap junctions"""
 
-    def __init__(self, neurons, synapses={}, gaps={}, tensors=False, labels=None):
+    def __init__(self, neurons, synapses={}, gaps={}, tensors=False, labels=None, sensors=set(), commands=set()):
         self._tensors = tensors
         self._neurons = neurons
-        if labels is None:
-            self.labels = list(range(neurons.num))
-        else:
-            self.labels = labels
+        self.sensors = sensors
+        self.commands = commands
+        self.inter = set(list(range(self._neurons.num))) - self.sensors - self.commands
+        self.labels = labels
+        if self.labels is None:
+            self.labels = {i:i for i in range(neurons.num)}
         if isinstance(synapses, list) or isinstance(gaps, list):
             if gaps == {}:
                 gaps = [{} for _ in range(len(synapses))]
@@ -210,12 +212,18 @@ class Circuit:
             return self.gap_curr(vprev, vpost)
         elif(self.n_gap == 0):
             return self.syn_curr(vprev, vpost)
-        syns = self.syn_curr(vprev[...,:self.n_synapse], vpost[...,:self.n_synapse])
-        gaps = self.gap_curr(vprev[...,self.n_synapse:], vpost[...,self.n_synapse:])
-        if self._tensors:
-            return tf.concat([syns, gaps], axis=-1)
+        if self.num > 1:
+            syns = self.syn_curr(vprev[...,:self.n_synapse,:], vpost[...,:self.n_synapse,:])
+            gaps = self.gap_curr(vprev[...,self.n_synapse:,:], vpost[...,self.n_synapse:,:])
+            axis = -2
         else:
-            return np.concatenate((syns, gaps), axis=-1)
+            syns = self.syn_curr(vprev[...,:self.n_synapse], vpost[...,:self.n_synapse])
+            gaps = self.gap_curr(vprev[...,self.n_synapse:], vpost[...,self.n_synapse:])
+            axis = 1
+        if self._tensors:
+            return tf.concat([syns, gaps], axis=axis)
+        else:
+            return np.concatenate((syns, gaps), axis=axis)
 
     def step(self, hprev, curs):
         """run one time step
@@ -294,6 +302,15 @@ class Circuit:
             return h, curs_post
 
     def plot(self, show=True, save=False):
+        """
+        Plot the circuit using networkx
+        Args:
+            show(bool):
+            save(bool:
+
+        Returns:
+
+        """
         G = nx.MultiDiGraph()
         exc = 'Crimson'
         inh = 'green'
@@ -305,20 +322,21 @@ class Circuit:
         G.add_edges_from([(k[1], k[0], {'color': gap}) for k in self.gaps.keys()])
         G.graph['edge'] = {'arrowsize': '0.6', 'splines': 'curved'}
         pos = nx.layout.circular_layout(G)
-        sensors = [0, 1, 7, 8]
-        inter = [2, 3, 6]
-        command = [4, 5]
         colors = []
-        for i in range(9):
+        for i in range(self._neurons.num):
             edges = G.out_edges(i, data='color')
             cols = [e[-1] for e in edges if e[-1] != gap]
-            colors.append(max(set(cols), key=cols.count))
-        nx.draw_networkx_nodes(G, pos, node_shape='v', node_color=[colors[i] for i in sensors], nodelist=sensors,
+            if cols == []:
+                colors.append('c')
+            else:
+                colors.append(max(set(cols), key=cols.count))
+        nx.draw_networkx_nodes(G, pos, node_shape='v', node_color=[colors[i] for i in self.sensors], nodelist=self.sensors,
                                node_size=2000, alpha=1)
-        nx.draw_networkx_nodes(G, pos, node_shape='o', node_color=[colors[i] for i in inter], nodelist=inter,
+        nx.draw_networkx_nodes(G, pos, node_shape='o', node_color=[colors[i] for i in self.inter], nodelist=self.inter,
                                node_size=2000, alpha=1)
-        nx.draw_networkx_nodes(G, pos, node_shape='H', node_color=[colors[i] for i in command], nodelist=command,
+        nx.draw_networkx_nodes(G, pos, node_shape='H', node_color=[colors[i] for i in self.commands], nodelist=self.commands,
                                node_size=2000, alpha=1)
+
         nx.draw_networkx_labels(G, pos, self.labels, font_color='white', font_weight='bold')
         edges_exc = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == inh]
         edges_inh = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == exc]
@@ -338,13 +356,17 @@ class Circuit:
     def plot_output(self, *args, **kwargs):
         return model.Neuron.plot_output(*args, **kwargs)
 
+    def plots_output_mult(self, *args, **kwargs):
+        labels = [self.labels[i] for i in range(len(self.labels))]
+        return utils.plots_output_mult(labels=labels, *args, **kwargs)
+
 
 class CircuitTf(Circuit, Optimized):
     """
     Circuit using tensorflow
     """
 
-    def __init__(self, neurons, synapses={}, gaps={}, labels=None):
+    def __init__(self, neurons, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
         """
 
         Args:
@@ -353,7 +375,8 @@ class CircuitTf(Circuit, Optimized):
             neurons(NeuronModel): if not None, all other parameters except conns are ignores
         """
         Optimized.__init__(self, dt=neurons.dt)
-        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=True, labels=labels)
+        Circuit.__init__(self, neurons=neurons, synapses=synapses, gaps=gaps, tensors=True, labels=labels, sensors=sensors,
+                         commands=commands)
         if self._num > 1:
             constraints_dic = give_constraints(synapses[0])
             #update constraint size for parallelization
@@ -441,7 +464,8 @@ class CircuitTf(Circuit, Optimized):
     
     def settings(self):
         return ('Circuit optimization'.center(20, '.') + '\n' +
-                'Connections : \n %s \n %s' % (self._pres, self._posts) + '\n' +
+                'Chemical connections : \n %s' % (self.synapses) + '\n' +
+                'Gap junctions : \n %s' % self.gaps + '\n' +
                 'Initial synaptic params : %s' % self.init_p + '\n' +
                 self._neurons.settings())
 
@@ -473,9 +497,9 @@ class CircuitTf(Circuit, Optimized):
         def oneplot(var_d, name):
             labels = ['G', 'mdp', 'E', 'scale']
             if func == utils.box:
-                func(var_d, utils.COLORS[:len(labels=None)], labels=None)
+                func(var_d, utils.COLORS[:len(labels)], labels)
             else:
-                for i, var in enumerate(labels=None):
+                for i, var in enumerate(labels):
                     plt.subplot(2, 2, i + 1)
                     func(plt, var_d[var])
                     plt.ylabel(var)
@@ -495,8 +519,9 @@ class CircuitTf(Circuit, Optimized):
 
 class CircuitFix(Circuit):
 
-    def __init__(self, pars, dt=0.1, synapses={}, gaps={}, labels=None):
-        Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps, tensors=False, labels=labels)
+    def __init__(self, pars, dt=0.1, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
+        Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps,
+                         tensors=False, labels=labels, sensors=sensors, commands=commands)
         self._param = self.init_p
 
     def calculate(self, i_inj):

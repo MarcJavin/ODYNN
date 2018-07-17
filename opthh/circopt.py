@@ -105,6 +105,7 @@ class CircuitOpt(Optimizer):
             NeuronTf: neuron attribute after optimization
 
         """
+        self.circuit.plot(show=False, save=True)
         self.n_out = n_out
         yshape = [2, None, None, len(n_out)]
         Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, plot=plot)

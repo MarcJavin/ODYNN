@@ -34,7 +34,7 @@ class TestCircuitOpt(TestCase):
 
         print('one target'.center(40, '#'))
         n_out = [1]
-        train = csim.simul(t=t, i_injs=i_injs, pars=pars, conns=conns, n_out=n_out,  show=False)
+        train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
@@ -50,7 +50,7 @@ class TestCircuitOpt(TestCase):
 
         print('several targets'.center(40, '#'))
         n_out = [0,1]
-        train = csim.simul(t=t, i_injs=i_injs, pars=pars, conns=conns, n_out=n_out,  show=False)
+        train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())

@@ -26,7 +26,7 @@ def inhibit():
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
     i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
     i_injs = np.array([i0, i1]).transpose()
-    sim.simul(t, i_injs, [p,p], connections, show=True, save=False)
+    sim.simul(t, i_injs, [p, p], connections, show=True, save=False)
 
 
 def opt_neurons():
@@ -114,7 +114,7 @@ def with_LSTM():
     t, i = datas.give_train(dt=dt)
     i_1 = np.zeros(i.shape)
     i_injs = np.stack([i, i_1], axis=2)
-    train = sim.simul(t, i_injs, [p,p], conns, n_out=[0,1], dump=False, show=False)
+    train = sim.simul(t, i_injs, [p, p], conns, n_out=[0, 1], dump=False, show=False)
 
     neurons = nr.Neurons([nr.BioNeuronTf(config_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
     c = CircuitTf(neurons=neurons, synapses=conns_opt)
@@ -148,6 +148,30 @@ def tap_with():
             (8, 2): circuit.SYNAPSE_inhib,
             (8, 6): circuit.SYNAPSE_inhib,
             }
+    syns_opt = [{(0, 1): circuit.get_syn_rand(False),
+            (0, 2): circuit.get_syn_rand(False),
+            (0, 4): circuit.get_syn_rand(False),
+            (1, 3): circuit.get_syn_rand(False),
+            (1, 4): circuit.get_syn_rand(False),
+            (1, 6): circuit.get_syn_rand(False),
+            (2, 0): circuit.get_syn_rand(True),
+            (2, 4): circuit.get_syn_rand(True),
+            (2, 5): circuit.get_syn_rand(True),
+            (3, 2): circuit.get_syn_rand(False),
+            (3, 4): circuit.get_syn_rand(False),
+            (3, 5): circuit.get_syn_rand(False),
+            (4, 2): circuit.get_syn_rand(False),
+            (4, 5): circuit.get_syn_rand(False),
+            (4, 6): circuit.get_syn_rand(False),
+            (5, 4): circuit.get_syn_rand(False),
+            (5, 6): circuit.get_syn_rand(False),
+            (6, 4): circuit.get_syn_rand(True),
+            (6, 5): circuit.get_syn_rand(True),
+            (7, 2): circuit.get_syn_rand(False),
+            (7, 5): circuit.get_syn_rand(False),
+            (8, 2): circuit.get_syn_rand(False),
+            (8, 6): circuit.get_syn_rand(False),
+            } for i in range(7)]
     gaps = {(1, 2): circuit.GAP,
             (2, 3): circuit.GAP,
             (2, 4): circuit.GAP,
@@ -166,15 +190,20 @@ def tap_with():
               8: 'ALM'}
     # plt.rcParams['figure.facecolor'] = 'Indigo'
 
-    c = circuit.CircuitFix([p for _ in range(9)], synapses=syns, gaps=gaps, labels=labels)
-    c.plot()
+    # c = circuit.CircuitFix([p for _ in range(9)], synapses=syns, gaps=gaps, labels=labels)
+    # c.plot()
 
-    t, i = datas.full4(dt=0.1, nb_neuron_zero=5)
+    dt = 0.5
+    t, i = datas.full4(dt=dt, nb_neuron_zero=5)
     i[:,:,:] = i[:,:,[0,1,7,8,2,3,4,5,6]]
 
 
     dir = utils.set_dir('Tapwith')
-    return sim.simul(circuit=c, t=t, i_injs=i, n_out=list(range(9)))
+    train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=[4,5], labels=labels)
+    n = nr.BioNeuronTf([p for _ in range(9)], fixed='all', dt=dt)
+    ctf = CircuitTf(neurons=n, synapses=syns_opt, gaps=[gaps for _ in range(7)], labels=labels, commands=set([4,5]), sensors=set([0,1,7,8]))
+    copt = CircuitOpt(circuit=ctf)
+    copt.opt_circuits(subdir=dir, train=train, n_out=[4,5])
 
 
 

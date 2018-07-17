@@ -131,23 +131,13 @@ class Optimizer(ABC):
 
         if self._parallel > 1:
             grads_normed = []
+            print(grads)
             for i in range(self._parallel):
                 # clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
-                # if isinstance(self.optimized, Circuit.Circuit):
-                #     #[synapse, model]
-                #     gi = [g[:,i] for g in grads]
-                # else:
-                #     gi = [g[i] for g in grads]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
-            grads_normed = tf.stack(grads_normed)
-            # resize to tf format
-            try:  # for circuits
-                grads_normed = tf.transpose(grads_normed, perm=[1, 2, 0])
-                grads_normed = tf.unstack(grads_normed, axis=0)
-            except:
-                grads_normed = tf.unstack(grads_normed, axis=1)
+            grads_normed = [tf.stack([grads_normed[i][j] for i in range(self._parallel)], axis=-1) for j in range(len(grads))]
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
