@@ -420,7 +420,7 @@ class CElegansNeuron(model.BioNeuron):
         return give_rand()
 
     @staticmethod
-    def boxplot_vars(var_dic, suffix="", show=True, save=False):
+    def boxplot_vars(var_dic, suffix="", show=False, save=True):
         plt.figure()
         plt.subplot(121)
         cols = [RATE_COLORS['n'], RATE_COLORS['n'], RATE_COLORS['f'], 'k']
@@ -457,7 +457,7 @@ class CElegansNeuron(model.BioNeuron):
         plt.close()
 
     @classmethod
-    def plot_vars(cls, var_dic, suffix="", show=True, save=False, func=utils.plot):
+    def plot_vars(cls, var_dic, suffix="evolution", show=False, save=True, func=utils.plot):
         """plot variation/comparison/boxplots of all variables organized by categories
 
         Args:
@@ -545,9 +545,9 @@ class CElegansNeuron(model.BioNeuron):
             fig.add_subplot(ax)
 
     @classmethod
-    def study_vars(cls, p):
-        cls.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-        cls.boxplot_vars(p, suffix='boxes', show=False, save=True)
+    def study_vars(cls, p, suffix):
+        cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=False, save=True)
+        cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=False, save=True)
 
     @staticmethod
     def ica_from_v(X, v_fix, self):
@@ -589,7 +589,7 @@ class CElegansNeuron(model.BioNeuron):
             return [ik, p, q, n]
 
 
-def plots_ica_from_v(ts, V, results, name="ica", show=True, save=False):
+def plots_ica_from_v(ts, V, results, name="ica", show=False, save=True):
     """plot i_ca and Ca conc depending on the voltage
 
     Args:

@@ -505,7 +505,8 @@ class CircuitTf(Circuit, Optimized):
         self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
         self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
         if self._neurons.trainable:
-            self._neurons.plot_vars(p)
+            for i in range(self._neurons.num):
+                self._neurons.study_vars({var: val[i] for var, val in p.items()}, suffix=self.labels[i])
 
     def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
         """plot variation/comparison/boxplots of synaptic variables
@@ -531,21 +532,35 @@ class CircuitTf(Circuit, Optimized):
             plt.close()
 
         if (self._num > 1):
+            dim = var_dic['E'].ndim
             # if parallelization, compare run on each synapse
             for i, name in enumerate(self.synapses.keys()):
                 labels = ['G', 'mdp', 'E', 'scale']
-                var_d = {l: var_dic[l][:,i] for l in labels}
+                #if data with optimization steps
+                if dim > 2:
+                    var_d = {l: var_dic[l][:,i] for l in labels}
+                #if final result
+                else:
+                    var_d = {l: var_dic[l][i] for l in labels}
                 oneplot(var_d, 'Synapse_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
             for i, name in enumerate(self.gaps.keys()):
                 labels = ['G_gap']
-                var_d = {l: var_dic[l][:, i] for l in labels}
+                if dim > 2:
+                    var_d = {l: var_dic[l][:,i] for l in labels}
+                else:
+                    var_d = {l: var_dic[l][i] for l in labels}
                 oneplot(var_d, 'Gap_junc_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
         else:
             # if not, compare all synapses together
             oneplot(var_dic, 'All_Synapses')
 
         if self._neurons.trainable:
-            self._neurons.plot_vars(var_dic)
+            for i in range(self._neurons.num):
+                if dim > 2:
+                    var_d = {l: var_dic[l][:,i] for l in self._neurons.init_params.keys()}
+                else:
+                    var_d = {l: var_dic[l][i] for l in self._neurons.init_params.keys()}
+                self._neurons.plot_vars(var_d, suffix='evolution_%s'%self.labels[i], show=False, save=True)
 
     
 

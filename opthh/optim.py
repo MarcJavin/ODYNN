@@ -439,6 +439,7 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
         plt.plot(losses, 'r', linewidth=0.6, label='Train')
     else:
         plt.plot(losses, linewidth=0.6)
+    plt.ylabel('Loss')
     if losses_test is not None:
         losses_test = np.array(losses_test)
         pts = np.linspace(0, losses.shape[0]-1, num=losses_test.shape[0], endpoint=True)
@@ -451,8 +452,8 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
             plt.yscale('log')
             plt.legend()
             plt.subplot(n_p,1,2)
-            plt.plot(pts, losses_test, linewidth=0.6, label='Test')
-    plt.ylabel('Loss')
+            plt.plot(pts, losses_test, linewidth=0.6)
+            plt.ylabel('Test Loss')
     plt.yscale('log')
     plt.legend()
 

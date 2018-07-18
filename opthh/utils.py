@@ -26,6 +26,8 @@ plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 
 RES_DIR = 'results/'
 IMG_DIR = 'img/'
+NEUR_DIR = 'neurons/'
+SYN_DIR = 'synapses/'
 current_dir = RES_DIR
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'

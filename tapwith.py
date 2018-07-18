@@ -102,7 +102,7 @@ if __name__=='__main__':
     # c = circuit.CircuitFix([p for _ in range(9)], synapses=syns, gaps=gaps, labels=labels)
     # c.plot()
 
-    dt = 0.5
+    dt = 0.2
     t, i = datas.full4(dt=dt, nb_neuron_zero=5)
     i[:, :, :] = i[:, :, [0, 1, 4, 5, 6, 7, 8, 2, 3]]
     _, itest = datas.full4_test(dt=dt, nb_neuron_zero=5)
