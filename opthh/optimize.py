@@ -91,7 +91,7 @@ class Optimized(ABC):
 
 class Optimizer(ABC):
 
-    def __init__(self, optimized, frequency=10):
+    def __init__(self, optimized, frequency=30):
         """
 
         Args:
@@ -131,7 +131,6 @@ class Optimizer(ABC):
 
         if self._parallel > 1:
             grads_normed = []
-            print(grads)
             for i in range(self._parallel):
                 # clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
@@ -256,7 +255,7 @@ class Optimizer(ABC):
         self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
 
         if plot:
-            plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, suffix=self.suffix, show=False,
+            plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, parallel=self._parallel, suffix=self.suffix, show=False,
                            save=True)
             self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                  suffix=self.suffix + "evolution", show=False,
@@ -435,7 +434,7 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
     if parallel == 1:
         plt.plot(losses, 'r', linewidth=0.6, label='Train')
     else:
-        plt.plot(losses, linewidth=0.6, label='Train')
+        plt.plot(losses, linewidth=0.6)
     if losses_test is not None:
         losses_test = np.array(losses_test)
         pts = np.linspace(0, losses.shape[0]-1, num=losses_test.shape[0], endpoint=True)
@@ -444,7 +443,7 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
         else:
             # add another subplot for readability
             n_p = 3
-            plt.ylabel('Loss')
+            plt.ylabel('Train Loss')
             plt.yscale('log')
             plt.legend()
             plt.subplot(n_p,1,2)

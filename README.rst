@@ -49,8 +49,6 @@ Folders
 TODO
 ---------------
 
-- inhibitory synapses : default and constraints
-- heatmaps for circuit
 - documentation
 - tutorial
 

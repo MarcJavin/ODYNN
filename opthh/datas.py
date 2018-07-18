@@ -214,6 +214,25 @@ def full4(dt=DT, nb_neuron_zero=None):
         i_fin = np.append(i_fin, i_zeros, axis=2)
     return t, i_fin
 
+def full4_test(dt=DT, nb_neuron_zero=None):
+    t = np.array(sp.arange(0.0, 1200., dt))
+    i1 = 10. * ((t > 100) & (t < 200))
+    i2 = 10. * ((t > 500) & (t < 700))
+    i3 = 10. * ((t > 500) & (t < 800))
+    i4 = 10. * ((t > 700) & (t < 900))
+    is_ = np.stack([i1, i2, i3, i4], axis=1)
+    is_2 = is_ * 2
+    i1 = np.sum([5. * ((t > n) & (t < n + 100)) for n in range(70, 1100, 300)], axis=0)
+    i2 = np.sum([(15. + (n * 3 / 100)) * ((t > n) & (t < n + 20)) for n in range(100, 1100, 50)], axis=0)
+    i3 = np.sum([(12. - (n * 1 / 100)) * ((t > n) & (t < n + 50)) for n in range(120, 1100, 120)], axis=0)
+    i4 = np.sum([(7. + (n * 0.5 / 100)) * ((t > n) & (t < n + 70)) for n in range(100, 1100, 80)], axis=0)
+    is_3 = np.stack([i1, i2, i3, i4], axis=1)
+    i_fin = np.stack([is_, is_2, is_3], axis=1)
+    if nb_neuron_zero is not None:
+        i_zeros = np.zeros((len(t), i_fin.shape[1], nb_neuron_zero))
+        i_fin = np.append(i_fin, i_zeros, axis=2)
+    return t, i_fin
+
 
 def test():
     t, i = full4()

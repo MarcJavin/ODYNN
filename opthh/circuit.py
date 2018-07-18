@@ -19,7 +19,7 @@ from . import utils, model, neuron
 from .optimize import Optimized
 
 SYNAPSE1 = {
-    'G': 1.,
+    'G': 5.,
     'mdp': -30.,
     'scale': 2.,
     'E': 20.
@@ -33,13 +33,19 @@ SYNAPSE2 = {
 SYNAPSE = {
     'G': 5.,
     'mdp': -25.,
-    'scale': 2.,
+    'scale': 8.,
     'E': 0.
 }
 SYNAPSE_inhib = {
-    'G': 1.,
+    'G': 2.,
+    'mdp': -25.,
+    'scale': 8.,
+    'E': -70.
+}
+SYNAPSE_inhib2 = {
+    'G': 3.,
     'mdp': -35.,
-    'scale': -2.,
+    'scale': -6.,
     'E': 20.
 }
 GAP = {'G_gap': 1.}
@@ -59,16 +65,17 @@ def give_constraints_syn(conns):
     Returns:
         dict: constraints
     """
-    scale_con = np.array([const_scale(True) if p['scale'] > 0 else const_scale(False) for p in conns.values()])
+    E_con = np.array([const_E(p['E'] > -60) for p in conns.values()]).transpose()
     return {'G': np.array([1e-5, np.infty]),
-            'scale': scale_con.transpose()}
+            'scale': np.array([1e-3, np.infty]),
+            'E' : E_con}
 
 
-def const_scale(exc=True):
+def const_E(exc=True):
     if exc:
-        return [1e-3, np.infty]
+        return [-70, np.infty]
     else:
-        return [-np.infty, -1e-3]
+        return [-np.infty, -50]
 
 
 MAX_TAU = 200.
@@ -90,15 +97,18 @@ def get_syn_rand(exc=True):
     """
     # scale is negative if inhibitory
     if exc:
-        scale = random.uniform(MIN_SCALE, MAX_SCALE)
+        E = random.uniform(-60, 30)
     else:
-        scale = random.uniform(-MAX_SCALE, -MIN_SCALE)
+        E = random.uniform(-100, -60)
     return {
         'G': random.uniform(0.01, MAX_G),
         'mdp': random.uniform(MIN_MDP, MAX_MDP),
-        'scale': scale,
-        'E': random.uniform(-20., 50.),
+        'scale': random.uniform(MIN_SCALE, MAX_SCALE),
+        'E': E
     }
+
+def get_gap_rand():
+    return {'G_gap' : random.uniform(0.01, MAX_G)}
 
 VARS_SYN = list(SYNAPSE1.keys())
 VARS_GAP = list(GAP.keys())
@@ -312,10 +322,10 @@ class Circuit:
 
         """
         G = nx.MultiDiGraph()
-        exc = 'Crimson'
-        inh = 'green'
+        exc = 'green'
+        inh = 'Crimson'
         gap = 'Gold'
-        synplot = [(k[0], k[1], {'color': inh}) if v['scale'] > 0 else (k[0], k[1], {'color': exc}) for k, v in
+        synplot = [(k[0], k[1], {'color': inh}) if v['E'] < -60 else (k[0], k[1], {'color': exc}) for k, v in
                    self.synapses.items()]
         G.add_edges_from(synplot)
         G.add_edges_from([(k[0], k[1], {'color': gap}) for k in self.gaps.keys()])
@@ -338,8 +348,8 @@ class Circuit:
                                node_size=2000, alpha=1)
 
         nx.draw_networkx_labels(G, pos, self.labels, font_color='white', font_weight='bold')
-        edges_exc = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == inh]
-        edges_inh = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == exc]
+        edges_exc = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == exc]
+        edges_inh = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == inh]
         edges_gap = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == gap]
         style = ArrowStyle("wedge", tail_width=2., shrink_factor=0.2)
         styleg = ArrowStyle("wedge", tail_width=0.6, shrink_factor=0.4)
@@ -464,9 +474,10 @@ class CircuitTf(Circuit, Optimized):
     
     def settings(self):
         return ('Circuit optimization'.center(20, '.') + '\n' +
-                'Chemical connections : \n %s' % (self.synapses) + '\n' +
-                'Gap junctions : \n %s' % self.gaps + '\n' +
+                'Chemical connections : \n %s' % (self.synapses.keys()) + '\n' +
+                'Gap junctions : \n %s' % self.gaps.keys() + '\n' +
                 'Initial synaptic params : %s' % self.init_p + '\n' +
+                'Synaptic constraints : %s' % self.constraints_dic + '\n' +
                 self._neurons.settings())
 
     def apply_constraints(self, session):
@@ -494,8 +505,7 @@ class CircuitTf(Circuit, Optimized):
           func:  (Default value = plot)
         """
 
-        def oneplot(var_d, name):
-            labels = ['G', 'mdp', 'E', 'scale']
+        def oneplot(var_d, name, labels):
             if func == utils.box:
                 func(var_d, utils.COLORS[:len(labels)], labels)
             else:
@@ -509,9 +519,14 @@ class CircuitTf(Circuit, Optimized):
 
         if (self._num > 1):
             # if parallelization, compare run on each synapse
-            for i in range(var_dic['E'].shape[0]):
-                var_d = {var: val[i] for var, val in var_dic.items()}
-                oneplot(var_d, 'Synapse_{}'.format(i))
+            for i, name in enumerate(self.synapses.keys()):
+                labels = ['G', 'mdp', 'E', 'scale']
+                var_d = {l: var_dic[l][:,i] for l in labels}
+                oneplot(var_d, 'Synapse_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
+            for i, name in enumerate(self.gaps.keys()):
+                labels = ['G_gap']
+                var_d = {l: var_dic[l][:, i] for l in labels}
+                oneplot(var_d, 'Gap_junc_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
         else:
             # if not, compare all synapses together
             oneplot(var_dic, 'All_Synapses')

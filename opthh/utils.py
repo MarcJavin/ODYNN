@@ -8,6 +8,7 @@ import pylab as plt
 import numpy as np
 import os
 import re
+import seaborn
 
 # Use on my server
 import matplotlib as mpl
@@ -16,7 +17,7 @@ if (socket.gethostname()=='1080'):
     mpl.use("Agg")
 
 # Tune the plots appearance
-COLORS = [ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive']
+COLORS = np.array([ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive'])
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 SMALL_SIZE = 8
 plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
@@ -103,7 +104,7 @@ def box(var_dic, cols, labels):
 
 
 
-def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False):
+def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False, l=1):
     """plot multiple voltages and Ca2+ concentration
 
     Args:
@@ -131,20 +132,21 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     if (i_syn is not None):
         n_plots = 4
         plt.subplot(n_plots, 1, 3)
-        plt.plot(ts, i_syn)
+        plt.plot(ts, i_syn, linewidth=l)
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{syn}$ ($\\mu{A}/cm^2$)')
-        plt.legend(labels, ncol=int(Vs.shape[1]/4)+1)
     else:
         n_plots = 3
 
     plt.subplot(n_plots, 1, 1)
-    plt.plot(ts, Vs)
+    plt.plot(ts, Vs, linewidth=l)
     plt.ylabel('Voltage (mV)')
-    plt.legend(labels, ncol=int(Vs.shape[1]/4)+1)
+    leg = plt.legend(labels, bbox_to_anchor=(1, 0.5), handlelength=0.2)
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(3.0)
 
     plt.subplot(n_plots, 1, 2)
-    plt.plot(ts, Cacs)
+    plt.plot(ts, Cacs, linewidth=l)
     plt.ylabel('[$Ca^{2+}$]')
 
     plt.subplot(n_plots, 1, n_plots)
@@ -155,7 +157,15 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.xlabel('t (ms)')
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
-    save_show(show, save, IMG_DIR+'output_%s'%suffix)
+    save_show(show, save, 'Output_%s'%suffix, dpi=250)
+    plt.close()
+
+    h = seaborn.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    save_show(show, save, 'Voltage_%s' % suffix, dpi=250)
+    plt.close()
+
+    seaborn.heatmap(Cacs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    save_show(show, save, 'Calcium_%s' % suffix, dpi=250)
     plt.close()
 
 
