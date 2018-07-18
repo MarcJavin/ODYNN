@@ -9,12 +9,12 @@
 import numpy as np
 import tensorflow as tf
 
-from . import config_model
+from . import cfg_model
 from .model import Neuron
-from .optimize import Optimized
+from .optim import Optimized
 
 
-MODEL = config_model.NEURON_MODEL
+MODEL = cfg_model.NEURON_MODEL
 
 
 class NeuronTf(Neuron, Optimized):
@@ -31,6 +31,10 @@ class NeuronTf(Neuron, Optimized):
         Neuron.__init__(self, dt=dt)
         Optimized.__init__(self, dt=dt)
         self.id = self.give_id()
+
+    @property
+    def trainable(self):
+        return True
 
     @classmethod
     def give_id(cls):
@@ -66,16 +70,20 @@ class BioNeuronTf(MODEL, NeuronTf):
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
         self._fixed = fixed
         if(fixed == 'all'):
-            self._fixed = set(self.init_p.keys())
+            self._fixed = set(self._init_p.keys())
         if(constraints is not None):
             self._constraints_dic = constraints
+
+    @property
+    def trainable(self):
+        return (self._fixed != set(self._init_p.keys()))
 
     def reset(self):
         """rebuild tf variable graph"""
         with(tf.variable_scope(self.id)):
             self._param = {}
             self._constraints = []
-            for var, val in self.init_p.items():
+            for var, val in self._init_p.items():
                 if var in self._fixed:
                     self._param[var] = tf.constant(val, name=var, dtype=tf.float32)
                 else:
@@ -93,11 +101,11 @@ class BioNeuronTf(MODEL, NeuronTf):
           n(int): size of the new dimension
         """
         if self._num > 1:
-            self.init_p = dict(
-                [(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
+            self._init_p = dict(
+                [(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self._init_p.items()])
         else:
-            self.init_p = dict(
-                [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self.init_p.items()])
+            self._init_p = dict(
+                [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self._init_p.items()])
         self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
 
     def init(self, batch):
@@ -153,7 +161,7 @@ class BioNeuronTf(MODEL, NeuronTf):
     def settings(self):
         return ('Neuron optimization'.center(20, '.') + '\n' +
                 'Nb of neurons : {}'.format(self._num) + '\n' +
-                'Initial neuron params : {}'.format(self.init_p) + '\n' +
+                'Initial neuron params : {}'.format(self._init_p) + '\n' +
                 'Fixed variables : {}'.format([c for c in self._fixed]) + '\n' +
                 'Initial state : {}'.format(self._init_state) + '\n' +
                 'Constraints : {}'.format(self._constraints_dic) + '\n' +
@@ -162,8 +170,13 @@ class BioNeuronTf(MODEL, NeuronTf):
     def apply_constraints(self, session):
         session.run(self._constraints)
 
-    def get_params(self):
-        return self._param.items()
+    @property
+    def init_params(self):
+        return self._init_p
+
+    @property
+    def variables(self):
+        return self._param
 
 
 class NeuronLSTM(NeuronTf):

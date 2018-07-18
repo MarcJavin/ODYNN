@@ -9,8 +9,8 @@ import tensorflow as tf
 
 from . import hhmodel
 from .circuit import CircuitTf
-from .optimize import Optimizer
-from .neuropt import NeuronOpt
+from .optim import Optimizer
+from .noptim import NeuronOpt
 
 
 class CircuitOpt(Optimizer):

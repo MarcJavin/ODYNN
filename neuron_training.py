@@ -9,10 +9,10 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import utils, config_model, hhmodel, datas, optimize
+from opthh import utils, cfg_model, hhmodel, datas, optim
 from opthh.neuron import NeuronLSTM, BioNeuronTf
-from opthh.neuropt import NeuronOpt
-from opthh import neursimul as sim
+from opthh.noptim import NeuronOpt
+from opthh import nsimul as sim
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}
@@ -22,7 +22,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = hhmodel.ALL - CA_VAR
 K_CONST = hhmodel.ALL - K_VAR
 
-MODEL = config_model.NEURON_MODEL
+MODEL = cfg_model.NEURON_MODEL
 
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
@@ -80,7 +80,7 @@ def steps2_exp_ca(w_v1, w_ca1, w_v2, w_ca2):
 
     dir = single_exp('ica', w_v1, w_ca1, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
-    param = optimize.get_best_result(dir)
+    param = optim.get_best_result(dir)
     opt = NeuronOpt(BioNeuronTf(init_p=param, fixed=CA_VAR))
     train = sim.simul(p=MODEL.default_params, dt=dt, i_inj=i_inj, suffix='step2', show=False)
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
@@ -93,7 +93,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
     dir = single_exp('ik', 1, 0, suffix='%s%s%s' % (name, w_v2, w_ca2))
 
-    param = optimize.get_best_result(dir)
+    param = optim.get_best_result(dir)
     opt = NeuronOpt(BioNeuronTf(init_p=param, fixed=K_VAR))
     train = sim.simul(dt=dt, i_inj=i_inj, suffix='step2')
     opt.optimize(dir, w=[w_v2, w_ca2], l_rate=[0.1, 9, 0.9], suffix='step2', train=train)
@@ -103,7 +103,7 @@ def steps2_exp_k(w_v2, w_ca2):
 
 def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
     dir = utils.set_dir(dir)
-    param = optimize.get_best_result(dir)
+    param = optim.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim.comp_pars_targ(param, default, dt=dt, i_inj=i_, show=show, save=True, suffix='train%s' % j)
 
@@ -185,12 +185,12 @@ def real_data(name, suffix='', lstm=True):
     comp_pars(dir, n)
     t, i, v, ca = test
     if not lstm:
-        sim.simul(optimize.get_best_result(dir), dt=dt, i_inj=i_inj, suffix='test', save=True, ca_true=ca)
+        sim.simul(optim.get_best_result(dir), dt=dt, i_inj=i_inj, suffix='test', save=True, ca_true=ca)
 
 
 def comp_pars(dir, i=-1):
     dir = utils.set_dir(dir)
-    p = optimize.get_vars(dir, i)
+    p = optim.get_vars(dir, i)
     hhmodel.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     hhmodel.boxplot_vars(p, suffix='boxes', show=False, save=True)
 

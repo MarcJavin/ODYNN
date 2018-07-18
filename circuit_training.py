@@ -13,11 +13,11 @@ import scipy as sp
 from opthh import neuron as nr
 from opthh import circuit
 from opthh import datas
-from opthh import config_model, utils
-from opthh.circopt import CircuitOpt, CircuitTf
-import opthh.circsimul as sim
+from opthh import cfg_model, utils
+from opthh.coptim import CircuitOpt, CircuitTf
+import opthh.csimul as sim
 
-p = config_model.NEURON_MODEL.default_params
+p = cfg_model.NEURON_MODEL.default_params
 
 def inhibit():
     inhib =circuit.SYNAPSE_inhib
@@ -116,7 +116,7 @@ def with_LSTM():
     i_injs = np.stack([i, i_1], axis=2)
     train = sim.simul(t, i_injs, [p, p], conns, n_out=[0, 1], dump=False, show=False)
 
-    neurons = nr.Neurons([nr.BioNeuronTf(config_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
+    neurons = nr.Neurons([nr.BioNeuronTf(cfg_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
     c = CircuitTf(neurons=neurons, synapses=conns_opt)
     co = CircuitOpt(circuit=c)
     co.opt_circuits(dir, train=train, n_out=[0,1], l_rate=(0.01,9,0.95))

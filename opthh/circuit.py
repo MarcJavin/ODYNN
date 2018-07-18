@@ -16,7 +16,7 @@ from matplotlib.patches import ArrowStyle
 
 from . import utils, model, neuron
 
-from .optimize import Optimized
+from .optim import Optimized
 
 SYNAPSE1 = {
     'G': 5.,
@@ -148,21 +148,21 @@ class Circuit:
                 init_p.update(init_gap)
                 inits_p.append(init_p)
             # merge them all in a new dimension
-            self.init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in vars}
+            self._init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in vars}
             neurons.parallelize(self._num)
             self.synapses = synapses[0]
             self.gaps = gaps[0]
 
         else:
             self._num = 1
-            self.init_p = {var : np.array([p[var] for p in synapses.values()], dtype=np.float32) for var in VARS_SYN}
+            self._init_p = {var : np.array([p[var] for p in synapses.values()], dtype=np.float32) for var in VARS_SYN}
             init_gap = {var : np.tile(np.array([p[var] for p in gaps.values()], dtype=np.float32), 2) for var in VARS_GAP}
-            self.init_p.update(init_gap)
+            self._init_p.update(init_gap)
             self.synapses = synapses
             self.gaps = gaps
         self._init_state = self._neurons.init_state
         self.dt = self._neurons.dt
-        self._param = self.init_p
+        self._param = self._init_p
         syns = list(zip(*[k for k in self.synapses.keys()]))
         gaps_c = list(zip(*[k for k in self.gaps.keys()]))
         if len(gaps_c)==0:
@@ -402,14 +402,14 @@ class CircuitTf(Circuit, Optimized):
         Args:
           n: size of the new dimension
         """
-        self.init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self.init_p.items()])
+        self._init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self._init_p.items()])
         self._neurons.parallelize(n)
 
     def reset(self):
         """prepare the variables as tensors, prepare the constraints, call reset for self._neurons"""
         self._param = {}
         self.constraints = []
-        for var, val in self.init_p.items():
+        for var, val in self._init_p.items():
             self._param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
             if var in self.constraints_dic:
                 # add dimension for later
@@ -476,7 +476,7 @@ class CircuitTf(Circuit, Optimized):
         return ('Circuit optimization'.center(20, '.') + '\n' +
                 'Chemical connections : \n %s' % (self.synapses.keys()) + '\n' +
                 'Gap junctions : \n %s' % self.gaps.keys() + '\n' +
-                'Initial synaptic params : %s' % self.init_p + '\n' +
+                'Initial synaptic params : %s' % self._init_p + '\n' +
                 'Synaptic constraints : %s' % self.constraints_dic + '\n' +
                 self._neurons.settings())
 
@@ -487,12 +487,25 @@ class CircuitTf(Circuit, Optimized):
     def apply_init(self, session):
         self._neurons.apply_init(session)
 
-    def get_params(self):
-        return self._param.items()
+    @property
+    def init_params(self):
+        if self._neurons.trainable:
+            return {**self._init_p, **self._neurons.init_params}
+        else:
+            return self._init_p
+
+    @property
+    def variables(self):
+        if self._neurons.trainable:
+            return {**self._param, **self._neurons.variables}
+        else:
+            return self._param
 
     def study_vars(self, p):
         self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
         self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
+        if self._neurons.trainable:
+            self._neurons.plot_vars(p)
 
     def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
         """plot variation/comparison/boxplots of synaptic variables
@@ -530,6 +543,10 @@ class CircuitTf(Circuit, Optimized):
         else:
             # if not, compare all synapses together
             oneplot(var_dic, 'All_Synapses')
+
+        if self._neurons.trainable:
+            self._neurons.plot_vars(var_dic)
+
     
 
 class CircuitFix(Circuit):
@@ -537,7 +554,7 @@ class CircuitFix(Circuit):
     def __init__(self, pars, dt=0.1, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
         Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps,
                          tensors=False, labels=labels, sensors=sensors, commands=commands)
-        self._param = self.init_p
+        self._param = self._init_p
 
     def calculate(self, i_inj):
         """

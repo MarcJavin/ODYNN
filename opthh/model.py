@@ -165,7 +165,7 @@ class BioNeuron(Neuron):
             self._num = 1
         self._tensors = tensors
         self._param = init_p
-        self.init_p = init_p
+        self._init_p = init_p
         self.dt = dt
 
     @staticmethod

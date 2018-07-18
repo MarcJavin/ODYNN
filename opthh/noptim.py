@@ -8,7 +8,7 @@
 import tensorflow as tf
 
 from .neuron import BioNeuronTf, NeuronTf
-from .optimize import Optimizer
+from .optim import Optimizer
 
 
 class NeuronOpt(Optimizer):

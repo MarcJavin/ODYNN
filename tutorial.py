@@ -1,7 +1,7 @@
 
 
 if __name__ == '__main__':
-    import opthh.neursimul as sim
+    import opthh.nsimul as sim
     import scipy as sp
 
     t = sp.arange(0., 1200., 0.1)

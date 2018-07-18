@@ -13,11 +13,12 @@ import psutil
 from opthh import neuron as nr
 from opthh import circuit
 from opthh import datas
-from opthh import config_model, utils
-from opthh.circopt import CircuitOpt, CircuitTf
-import opthh.circsimul as sim
+from opthh import cfg_model, utils
+from opthh.coptim import CircuitOpt, CircuitTf
+import opthh.csimul as sim
 
-p = config_model.NEURON_MODEL.default_params
+p = cfg_model.NEURON_MODEL.default_params
+rand = cfg_model.NEURON_MODEL.get_random
 
 
 if __name__=='__main__':
@@ -111,7 +112,7 @@ if __name__=='__main__':
     dir = utils.set_dir('Tapwith_' + name)
     train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
     test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
-    n = nr.BioNeuronTf([p for _ in range(9)], fixed='all', dt=dt)
+    n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
     ctf = CircuitTf(neurons=n, synapses=syns_opt, gaps=gaps_opt, labels=labels, commands={4, 5},
                     sensors={0, 1, 7, 8})
     copt = CircuitOpt(circuit=ctf)

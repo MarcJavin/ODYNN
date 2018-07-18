@@ -1,9 +1,9 @@
 from unittest import TestCase
 from context import opthh
-from opthh import config_model, utils, datas
+from opthh import cfg_model, utils, datas
 from opthh.neuron import NeuronLSTM, BioNeuronTf
-from opthh.neuropt import NeuronOpt
-from opthh.neursimul import simul
+from opthh.noptim import NeuronOpt
+from opthh.nsimul import simul
 
 
 class TestNeuronOpt(TestCase):
@@ -12,8 +12,8 @@ class TestNeuronOpt(TestCase):
         dir = utils.set_dir('unittest')
         dt = 0.5
         t,i = datas.give_train(dt=dt, max_t=5.)
-        default = config_model.NEURON_MODEL.default_params
-        pars = config_model.NEURON_MODEL.get_random()
+        default = cfg_model.NEURON_MODEL.default_params
+        pars = cfg_model.NEURON_MODEL.get_random()
         train = simul(p=default, dt=dt, i_inj=i, show=False, suffix='train')
         plot=False
 
@@ -34,7 +34,7 @@ class TestNeuronOpt(TestCase):
 
 
         print('Parallel'.center(40, '#'))
-        pars = [config_model.NEURON_MODEL.get_random() for _ in range(2)]
+        pars = [cfg_model.NEURON_MODEL.get_random() for _ in range(2)]
         opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))
         self.assertEqual(opt._parallel, 2)
         n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)

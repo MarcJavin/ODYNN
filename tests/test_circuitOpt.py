@@ -2,10 +2,10 @@ from unittest import TestCase
 from context import opthh
 import opthh.circuit as cr
 import opthh.datas
-from opthh import hhmodel, utils, config_model
+from opthh import hhmodel, utils, cfg_model
 import numpy as np
-from opthh.circopt import CircuitOpt
-import opthh.circsimul as csim
+from opthh.coptim import CircuitOpt
+import opthh.csimul as csim
 import opthh.neuron as nr
 
 

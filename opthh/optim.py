@@ -27,7 +27,6 @@ class Optimized(ABC):
 
     ions = {}
     _num = None
-    init_p = {}
 
     def __init__(self, dt):
         self.dt = dt
@@ -79,8 +78,13 @@ class Optimized(ABC):
     def apply_init(self, session):
         pass
 
-    def get_params(self):
-        return []
+    @property
+    def init_params(self):
+        return {}
+
+    @property
+    def variables(self):
+        return {}
 
     def todump(self, sess):
         return []
@@ -309,7 +313,7 @@ class Optimizer(ABC):
                 # sess.run(tf.assign(self.global_step, 200))
                 len_prev = len(l)
             else:
-                vars = {var : np.array([val]) for var, val in self.optimized.init_p.items()}
+                vars = {var : np.array([val]) for var, val in self.optimized.init_params.items()}
                 len_prev = 0
 
             vars = {var: np.vstack((val, np.zeros([epochs] + list(val.shape)[1:]))) for var, val in vars.items()}
@@ -326,7 +330,7 @@ class Optimizer(ABC):
                 self.optimized.apply_constraints(sess)
 
                 # with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-                for name, v in self.optimized.get_params():
+                for name, v in self.optimized.variables.items():
                     v_ = sess.run(v)
                     # f.write("{} : {}\n".format(name, v_))
                     vars[name][i + 1] = v_

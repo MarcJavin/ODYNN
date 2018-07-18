@@ -82,16 +82,16 @@ class TestNeuronTf(TestCase):
         sh.append(10)
         shp = (10,)
         self.assertEqual(n._init_state.shape, tuple(sh))
-        self.assertEqual(list(n.init_p.values())[0].shape, tuple(shp))
+        self.assertEqual(list(n.init_params.values())[0].shape, tuple(shp))
 
         n = BioNeuronTf(init_p=[p for _ in range(8)])
         sh = list(n._init_state.shape)
-        shp = list(list(n.init_p.values())[0].shape)
+        shp = list(list(n.init_params.values())[0].shape)
         n.parallelize(11)
         sh.append(11)
         shp.append(11)
         self.assertEqual(n._init_state.shape, tuple(sh))
-        self.assertEqual(list(n.init_p.values())[0].shape, tuple(shp))
+        self.assertEqual(list(n.init_params.values())[0].shape, tuple(shp))
 
     def test_build_graph(self):
         n = BioNeuronTf(init_p=p)
