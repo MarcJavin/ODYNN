@@ -75,19 +75,18 @@ class Neuron(ABC):
           targstyle(str): style of the target lines (Default value = '-')
 
         """
-        if y_states is not None:
-            custom_cycler = cycler('color', utils.COLORS.repeat(y_states[cls.V_pos].shape[1]))
 
         plt.figure()
         nb_plots = len(cls._ions) + 2
-
+        custom_cycler = None
         if (states.ndim > 3): # circuit in parallel
             states = np.reshape(np.swapaxes(states,-2,-1), (states.shape[0], states.shape[1], -1))
+            custom_cycler = cycler('color', utils.COLORS.repeat(y_states[cls.V_pos].shape[1]))
             y_states = [np.reshape(y, (y.shape[0], -1)) if y is not None else None for y in y_states]
 
         # Plot voltage
         p = plt.subplot(nb_plots, 1, 1)
-        if y_states is not None:
+        if custom_cycler is not None:
             p.set_prop_cycle(custom_cycler)
         plt.plot(ts, states[:, cls.V_pos], linewidth=l)
         if y_states is not None:
@@ -98,7 +97,7 @@ class Neuron(ABC):
 
         for ion, pos in cls._ions.items():
             p = plt.subplot(nb_plots, 1, 2)
-            if y_states is not None:
+            if custom_cycler is not None:
                 p.set_prop_cycle(custom_cycler)
             plt.plot(ts, states[:, pos], linewidth=l)
             if y_states is not None:
