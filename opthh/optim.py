@@ -347,7 +347,7 @@ class Optimizer(ABC):
                 if i % self.frequency == 0 or j == epochs - 1:
                     res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i, plot)
                     if res_test is not None:
-                        self.plot_out(X, results, res_targ_test, suffix, step, 'test', i)
+                        self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))
