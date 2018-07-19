@@ -75,6 +75,13 @@ class TestNeuronTf(TestCase):
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(hh._param, p)
 
+        hh = BioNeuronTf(n_rand=15)
+        self.assertEqual(len(hh._init_state), 7)
+        self.assertEqual(hh.num, 15)
+        self.assertEqual(hh._init_state.shape, (7, hh.num))
+        self.assertIsInstance(hh._param, dict)
+        self.assertEqual(list(hh._param.values())[0].shape, (15,))
+
     def test_parallelize(self):
         n = BioNeuronTf(init_p=p)
         sh = list(n._init_state.shape)
@@ -182,6 +189,8 @@ class TestNeuronFix(TestCase):
         self.assertEqual(x.shape[0], i.shape[0]) #same time
         self.assertEqual(x.shape[1], hh._init_state.shape[0])
         self.assertEqual(x.shape[2], i.shape[1]) #same nb of batch
+
+
 
 
 if __name__ == '__main__':

@@ -40,21 +40,22 @@ class TestCircuitOpt(TestCase):
         self.assertEqual(co._loss.shape, ())
 
         print('one target parallel'.center(40, '#'))
-        co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt_parallel))
-        co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
+        co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(n_rand=n_neuron, dt=dt), synapses=conns_opt_parallel))
+        co.opt_circuits(dir, n_out=n_out, train=train, test=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
 
         print('several targets'.center(40, '#'))
-        n_out = [0,1]
-        train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
 
         print('several targets parallel'.center(40, '#'))
-        co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt_parallel))
+        n_out = [0,1]
+        train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)
+        co = CircuitOpt(cr.CircuitTf.create_random(n_neuron=2, syn_keys={k: False for k in conns.keys()}, dt=dt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
+
 
         print('1 LSTM'.center(40, '#'))
         neurons = nr.Neurons(

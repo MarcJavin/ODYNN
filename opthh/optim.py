@@ -132,6 +132,7 @@ class Optimizer(ABC):
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         gvs = opt.compute_gradients(self._loss)
+        gvs = [(g,v) for g,v in gvs if g is not None]
         grads, vars = zip(*gvs)
 
         if self._parallel > 1:

@@ -113,9 +113,9 @@ if __name__=='__main__':
     dir = utils.set_dir('Tapwith_' + name)
     train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
     test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
-    n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
-    n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
-    ctf = CircuitTf(neurons=n, synapses=syns_opt[0], gaps=gaps_opt[0], labels=labels, commands={4, 5},
-                    sensors={0, 1, 7, 8})
+    # n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
+    # n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
+    ctf = CircuitTf.create_random(n_neuron=9, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
+                    sensors={0, 1, 7, 8}, n_rand=n_parallel)
     copt = CircuitOpt(circuit=ctf)
     copt.opt_circuits(subdir=dir, train=train, test=test, n_out=[4, 5])

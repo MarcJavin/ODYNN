@@ -396,14 +396,14 @@ class CircuitTf(Circuit, Optimized):
         else:
             self.constraints_dic = give_constraints(synapses)
 
-    def parallelize(self, n):
-        """Add a dimension of size n in the parameters
+    @classmethod
+    def create_random(cls, n_neuron, syn_keys={}, gap_keys={}, n_rand=10, dt=0.1, labels=None, sensors=set(),
+                      commands=set()):
+        neurons = neuron.BioNeuronTf(n_rand=n_neuron, dt=dt)
+        synapses = [{k: get_syn_rand(v) for k, v in syn_keys.items()} for _ in range(n_rand)]
+        gaps = [{k: get_gap_rand() for k in gap_keys} for _ in range(n_rand)]
+        return cls(neurons, synapses, gaps, labels, sensors, commands)
 
-        Args:
-          n: size of the new dimension
-        """
-        self._init_p = dict([(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self._init_p.items()])
-        self._neurons.parallelize(n)
 
     def reset(self):
         """prepare the variables as tensors, prepare the constraints, call reset for self._neurons"""

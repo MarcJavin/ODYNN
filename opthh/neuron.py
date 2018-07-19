@@ -55,7 +55,7 @@ class BioNeuronTf(MODEL, NeuronTf):
     represent the entire neurons in a Circuit.
     """
 
-    def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None):
+    def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None, n_rand=None):
         """
         Initializer
         Args:
@@ -66,6 +66,9 @@ class BioNeuronTf(MODEL, NeuronTf):
                 if fixed == 'all', all parameters will be constant
             constraints(dict of ndarray): keys as parameters name, and values as [lower_bound, upper_bound]
         """
+        if n_rand is not None:
+            init_p = [self.get_random() for _ in range(n_rand)]
+        self.n_rand = n_rand
         NeuronTf.__init__(self, dt=dt)
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
         self._fixed = fixed
@@ -101,11 +104,21 @@ class BioNeuronTf(MODEL, NeuronTf):
           n(int): size of the new dimension
         """
         if self._num > 1:
-            self._init_p = dict(
-                [(var, np.stack([val for _ in range(n)], axis=val.ndim)) for var, val in self._init_p.items()])
+            if self.n_rand is not None:
+                keys = self._init_p.keys()
+                toadd = [[self.get_random() for _ in range(self._num)] for __ in range(n-1)]
+                toadd_ = [{var: np.array([par[i][var] for i in range(self._num)], dtype=np.float32) for var in keys} for par in toadd]
+                l = [self._init_p] + toadd_
+                self._init_p = {var: np.stack([l[i][var] for i in range(n)], axis=-1) for var in keys}
+            else:
+                self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
         else:
-            self._init_p = dict(
-                [(var, np.stack([val for _ in range(n)], axis=0)) for var, val in self._init_p.items()])
+            if self.n_rand is not None:
+                keys = self._init_p.keys()
+                l = [self._init_p] + [self.get_random() for _ in range(n - 1)]
+                self._init_p = {var: np.array([l[i][var] for i in range(n)], dtype=np.float32) for var in keys}
+            else:
+                self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
         self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
 
     def init(self, batch):

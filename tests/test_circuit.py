@@ -2,7 +2,7 @@ from unittest import TestCase
 from context import opthh
 import opthh.circuit
 from opthh import hhmodel
-from opthh.circuit import Circuit
+from opthh.circuit import Circuit, CircuitTf
 import numpy as np
 from opthh.neuron import BioNeuronTf
 
@@ -49,6 +49,14 @@ class TestCircuit(TestCase):
             cbad = Circuit(neuron_bad, self.conns)
         with self.assertRaises(AttributeError):
             cbad = Circuit(neuron_bad, self.conns2)
+
+    def test_create_random(self):
+        c = CircuitTf.create_random(n_neuron=3, syn_keys={(0, 1):True, (1, 2):False}, n_rand=4)
+        self.assertEqual(c.num, 4)
+        self.assertEqual(c.init_params['G'].shape[0], 2)
+        self.assertEqual(c.init_params['G'].shape[-1], 4)
+        self.assertEqual(c._pres.all(), np.array([0, 1]).all())
+        self.assertEqual(c._posts.all(), np.array([1, 2]).all())
 
     def test_gap(self):
 
