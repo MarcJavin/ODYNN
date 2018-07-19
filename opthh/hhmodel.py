@@ -163,7 +163,7 @@ MAX_G = 10.
 def give_rand():
     return {
         'decay_ca': random.uniform(10.,500.),
-        'rho_ca': (1e-5,1.),
+        'rho_ca': random.uniform(1e-5,1.),
         'p__tau': random.uniform(0.1, MAX_TAU),
         'p__scale': random.uniform(MIN_SCALE, MAX_SCALE),
         'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
