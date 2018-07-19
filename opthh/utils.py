@@ -8,16 +8,9 @@ import numpy as np
 import os
 import re
 import seaborn
-
-
 import pylab as plt
 
-# Tune the plots appearance
 COLORS = np.array([ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive'])
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
-SMALL_SIZE = 8
-plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
 
 
 RES_DIR = 'results/'
