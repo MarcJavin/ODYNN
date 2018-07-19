@@ -12,9 +12,10 @@ import scipy as sp
 import psutil
 from opthh import neuron as nr
 from opthh import circuit
+from opthh.circuit import CircuitTf
 from opthh import datas
 from opthh import cfg_model, utils
-from opthh.coptim import CircuitOpt, CircuitTf
+from opthh.coptim import CircuitOpt
 import opthh.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
@@ -113,8 +114,8 @@ if __name__=='__main__':
     train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
     test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
     n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
-    # n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
-    ctf = CircuitTf(neurons=n, synapses=syns_opt, gaps=gaps_opt, labels=labels, commands={4, 5},
+    n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
+    ctf = CircuitTf(neurons=n, synapses=syns_opt[0], gaps=gaps_opt[0], labels=labels, commands={4, 5},
                     sensors={0, 1, 7, 8})
     copt = CircuitOpt(circuit=ctf)
     copt.opt_circuits(subdir=dir, train=train, test=test, n_out=[4, 5])
