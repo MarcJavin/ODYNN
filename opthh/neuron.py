@@ -218,13 +218,13 @@ class NeuronLSTM(NeuronTf):
         num_units1 = [self._hidden_layer_size for _ in range(self._hidden_layer_nb)]
         num_units1.append(1)
         with tf.variable_scope(self.id+'Volt'):
-            cells = [tf.contrib.rnn.LSTMBlockCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
+            cells = [tf.contrib.rnn.LSTMBlockCell(n, use_peephole=True) for n in num_units1]
             self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
         num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
         num_units2.append(1)
         with tf.variable_scope(self.id+'Calc'):
-            cells = [tf.contrib.rnn.LSTMBlockCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
+            cells = [tf.contrib.rnn.LSTMBlockCell(n, use_peephole=True) for n in num_units2]
             self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
     def init(self, batch):
