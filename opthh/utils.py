@@ -9,11 +9,7 @@ import os
 import re
 import seaborn
 
-# Use on my server
-import matplotlib as mpl
-import socket
-if (socket.gethostname()=='1080'):
-    mpl.use("Agg")
+
 import pylab as plt
 
 # Tune the plots appearance
