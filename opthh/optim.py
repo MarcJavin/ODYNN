@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import tensorflow as tf
+import copy
 from tqdm import tqdm
 
 from .utils import OUT_SETTINGS, IMG_DIR
@@ -271,22 +272,22 @@ class Optimizer(ABC):
     def _build_loss(self, w):
         pass
 
-    def optimize(self, dir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
+    def optimize(self, dir, train_=None, test_=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
                  reload=False, reload_dir=None, yshape=None, plot=True):
 
         print('Optimization'.center(40,'_'))
         import psutil
         p = psutil.Process()
         # print('%s MB 1 '%(p.memory_info().vms>>20))
-        T, X, V, Ca = train
+        T, X, V, Ca = train_
         res_targ = [V, Ca]
-        if test is not None:
-            T_test, X_test, V_test, Ca_test = test
+        if test_ is not None:
+            T_test, X_test, V_test, Ca_test = test_
             res_targ_test = [V_test, Ca_test]
 
         if reload_dir is None:
             reload_dir = dir
-        train, test = self._init(dir, suffix, train, test, l_rate, w, yshape)
+        train, test = self._init(dir, suffix, copy.copy(train_), copy.copy(test_), l_rate, w, yshape)
         # print('%s MB parall'%(p.memory_info().vms>>20))
         # print(self.settings(w))
 
@@ -334,10 +335,10 @@ class Optimizer(ABC):
                 self.optimized.apply_constraints(sess)
 
                 # with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-                # for name, v in self.optimized.variables.items():
-                #     v_ = sess.run(v)
-                #     # f.write("{} : {}\n".format(name, v_))
-                #     vars[name][i + 1] = v_
+                for name, v in self.optimized.variables.items():
+                    v_ = sess.run(v)
+                    # f.write("{} : {}\n".format(name, v_))
+                    vars[name][i + 1] = v_
 
                 rates[i] = sess.run(self.learning_rate)
                 losses[i] = train_loss
@@ -350,7 +351,7 @@ class Optimizer(ABC):
 
                 if i % self.frequency == 0 or j == epochs - 1:
                     res_test = self._plots_dump(sess, test, losses, rates, vars, len_prev + i, plot)
-                    if res_test is not None:
+                    if res_test is not None and plot:
                         self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
             with open(self.dir + 'time', 'w') as f:

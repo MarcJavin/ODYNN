@@ -117,4 +117,4 @@ if __name__=='__main__':
     ctf = CircuitTf(neurons=n, synapses=syns_opt, gaps=gaps_opt, labels=labels, commands={4, 5},
                     sensors={0, 1, 7, 8})
     copt = CircuitOpt(circuit=ctf)
-    copt.opt_circuits(subdir=dir, train=train, test=test, n_out=[4, 5], plot=False)
+    copt.opt_circuits(subdir=dir, train=train, test=test, n_out=[4, 5])

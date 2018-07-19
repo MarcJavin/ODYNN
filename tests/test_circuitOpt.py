@@ -38,15 +38,11 @@ class TestCircuitOpt(TestCase):
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
-        self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
-        self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('one target parallel'.center(40, '#'))
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt_parallel))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
-        self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
-        self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))
 
         print('several targets'.center(40, '#'))
         n_out = [0,1]
@@ -54,15 +50,11 @@ class TestCircuitOpt(TestCase):
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, ())
-        self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out)))
-        self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron))
 
         print('several targets parallel'.center(40, '#'))
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt_parallel))
         co.opt_circuits(dir, n_out=n_out, train=train, epochs=1, plot=plot)
         self.assertEqual(co._loss.shape, (10,))
-        self.assertEqual(co._V.shape, (length, i_injs.shape[1], len(n_out), 10))
-        self.assertEqual(co._X.shape, (length, i_injs.shape[1], n_neuron, 10))
 
         print('1 LSTM'.center(40, '#'))
         neurons = nr.Neurons(
