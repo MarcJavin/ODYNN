@@ -364,7 +364,7 @@ class Circuit:
 
 
     def plot_output(self, *args, **kwargs):
-        return model.Neuron.plot_output(*args, **kwargs)
+        return self._neurons.plot_output(*args, **kwargs)
 
     def plots_output_mult(self, *args, **kwargs):
         labels = [self.labels[i] for i in range(len(self.labels))]
