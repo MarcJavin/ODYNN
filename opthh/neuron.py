@@ -272,7 +272,7 @@ class NeuronLSTM(NeuronTf):
         """
         with tf.variable_scope(self.id+'Volt'):
             # apply lstm network (self._volt_net) with i_inj as input, using the previous state
-            v, vstate = self._volt_net(i_inj, hprev[0])
+            v, vstate = self._volt_net(i_inj/self._max_cur, hprev[0])
             v = v * self._scale_v + self._rest_v
 
         with tf.variable_scope(self.id+'Calc'):

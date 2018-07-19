@@ -36,7 +36,7 @@ class Optimized(ABC):
         return self._num
 
     @abstractmethod
-    def build_graph(self):
+    def build_graph(self, batch=1):
         """Build the tensorflow graph. Take care of the loop and the initial state."""
         pass
 
@@ -168,44 +168,42 @@ class Optimizer(ABC):
         tf.reset_default_graph()
         self.l_rate = l_rate
 
-        self._T, self._X, self._V, self._Ca = train
         if test is not None:
             self._test = True
             self._test_losses = []
-            self._T_test, self._X_test, self._V_test, self._Ca_test = test
-            if self.optimized.dt != self._T_test[1] - self._T_test[0]:
+            if self.optimized.dt != test[0][1] - test[0][0]:
                 raise ValueError('The expected time step from the optimized object is {}, but got {} in the test data'
-                                 .format(self.optimized.dt, self._T_test[1] - self._T_test[0]))
-        if self.optimized.dt != self._T[1] - self._T[0]:
+                                 .format(self.optimized.dt, test[0][1] - test[0][0]))
+        if self.optimized.dt != train[0][1] - train[0][0]:
             raise ValueError(
                 'The expected time step from the optimized object is {}, but got {} in the train data'.format(
-                    self.optimized.dt, self._T[1] - self._T[0]))
+                    self.optimized.dt, train[0][1] - train[0][0]))
 
-        self.n_batch = self._X.shape[1]
-        sett = self.settings(w)
+        self.n_batch = train[1].shape[1]
+        sett = self.settings(w, train)
         with open(self.dir + OUT_SETTINGS, 'w') as f:
             f.write(sett)
 
         if self._parallel > 1:
             # add dimension for neurons trained in parallel
             # [time, n_batch, neuron]
-            self._X = np.stack([self._X for _ in range(self._parallel)], axis=self._X.ndim)
-            self._V = np.stack([self._V for _ in range(self._parallel)], axis=self._V.ndim)
-            self._Ca = np.stack([self._Ca for _ in range(self._parallel)], axis=self._Ca.ndim)
+            for i in range(1, len(train)):
+                train[i] = np.stack([train[i] for _ in range(self._parallel)], axis=train[i].ndim)
 
             if self._test:
-                self._X_test = np.stack([self._X_test for _ in range(self._parallel)], axis=self._X_test.ndim)
-                self._V_test = np.stack([self._V_test for _ in range(self._parallel)], axis=self._V_test.ndim)
-                self._Ca_test = np.stack([self._Ca_test for _ in range(self._parallel)], axis=self._Ca_test.ndim)
+                for i in range(1, len(test)):
+                    test[i] = np.stack([test[i] for _ in range(self._parallel)], axis=test[i].ndim)
             yshape.append(self._parallel)
 
         self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
         self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name="voltage_Ca")
 
         print("i expected : ", self.xs_.shape)
-        print("i : ", self._X.shape)
+        print("i : ", train[1].shape)
 
-    def settings(self, w):
+        return train, test
+
+    def settings(self, w, train):
         """Give the settings of the optimization
 
         Args:
@@ -214,21 +212,21 @@ class Optimizer(ABC):
         Returns:
             str: settings
         """
-        show_shape = self._V
-        if self._V is None:
-            show_shape = self._Ca
+        show_shape = train[2]
+        if train[2] is None:
+            show_shape = train[-1]
         return ("Weights (out, cac) : {}".format(w) + "\n" +
                 "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
                                                                            self.l_rate[2]) + "\n" +
                 "Number of batches : {}".format(self.n_batch) + "\n" +
-                "Number of time steps : {}".format(self._T.shape) + "Input current shape : {}".format(
-            self._X.shape) +
+                "Number of time steps : {}".format(train[0].shape) + "Input current shape : {}".format(
+                train[1].shape) +
                 "Output shape : {}".format(show_shape.shape) + "\n" +
                 self.optimized.settings())
 
 
 
-    def _plots_dump(self, sess, losses, rates, vars, i, plot):
+    def _plots_dump(self, sess, test, losses, rates, vars, i, plot):
         """Plot the variables evolution, the loss and saves it in a file
 
         Args:
@@ -243,10 +241,10 @@ class Optimizer(ABC):
 
         """
         results = None
-        if self._test:
+        if test is not None:
             test_loss, results = sess.run([self._loss, self.res], feed_dict={
-                self.xs_: self._X_test,
-                self.ys_: np.array([self._V_test, self._Ca_test])
+                self.xs_: test[1],
+                self.ys_: np.array([test[2], test[-1]])
             })
             self._test_losses.append(test_loss)
 
@@ -277,6 +275,9 @@ class Optimizer(ABC):
                  reload=False, reload_dir=None, yshape=None, plot=True):
 
         print('Optimization'.center(40,'_'))
+        import psutil
+        p = psutil.Process()
+        # print('%s MB 1 '%(p.memory_info().vms>>20))
         T, X, V, Ca = train
         res_targ = [V, Ca]
         if test is not None:
@@ -285,7 +286,8 @@ class Optimizer(ABC):
 
         if reload_dir is None:
             reload_dir = dir
-        self._init(dir, suffix, train, test, l_rate, w, yshape)
+        train, test = self._init(dir, suffix, train, test, l_rate, w, yshape)
+        # print('%s MB parall'%(p.memory_info().vms>>20))
         # print(self.settings(w))
 
         global_step = self._build_loss(w)
@@ -294,7 +296,7 @@ class Optimizer(ABC):
 
         with tf.Session() as sess:
 
-            Vt = self._V if self._V is not None else np.zeros(self._Ca.shape)
+            Vt = train[2] if train[2] is not None else np.zeros(train[-1].shape)
 
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
@@ -316,24 +318,26 @@ class Optimizer(ABC):
                 vars = {var : np.array([val]) for var, val in self.optimized.init_params.items()}
                 len_prev = 0
 
+            print('%s MB before vars'%(p.memory_info().vms>>20))
             vars = {var: np.vstack((val, np.zeros([epochs] + list(val.shape)[1:]))) for var, val in vars.items()}
-
+            print('%s MB after vars'%(p.memory_info().vms>>20))
             for j in tqdm(range(epochs)):
                 i = len_prev + j
                 summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict={
-                    self.xs_: self._X,
-                    self.ys_: np.array([Vt, self._Ca])
+                    self.xs_: train[1],
+                    self.ys_: np.array([Vt, train[-1]])
                 })
+                print('%s MB after tf'%(p.memory_info().vms>>20))
 
                 self.tdb.add_summary(summ, i)
 
                 self.optimized.apply_constraints(sess)
 
                 # with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-                for name, v in self.optimized.variables.items():
-                    v_ = sess.run(v)
-                    # f.write("{} : {}\n".format(name, v_))
-                    vars[name][i + 1] = v_
+                # for name, v in self.optimized.variables.items():
+                #     v_ = sess.run(v)
+                #     # f.write("{} : {}\n".format(name, v_))
+                #     vars[name][i + 1] = v_
 
                 rates[i] = sess.run(self.learning_rate)
                 losses[i] = train_loss
@@ -345,7 +349,7 @@ class Optimizer(ABC):
                     self.plot_out(X, results, res_targ, suffix, step, 'train', i)
 
                 if i % self.frequency == 0 or j == epochs - 1:
-                    res_test = self._plots_dump(sess, losses, rates, vars, len_prev + i, plot)
+                    res_test = self._plots_dump(sess, test, losses, rates, vars, len_prev + i, plot)
                     if res_test is not None:
                         self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
