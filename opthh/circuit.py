@@ -549,18 +549,22 @@ class CircuitTf(Circuit, Optimized):
                 else:
                     var_d = {l: var_dic[l][i] for l in labels}
                 oneplot(var_d, 'Gap_junc_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
+
+            if self._neurons.trainable:
+                for i in range(self._neurons.num):
+                    if dim > 2:
+                        var_d = {l: var_dic[l][:, i] for l in self._neurons.init_params.keys()}
+                    else:
+                        var_d = {l: var_dic[l][i] for l in self._neurons.init_params.keys()}
+                    self._neurons.plot_vars(var_d, suffix='evolution_%s' % self.labels[i], show=False, save=True)
+
         else:
             # if not, compare all synapses together
             oneplot(var_dic, 'All_Synapses', ['G', 'mdp', 'E', 'scale'])
             oneplot(var_dic, 'All_gaps', ['G_gap'])
 
-        if self._neurons.trainable:
-            for i in range(self._neurons.num):
-                if dim > 2:
-                    var_d = {l: var_dic[l][:,i] for l in self._neurons.init_params.keys()}
-                else:
-                    var_d = {l: var_dic[l][i] for l in self._neurons.init_params.keys()}
-                self._neurons.plot_vars(var_d, suffix='evolution_%s'%self.labels[i], show=False, save=True)
+            if self._neurons.trainable:
+                self._neurons.plot_vars(var_dic, suffix='evolution_all', show=False, save=True)
 
     
 
