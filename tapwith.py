@@ -14,7 +14,7 @@ from opthh import neuron as nr
 from opthh import circuit
 from opthh import datas
 from opthh import cfg_model, utils
-from opthh.coptim import CircuitOpt, CircuitTf
+from opthh.coptim import CircuitOpt
 import opthh.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
