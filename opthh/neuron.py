@@ -183,7 +183,7 @@ class NeuronLSTM(NeuronTf):
     """Behavior model of a neuron using an LSTM network"""
 
     _max_cur = 60.
-    _rest_v = -50.
+    _rest_v = -60.
     _scale_v = 100.
     _scale_ca = 500.
 
