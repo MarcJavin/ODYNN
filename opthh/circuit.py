@@ -551,7 +551,8 @@ class CircuitTf(Circuit, Optimized):
                 oneplot(var_d, 'Gap_junc_{}-{}'.format(self.labels[name[0]], self.labels[name[1]]), labels)
         else:
             # if not, compare all synapses together
-            oneplot(var_dic, 'All_Synapses')
+            oneplot(var_dic, 'All_Synapses', ['G', 'mdp', 'E', 'scale'])
+            oneplot(var_dic, 'All_gaps', ['G_gap'])
 
         if self._neurons.trainable:
             for i in range(self._neurons.num):

@@ -49,8 +49,8 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 
 CONSTRAINTS = {
-    'decay_ca': [1e-3, np.infty],
-    'rho_ca': [1e-3, np.infty],
+    'decay_ca': [1, np.infty],
+    'rho_ca': [1e-5, 1.],
     'C_m': [5e-1, np.infty],
     'e__scale': [1e-3, np.infty],
     'e__tau': [1e-3, np.infty],
