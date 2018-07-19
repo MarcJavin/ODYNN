@@ -17,6 +17,8 @@ RES_DIR = 'results/'
 IMG_DIR = 'img/'
 NEUR_DIR = 'neurons/'
 SYN_DIR = 'synapses/'
+TMP_DIR = 'tmp/'
+subdirs = [IMG_DIR, NEUR_DIR, SYN_DIR, TMP_DIR]
 current_dir = RES_DIR
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
@@ -45,9 +47,9 @@ def set_dir(subdir):
     current_dir = RES_DIR + subdir + '/'
     if not os.path.exists(current_dir):
         os.makedirs(current_dir)
-    if not os.path.exists(current_dir + IMG_DIR):
-        os.makedirs(current_dir + IMG_DIR)
-        os.makedirs(current_dir + 'tmp/')
+    for sd in subdirs:
+        if not os.path.exists(current_dir + sd):
+            os.makedirs(current_dir + sd)
     return current_dir
 
 

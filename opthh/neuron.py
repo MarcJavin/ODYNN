@@ -364,7 +364,7 @@ class NeuronLSTM(NeuronTf):
         Args:
           sess: tf.Session
         """
-        sess.run([tf.assign(v, self.vars_init[v.name]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
+        sess.run([tf.assign(v, self.vars_init[v.name[1:]]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
 
 
 class Neurons(NeuronTf):

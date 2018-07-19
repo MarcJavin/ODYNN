@@ -24,7 +24,7 @@ K_CONST = hhmodel.ALL - K_VAR
 
 MODEL = cfg_model.NEURON_MODEL
 
-pars = [MODEL.get_random() for i in range(100)]
+pars = [MODEL.get_random() for i in range(10)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1
@@ -131,10 +131,10 @@ def alternate(name='', suffix='', lstm=True):
         neur = NeuronLSTM(dt=dt)
         l_rate = [0.01, 9, 0.95]
     else:
-        neur = BioNeuronTf(init_p=pars, dt=dt)
+        neur = BioNeuronTf(pars, dt=dt)
         l_rate = [1., 9, 0.92]
     opt = NeuronOpt(neur)
-    utils.set_dir(dir)
+    dir = utils.set_dir(dir)
     train = sim.simul(dt=dt, i_inj=i_inj, show=False, suffix='train')
     opt.optimize(dir, suffix=suffix, train=train, w=[wv, wca], epochs=300, step=0, l_rate=l_rate)
     for i in range(40):
@@ -145,7 +145,7 @@ def alternate(name='', suffix='', lstm=True):
     test_xp(dir)
 
 
-def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
+def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     if (wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif (wca == 0):
@@ -158,9 +158,10 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
         l_rate = [0.01, 9, 0.95]
         opt = NeuronOpt(neur)
     else:
+        neur = BioNeuronTf(pars, dt=dt)
         l_rate = [1., 9, 0.92]
-        opt = NeuronOpt(init_p=pars, dt=dt)
-    utils.set_dir(dir)
+        opt = NeuronOpt(neur)
+    dir = utils.set_dir(dir)
     train = sim.simul(p=default, dt=dt, i_inj=i_inj, show=False, suffix='train')
     test= sim.simul(p=default, dt=dt, i_inj=it, show=False, suffix='test')
     n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, l_rate=l_rate)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
@@ -176,10 +177,10 @@ def real_data(name, suffix='', lstm=True):
         l_rate = [0.01, 9, 0.95]
         opt = NeuronOpt(neur)
     else:
-        neur =
+        neur = BioNeuronTf(pars, dt=dt)
         l_rate = [1., 9, 0.92]
-        opt = NeuronOpt(init_p=pars, dt=dt)
-    utils.set_dir(dir)
+        opt = NeuronOpt(neur)
+    dir = utils.set_dir(dir)
     train, test = datas.dump_data(dt=dt)
     n = opt.optimize(dir, w=[0, 1], train = train, suffix=suffix, l_rate=l_rate)
     comp_pars(dir, n)
@@ -216,8 +217,6 @@ def test_lstm():
     exit(0)
 
 if __name__ == '__main__':
-
-    test_lstm(); exit(0)
 
     xp = sys.argv[1]
     if len(sys.argv)>3:

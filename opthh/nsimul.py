@@ -88,7 +88,7 @@ def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
     neurons[0].plot_output(t, i_inj, X, show=show, save=save)
 
 def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=False):
-    """Compare a neuron with a given measured trace
+    """Compare a neuron with a given measured trace after scaling
 
     Args:
       neuron(NeuronModel object): neuron to compare

@@ -17,9 +17,9 @@ from .utils import OUT_SETTINGS, IMG_DIR
 from . import utils
 import pylab as plt
 
-SAVE_PATH = 'tmp/model.ckpt'
-FILE_LV = 'tmp/dump_lossratevars'
-FILE_OBJ = 'tmp/optimized'
+SAVE_PATH = utils.TMP_DIR + 'model.ckpt'
+FILE_LV = utils.TMP_DIR + 'dump_lossratevars'
+FILE_OBJ = utils.TMP_DIR + 'optimized'
 
 
 class Optimized(ABC):
@@ -430,6 +430,8 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
     plt.figure()
 
     n_p = 2
+    if losses_test is not None and parallel > 1:
+        n_p = 3
 
     plt.ylabel('Test Loss')
     plt.yscale('log')
@@ -445,20 +447,20 @@ def plot_loss_rate(losses, rates, losses_test=None, parallel=1, suffix="", show=
         pts = np.linspace(0, losses.shape[0]-1, num=losses_test.shape[0], endpoint=True)
         if parallel == 1:
             plt.plot(pts, losses_test, 'Navy', linewidth=0.6, label='Test')
+            plt.legend()
         else:
             # add another subplot for readability
             n_p = 3
             plt.ylabel('Train Loss')
             plt.yscale('log')
-            plt.legend()
             plt.subplot(n_p,1,2)
             plt.plot(pts, losses_test, linewidth=0.6)
             plt.ylabel('Test Loss')
     plt.yscale('log')
-    plt.legend()
+
 
     plt.subplot(n_p,1,n_p)
     plt.plot(rates)
     plt.ylabel('Learning rate')
 
-    utils.save_show(show, save, name='losses_{}'.format(suffix), dpi=300)
+    utils.save_show(show, save, name='Losses_{}'.format(suffix), dpi=300)

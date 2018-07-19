@@ -477,7 +477,7 @@ class CElegansNeuron(model.BioNeuron):
         cls.plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
                        var_dic['h__alpha'], fig, grid[5], False, func=func)
         plt.tight_layout()
-        save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         fig = plt.figure()
         grid = plt.GridSpec(1, 2)
@@ -499,7 +499,7 @@ class CElegansNeuron(model.BioNeuron):
             ax.yaxis.tick_right()
             fig.add_subplot(ax)
         plt.tight_layout()
-        save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}Membrane_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         plt.figure()
         ax = plt.subplot(211)
@@ -508,7 +508,7 @@ class CElegansNeuron(model.BioNeuron):
         ax = plt.subplot(212)
         func(ax, var_dic['decay_ca'])  # , 'b')
         plt.ylabel('Decay_ca')
-        save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
     @staticmethod
     def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=utils.plot):
@@ -541,7 +541,7 @@ class CElegansNeuron(model.BioNeuron):
             fig.add_subplot(ax)
 
     @classmethod
-    def study_vars(cls, p, suffix):
+    def study_vars(cls, p, suffix=''):
         cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=False, save=True)
         cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=False, save=True)
 

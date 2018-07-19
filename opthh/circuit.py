@@ -528,7 +528,7 @@ class CircuitTf(Circuit, Optimized):
                     func(plt, var_d[var])
                     plt.ylabel(var)
             plt.tight_layout()
-            utils.save_show(show, save, name='{}_{}'.format(name, suffix), dpi=300)
+            utils.save_show(show, save, name='{}{}_{}'.format(utils.SYN_DIR, name, suffix), dpi=300)
 
         if (self._num > 1):
             dim = var_dic['E'].ndim
