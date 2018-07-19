@@ -112,7 +112,6 @@ class Neuron(ABC):
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
         utils.save_show(show, save, utils.IMG_DIR + 'output_%s' % suffix)
-        plt.close()
 
     @abstractmethod
     def calculate(self, i):

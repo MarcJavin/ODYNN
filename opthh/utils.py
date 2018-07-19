@@ -4,7 +4,6 @@
 
 .. moduleauthor:: Marc Javin
 """
-import pylab as plt
 import numpy as np
 import os
 import re
@@ -15,6 +14,7 @@ import matplotlib as mpl
 import socket
 if (socket.gethostname()=='1080'):
     mpl.use("Agg")
+import pylab as plt
 
 # Tune the plots appearance
 COLORS = np.array([ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive'])
@@ -90,6 +90,7 @@ def save_show(show, save, name='', dpi=100):
         plt.savefig('{}{}.png'.format(current_dir,name), dpi=dpi)
     if (show):
         plt.show()
+    plt.close()
 
 def bar(ax, var):
     ax.bar(x=range(len(var)), height=var, color=COLORS)
@@ -160,15 +161,12 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
     plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
 
     save_show(show, save, 'Output_%s'%suffix, dpi=250)
-    plt.close()
 
     h = seaborn.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
     save_show(show, save, 'Voltage_%s' % suffix, dpi=250)
-    plt.close()
 
     seaborn.heatmap(Cacs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
     save_show(show, save, 'Calcium_%s' % suffix, dpi=250)
-    plt.close()
 
 
 

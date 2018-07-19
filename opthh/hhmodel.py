@@ -412,7 +412,6 @@ class CElegansNeuron(model.BioNeuron):
         # plt.ylim(-1, 40)
 
         utils.save_show(show, save, name='Results_{}'.format(suffix), dpi=300)
-        plt.close()
 
     @staticmethod
     def get_random():
@@ -454,7 +453,6 @@ class CElegansNeuron(model.BioNeuron):
                 labels = ['h__alpha' if x == 'h__tau' else x for x in labels]
             box(var_dic, cols, labels)
         save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
-        plt.close()
 
     @classmethod
     def plot_vars(cls, var_dic, suffix="evolution", show=False, save=True, func=utils.plot):
@@ -511,8 +509,6 @@ class CElegansNeuron(model.BioNeuron):
         func(ax, var_dic['decay_ca'])  # , 'b')
         plt.ylabel('Decay_ca')
         save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
-
-        plt.close('all')
 
     @staticmethod
     def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=utils.plot):
@@ -633,7 +629,6 @@ def plots_ica_from_v(ts, V, results, name="ica", show=False, save=True):
     plt.xlabel('t (ms)')
 
     save_show(show, save, name)
-    plt.close()
 
 
 def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
