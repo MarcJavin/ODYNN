@@ -223,6 +223,7 @@ class Optimizer(ABC):
                 "Number of time steps : {}".format(train[0].shape) + "Input current shape : {}".format(
                 train[1].shape) +
                 "Output shape : {}".format(show_shape.shape) + "\n" +
+                "Number of models : {}".format(self._parallel) + '\n' +
                 self.optimized.settings())
 
 

@@ -49,8 +49,8 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 
 CONSTRAINTS = {
-    'decay_ca': [1, np.infty],
-    'rho_ca': [1e-5, 1.],
+    'decay_ca': [0.1, np.infty],
+    'rho_ca': [1e-5, 1000.],
     'C_m': [5e-1, np.infty],
     'e__scale': [1e-3, np.infty],
     'e__tau': [1e-3, np.infty],
@@ -437,6 +437,7 @@ class CElegansNeuron(model.BioNeuron):
         plt.subplot(211)
         box(var_dic, ['k'], ['rho_ca'])
         plt.title('Rho_ca')
+        plt.yscale('log')
         plt.subplot(212)
         box(var_dic, ['b'], ['decay_ca'])  # , 'b')
         plt.title('Decay_ca')
