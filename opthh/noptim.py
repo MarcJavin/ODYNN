@@ -6,6 +6,7 @@
 """
 
 import tensorflow as tf
+import numpy as np
 
 from .neuron import BioNeuronTf, NeuronTf
 from .optim import Optimizer
@@ -49,7 +50,7 @@ class NeuronOpt(Optimizer):
     def plot_out(self, X, results, res_targ, suffix, step, name, i):
         for b in range(self.n_batch):
             res_t = [res_targ[i][:, b] if res_targ[i] is not None else None for i in range(len(res_targ))]
-            self.neuron.plot_output(self._T, X[:, b], results[:, :, b], res_t,
+            self.neuron.plot_output(self.neuron.dt*np.arange(len(X)), X[:, b], results[:, :, b], res_t,
                                     suffix='%s_%s%s_%s_%s' % (suffix, name, b, step, i + 1), show=False,
                                     save=True, l=0.7, lt=2)
 
