@@ -124,9 +124,9 @@ class Optimizer(ABC):
             staircase=True)
         return global_step
 
-    def _build_train(self, global_step):
+    def _build_train(self):
         """learning rate and optimization"""
-        self._init_l_rate()
+        global_step = self._init_l_rate()
         # self.learning_rate = 0.1
         tf.summary.scalar("learning rate", self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
@@ -253,8 +253,8 @@ class Optimizer(ABC):
         # print('%s MB parall'%(p.memory_info().vms>>20))
         # print(self.settings(w))
 
-        global_step = self._build_loss(w)
-        self._build_train(global_step)
+        self._build_loss(w)
+        self._build_train()
         self.summary = tf.summary.merge_all()
 
         with tf.Session() as sess:
