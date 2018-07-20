@@ -10,10 +10,13 @@ import numpy as np
 import random
 
 import pylab as plt
+import pandas as pd
+import seaborn as sns
 import tensorflow as tf
 import scipy as sp
 from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
+import collections
 
 from .utils import box, save_show
 from . import utils, model
@@ -49,8 +52,8 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 
 CONSTRAINTS = {
-    'decay_ca': [0.1, np.infty],
-    'rho_ca': [1e-5, 1000.],
+    'decay_ca': [1e-3, np.infty],
+    'rho_ca': [1e-3, np.infty],
     'C_m': [5e-1, np.infty],
     'e__scale': [1e-3, np.infty],
     'e__tau': [1e-3, np.infty],
@@ -69,6 +72,7 @@ CONSTRAINTS = {
     'q__scale': [-np.infty, 1e-3],
     'q__tau': [1e-3, np.infty]
 }
+CONSTRAINTS = collections.OrderedDict(sorted(CONSTRAINTS.items(), key=lambda t: t[0]))
 
 DEFAULT_2 = {
     'decay_ca': 110.,
@@ -150,6 +154,7 @@ DEFAULT = {
     'E_L': -60.0
     # Leak Nernst reversal potentials, in mV
 }
+DEFAULT = collections.OrderedDict(sorted(DEFAULT.items(), key=lambda t: t[0]))
 
 ALL = set(DEFAULT.keys())
 
@@ -161,7 +166,7 @@ MAX_MDP = 30.
 MAX_G = 10.
 
 def give_rand():
-    return {
+    rand_par = {
         'decay_ca': random.uniform(10.,500.),
         'rho_ca': random.uniform(1e-5,1.),
         'p__tau': random.uniform(0.1, MAX_TAU),
@@ -197,6 +202,7 @@ def give_rand():
         'E_K': random.uniform(-80, -40.),
         'E_L': random.uniform(-80, -40.),
     }
+    return collections.OrderedDict(sorted(rand_par.items(), key=lambda t: t[0]))
 
 
 
@@ -420,29 +426,28 @@ class CElegansNeuron(model.BioNeuron):
 
     @staticmethod
     def boxplot_vars(var_dic, suffix="", show=False, save=True):
+        df = pd.DataFrame.from_dict(var_dic)
         plt.figure()
         plt.subplot(121)
         cols = [RATE_COLORS['n'], RATE_COLORS['n'], RATE_COLORS['f'], 'k']
-        labels = CONDS
-        box(var_dic, cols, labels)
+        box(df, cols, CONDS)
         plt.title('Conductances')
         plt.subplot(122)
         cols = ['b', RATE_COLORS['n'], RATE_COLORS['f'], 'k']
-        labels = MEMB
-        box(var_dic, cols, labels)
+        box(df, cols, MEMB)
         plt.title('Membrane')
-        save_show(show, save, name='Membrane_{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}MEmbrane_{}'.format(utils.NEUR_DIR, suffix).format(suffix), dpi=300)
 
         plt.figure()
         plt.subplot(211)
-        box(var_dic, ['k'], ['rho_ca'])
+        box(df, ['#666666'], ['rho_ca'])
         plt.title('Rho_ca')
         plt.yscale('log')
         plt.subplot(212)
-        box(var_dic, ['b'], ['decay_ca'])  # , 'b')
+        box(df, ['#0000ff'], ['decay_ca'])  # , 'b')
         plt.title('Decay_ca')
         plt.tight_layout()
-        save_show(show, save, name='CalciumPump_{}'.format(suffix), dpi=300)
+        save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         plt.figure()
         for i, type in enumerate(['mdp', 'scale', 'tau']):
@@ -452,8 +457,8 @@ class CElegansNeuron(model.BioNeuron):
             cols = RATE_COLORS.values()
             if (type == 'tau'):
                 labels = ['h__alpha' if x == 'h__tau' else x for x in labels]
-            box(var_dic, cols, labels)
-        save_show(show, save, name='Rates_{}'.format(suffix), dpi=300)
+            box(df, cols, labels)
+        save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
     @classmethod
     def plot_vars(cls, var_dic, suffix="evolution", show=False, save=True, func=utils.plot):
@@ -506,6 +511,7 @@ class CElegansNeuron(model.BioNeuron):
         ax = plt.subplot(211)
         func(ax, var_dic['rho_ca'])  # , 'r')
         plt.ylabel('Rho_ca')
+        plt.yscale('log')
         ax = plt.subplot(212)
         func(ax, var_dic['decay_ca'])  # , 'b')
         plt.ylabel('Decay_ca')
@@ -542,9 +548,19 @@ class CElegansNeuron(model.BioNeuron):
             fig.add_subplot(ax)
 
     @classmethod
-    def study_vars(cls, p, suffix=''):
-        cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=False, save=True)
-        cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=False, save=True)
+    def study_vars(cls, p, suffix='', show=False, save=True):
+        cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=show, save=save)
+        cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=show, save=save)
+        corr = pd.DataFrame.from_dict(p).corr()
+
+        # Set up the matplotlib figure
+        f, ax = plt.subplots(figsize=(11, 9))
+        # Generate a custom diverging colormap
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        # Draw the heatmap with the mask and correct aspect ratio
+        sns.heatmap(corr, cmap=cmap, center=0,
+                    square=True, linewidths=.5, cbar_kws={"shrink": .5})
+        save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
 
     @staticmethod
     def ica_from_v(X, v_fix, self):

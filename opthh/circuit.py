@@ -8,6 +8,7 @@ import random
 
 import numpy as np
 import scipy as sp
+import pandas as pd
 import tensorflow as tf
 import pylab as plt
 import networkx as nx
@@ -501,12 +502,12 @@ class CircuitTf(Circuit, Optimized):
         else:
             return self._param
 
-    def study_vars(self, p):
-        self.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-        self.plot_vars(p, func=utils.box, suffix='boxes', show=False, save=True)
+    def study_vars(self, p, show=False, save=True):
+        self.plot_vars(p, func=utils.bar, suffix='compared', show=show, save=save)
+        self.plot_vars(p, func=utils.box, suffix='boxes', show=show, save=save)
         if self._neurons.trainable:
             for i in range(self._neurons.num):
-                self._neurons.study_vars({var: val[i] for var, val in p.items()}, suffix=self.labels[i])
+                self._neurons.study_vars({var: val[i] for var, val in p.items()}, suffix=self.labels[i], show=show, save=save)
 
     def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
         """plot variation/comparison/boxplots of synaptic variables
@@ -521,7 +522,8 @@ class CircuitTf(Circuit, Optimized):
 
         def oneplot(var_d, name, labels):
             if func == utils.box:
-                func(var_d, utils.COLORS[:len(labels)], labels)
+                df = pd.DataFrame.from_dic(var_d)
+                func(df, utils.COLORS[:len(labels)], labels)
             else:
                 for i, var in enumerate(labels):
                     plt.subplot(2, 2, i + 1)
@@ -552,11 +554,12 @@ class CircuitTf(Circuit, Optimized):
 
             if self._neurons.trainable:
                 for i in range(self._neurons.num):
+                    print('hola')
                     if dim > 2:
                         var_d = {l: var_dic[l][:, i] for l in self._neurons.init_params.keys()}
                     else:
                         var_d = {l: var_dic[l][i] for l in self._neurons.init_params.keys()}
-                    self._neurons.plot_vars(var_d, suffix='evolution_%s' % self.labels[i], show=False, save=True)
+                    self._neurons.plot_vars(var_d, suffix='evolution_%s' % self.labels[i], show=show, save=save)
 
         else:
             # if not, compare all synapses together
@@ -564,7 +567,7 @@ class CircuitTf(Circuit, Optimized):
             oneplot(var_dic, 'All_gaps', ['G_gap'])
 
             if self._neurons.trainable:
-                self._neurons.plot_vars(var_dic, suffix='evolution_all', show=False, save=True)
+                self._neurons.plot_vars(var_dic, suffix='evolution_all', show=show, save=save)
 
     
 

@@ -366,7 +366,11 @@ class Optimizer(ABC):
         return self.optimized
 
 
-
+def get_model(dir):
+    file = dir + '/' + FILE_OBJ
+    with open(file, 'rb') as f:
+        obj = pickle.load(f)
+    return obj
 
 def get_vars(dir, i=-1):
     """get dic of vars from dumped file
@@ -379,7 +383,7 @@ def get_vars(dir, i=-1):
     """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        dic = pickle.load(f)[-1]
+        dic = pickle.load(f, encoding="latin1")[-1]
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 

@@ -7,7 +7,7 @@
 import numpy as np
 import os
 import re
-import seaborn
+import seaborn as sns
 import pylab as plt
 
 COLORS = np.array([ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive'])
@@ -84,18 +84,42 @@ def save_show(show, save, name='', dpi=100):
     plt.close()
 
 def bar(ax, var):
-    ax.bar(x=range(len(var)), height=var, color=COLORS)
+    sns.barplot(x=np.arange(len(var)), y=var, ax=ax)
+    ax.set_xticks([])
 def plot(ax, var):
     ax.plot(var, linewidth=0.5)
 def boxplot(ax, var):
     ax.boxplot(var, vert=True, showmeans=True)
 
-def box(var_dic, cols, labels):
-    bp = plt.boxplot([var_dic[k][~np.isnan(var_dic[k])] for k in labels], vert=True, patch_artist=True, showmeans=True, labels=labels)
-    for b, color in zip(bp["boxes"], cols):
-        b.set_facecolor(color)
+def box(df, cols, labels):
+    lighter = [colorscale(c, 0.6) for c in cols]
+    sns.boxplot(data=df[labels], palette = lighter)
+    sns.swarmplot(data=df[labels], palette=cols, size=2)
 
+def clamp(val, minimum=0, maximum=255):
+    if val < minimum:
+        return minimum
+    if val > maximum:
+        return maximum
+    return int(val)
 
+def colorscale(hexstr, scalefactor):
+    """
+    Scales a hex string by ``scalefactor``. Returns scaled hex string.
+    """
+
+    hexstr = hexstr.strip('#')
+
+    if scalefactor < 0 or len(hexstr) != 6:
+        return hexstr
+
+    r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
+
+    r = clamp(r * scalefactor)
+    g = clamp(g * scalefactor)
+    b = clamp(b * scalefactor)
+
+    return "#%02x%02x%02x" % (r, g, b)
 
 
 def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", show=True, save=False, l=1):
@@ -153,10 +177,10 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
 
     save_show(show, save, 'Output_%s'%suffix, dpi=250)
 
-    h = seaborn.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    h = sns.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
     save_show(show, save, 'Voltage_%s' % suffix, dpi=250)
 
-    seaborn.heatmap(Cacs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    sns.heatmap(Cacs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
     save_show(show, save, 'Calcium_%s' % suffix, dpi=250)
 
 
