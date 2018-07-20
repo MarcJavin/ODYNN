@@ -235,7 +235,7 @@ class Optimizer(ABC):
         pass
 
     def optimize(self, dir, train_=None, test_=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
-                 reload=False, reload_dir=None, yshape=None, evol_var=False, plot=True):
+                 reload=False, reload_dir=None, yshape=None, evol_var=True, plot=True):
 
         print('Optimization'.center(40,'_'))
         import psutil
@@ -345,8 +345,7 @@ class Optimizer(ABC):
 
         # plot evolution of variables
         p = get_vars(self.dir)
-        if plot:
-            self.optimized.study_vars(p)
+        self.optimized.study_vars(p)
         return self.optimized
 
 

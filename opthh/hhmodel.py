@@ -156,6 +156,47 @@ DEFAULT = {
 }
 DEFAULT = collections.OrderedDict(sorted(DEFAULT.items(), key=lambda t: t[0]))
 
+DEFAULT_3 = {
+'decay_ca': 110.,
+    'rho_ca': 0.23,
+    'p__tau': 2.25518, #ms
+    'p__scale': 7.42636, #mV
+    'p__mdp': -8.05232, #mV
+
+    'q__tau': 149.963,
+    'q__scale': -9.97468,
+    'q__mdp': -15.6456,
+
+    'n__tau': 25.0007,
+    'n__scale': 15.8512,
+    'n__mdp': 19.8741,
+
+    'e__tau': 0.100027,
+    'e__scale': 6.74821,
+    'e__mdp': -3.3568,
+
+    'f__tau': 150.88,
+    'f__scale': -5.03176,
+    'f__mdp': 25.1815,
+
+    'h__alpha': 0.282,  # None
+    'h__scale': -1.,  # mol per m3
+    'h__mdp': 6.42,
+
+    'E_K' : -60,
+    'E_Ca' : 40,
+    'E_L' : -50,
+    'C_m' : 1,
+    'g_Ca': 3.,
+
+    'g_Ks': 3.0,
+    'g_Kf': 0.07,
+
+    'g_L': 0.005
+
+}
+
+
 ALL = set(DEFAULT.keys())
 
 MAX_TAU = 200.
@@ -216,7 +257,7 @@ class CElegansNeuron(model.BioNeuron):
     """int, Default position of the calcium concentration in state vectors"""
     default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
-    default_params = DEFAULT
+    default_params = DEFAULT_3
     """default parameters as a dictionnary"""
     _constraints_dic = CONSTRAINTS
     """constraints to be applied when optimizing"""
