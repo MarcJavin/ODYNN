@@ -190,7 +190,8 @@ class Optimizer(ABC):
             # add dimension for neurons trained in parallel
             # [time, n_batch, neuron]
             for i in range(1, len(train)):
-                train[i] = np.stack([train[i] for _ in range(self._parallel)], axis=train[i].ndim)
+                if train[i] is not None:
+                    train[i] = np.stack([train[i] for _ in range(self._parallel)], axis=train[i].ndim)
 
             if self._test:
                 for i in range(1, len(test)):
@@ -260,6 +261,7 @@ class Optimizer(ABC):
         with tf.Session() as sess:
 
             Vt = train[2] if train[2] is not None else np.zeros(train[-1].shape)
+            Cat = train[-1] if train[-1] is not None else np.zeros(train[2].shape)
 
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
@@ -290,7 +292,7 @@ class Optimizer(ABC):
                 i = len_prev + j
                 summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict={
                     self.xs_: train[1],
-                    self.ys_: np.array([Vt, train[-1]])
+                    self.ys_: np.array([Vt, Cat])
                 })
                 print('%s MB after tf'%(p.memory_info().vms>>20))
 
@@ -402,6 +404,7 @@ def get_best_result(dir, i=-1):
         l = pickle.load(f)[0]
         dic = pickle.load(f)[-1]
         idx = np.nanargmin(l[-1])
+        dic['loss'] = l[i,idx]
         dic = dict([(var, val[i,idx]) for var, val in dic.items()])
     return dic
 

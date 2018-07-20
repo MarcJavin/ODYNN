@@ -424,9 +424,10 @@ class CircuitTf(Circuit, Optimized):
         self.reset()
         xshape = [None]
         initializer = self._init_state.astype(np.float32)
-        if batch != 1:
-            xshape.append(None)
-            initializer = np.stack([initializer for _ in range(batch)], axis=1)
+
+        xshape.append(None)
+        initializer = np.stack([initializer for _ in range(batch)], axis=1)
+
         self._neurons.init(batch)
         xshape.append(self._neurons.num)
         print("num neurons : ", self._neurons.num)

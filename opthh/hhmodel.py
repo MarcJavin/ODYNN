@@ -257,7 +257,7 @@ class CElegansNeuron(model.BioNeuron):
     """int, Default position of the calcium concentration in state vectors"""
     default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
-    default_params = DEFAULT_3
+    default_params = DEFAULT
     """default parameters as a dictionnary"""
     _constraints_dic = CONSTRAINTS
     """constraints to be applied when optimizing"""

@@ -177,10 +177,16 @@ def plots_output_mult(ts, i_inj, Vs, Cacs, i_syn=None, labels=None, suffix="", s
 
     save_show(show, save, 'Output_%s'%suffix, dpi=250)
 
-    h = sns.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    sns.heatmap(Vs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    plt.title('Membrane potentials (mV)')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Neuron')
     save_show(show, save, 'Voltage_%s' % suffix, dpi=250)
 
     sns.heatmap(Cacs.transpose(), yticklabels=labels, cmap='RdYlBu_r', xticklabels=False)
+    plt.title('Calcium concentrations')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Neuron')
     save_show(show, save, 'Calcium_%s' % suffix, dpi=250)
 
 
