@@ -109,7 +109,7 @@ class Optimizer(ABC):
         self._parallel = self.optimized.num
         self.dir = None
         self._loss = None
-        self.frequency = frequency
+        self.freq_test = 30
         self._test_losses = None
         self._test = False
 
@@ -227,46 +227,6 @@ class Optimizer(ABC):
                 "Number of models : {}".format(self._parallel) + '\n' +
                 self.optimized.settings())
 
-
-
-    def _plots_dump(self, sess, test, losses, rates, vars, i, plot):
-        """Plot the variables evolution, the loss and saves it in a file
-
-        Args:
-          sess(tf.Session): tensorflow session
-          losses(ndarray): array of losses
-          rates(ndarray): array containing the registered values of the learning rate
-          vars(dict): dictionary with the registered value of optimized variables
-          i: step in the optimization
-
-        Returns:
-            array: results of the test
-
-        """
-        results = None
-        if test is not None:
-            test_loss, results = sess.run([self._loss, self.res], feed_dict={
-                self.xs_: test[1],
-                self.ys_: np.array([test[2], test[-1]])
-            })
-            self._test_losses.append(test_loss)
-
-
-        with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
-            pickle.dump([losses, self._test_losses, rates, vars], f)
-        with open(self.dir + FILE_OBJ + self.suffix, 'wb') as f:
-            pickle.dump(self.optimized.todump(sess), f)
-
-        self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
-
-        if plot:
-            plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses, parallel=self._parallel, suffix=self.suffix, show=False,
-                           save=True)
-            self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
-                                 suffix=self.suffix + "evolution", show=False,
-                                 save=True)
-        return results
-
     def plot_out(self, *args, **kwargs):
         pass
 
@@ -275,7 +235,7 @@ class Optimizer(ABC):
         pass
 
     def optimize(self, dir, train_=None, test_=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
-                 reload=False, reload_dir=None, yshape=None, plot=True):
+                 reload=False, reload_dir=None, yshape=None, evol_var=False, plot=True):
 
         print('Optimization'.center(40,'_'))
         import psutil
@@ -321,9 +281,11 @@ class Optimizer(ABC):
                 vars = {var : np.array([val]) for var, val in self.optimized.init_params.items()}
                 len_prev = 0
 
-            print('%s MB before vars'%(p.memory_info().vms>>20))
-            vars = {var: np.vstack((val, np.zeros([epochs] + list(val.shape)[1:]))) for var, val in vars.items()}
-            print('%s MB after vars'%(p.memory_info().vms>>20))
+            if(evol_var):
+                vars = {var: np.vstack((val, np.zeros([epochs] + list(val.shape)[1:]))) for var, val in vars.items()}
+            else:
+                vars = {var: np.vstack((val, np.zeros([1] + list(val.shape)[1:]))) for var, val in vars.items()}
+
             for j in tqdm(range(epochs)):
                 i = len_prev + j
                 summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict={
@@ -336,11 +298,13 @@ class Optimizer(ABC):
 
                 self.optimized.apply_constraints(sess)
 
-                # with open("{}{}_{}.txt".format(self.dir, OUT_PARAMS, self.suffix), 'w') as f:
-                for name, v in self.optimized.variables.items():
-                    v_ = sess.run(v)
-                    # f.write("{} : {}\n".format(name, v_))
-                    vars[name][i + 1] = v_
+                if evol_var or j == epochs - 1:
+                    for name, v in self.optimized.variables.items():
+                        v_ = sess.run(v)
+                        if evol_var:
+                            vars[name][i + 1] = v_
+                        else:
+                            vars[name][-1] = v_
 
                 rates[i] = sess.run(self.learning_rate)
                 losses[i] = train_loss
@@ -351,8 +315,28 @@ class Optimizer(ABC):
                 if plot:
                     self.plot_out(X, results, res_targ, suffix, step, 'train', i)
 
-                if i % self.frequency == 0 or j == epochs - 1:
-                    res_test = self._plots_dump(sess, test, losses, rates, vars, len_prev + i, plot)
+                if i % self.freq_test == 0 or j == epochs - 1:
+                    res_test = None
+                    if test is not None:
+                        test_loss, res_test = sess.run([self._loss, self.res], feed_dict={
+                            self.xs_: test[1],
+                            self.ys_: np.array([test[2], test[-1]])
+                        })
+                        self._test_losses.append(test_loss)
+
+                    with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
+                        pickle.dump([losses, self._test_losses, rates, vars], f)
+                    with open(self.dir + FILE_OBJ + self.suffix, 'wb') as f:
+                        pickle.dump(self.optimized.todump(sess), f)
+
+                    self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
+
+                    if plot:
+                        plot_loss_rate(losses[:i + 1], rates[:i + 1], losses_test=self._test_losses,
+                                       parallel=self._parallel, suffix=self.suffix, show=False, save=True)
+                        if evol_var:
+                            self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
+                                                 suffix=self.suffix + "evolution", show=False, save=True)
                     if res_test is not None and plot:
                         self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
