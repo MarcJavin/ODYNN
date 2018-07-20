@@ -19,7 +19,7 @@ from opthh import circuit as cr
 from opthh import coptim as co
 
 dt = 0.1
-n_parallel = 2
+n_parallel = 100
 
 labels = {0: 'AVBL',
               1: 'AVBR',
@@ -141,7 +141,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(True, False, 'Target_Voltage', dpi=300)
+    utils.save_show(False, False, 'Target_Voltage', dpi=300)
 
     name = 'Forward_{}'.format(sys.argv[1])
     dir = utils.set_dir(name)
@@ -412,7 +412,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(True, False, 'Target_Voltage', dpi=300)
+    utils.save_show(False, False, 'Target_Voltage', dpi=300)
 
     cur = cur[:, np.newaxis, :]
     res = res[:, np.newaxis, :]
