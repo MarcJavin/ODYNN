@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import pylab as plt
 import collections
+from sklearn.decomposition import PCA
 
 
 def corr(df):
@@ -25,8 +26,8 @@ def scatt(df):
 
     f, ax = plt.subplots(figsize=(6.5, 6.5))
     sns.despine(f, left=True, bottom=True)
-    sns.scatterplot(x="loss", y="e__scale",
-                    hue="g_Ca",
+    sns.scatterplot(x="loss", y="n__tau",
+                    hue="rho_ca",
                     palette="autumn", linewidth=0,
                     data=df, ax=ax)
     plt.show()
@@ -39,13 +40,20 @@ def violin(df):
     sns.violinplot(data=df, inner="points")
     plt.show()
 
+def get_df(dir):
+    dic = optim.get_vars(dir)
+    return pd.DataFrame.from_dict(dic)
+
 if __name__ == '__main__':
     dir = utils.set_dir('Integcomp_both_500rate-YAY')
-    dic1 = optim.get_vars(dir)
-    dir = utils.set_dir('Integcomp_both_500-YE')
-    dic2 = optim.get_vars(dir)
-    dic = {**dic1, **dic2}
-    dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
+    dic = optim.get_vars(dir)
+    df = pd.DataFrame.from_dict(dic)
+    df = df.dropna()
+    # dir = utils.set_dir('Integcomp_both_500-YE')
+    # dic2 = optim.get_vars(dir)
+    # df = pd.DataFrame.from_dict(dic2)
+    # df.merge(df1)
+    # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     from opthh import hhmodel
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
     # hhmodel.CElegansNeuron.study_vars(dic, show=True, save=False)
@@ -53,8 +61,17 @@ if __name__ == '__main__':
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)
 
-    df = pd.DataFrame.from_dict(dic)
     scatt(df)
+
+    pca = PCA()
+    pca.fit(df)
+    for c in pca.components_:
+        for i, name in enumerate(df):
+            print(name, '%.2f'%c[i])
+    plt.plot(pca.explained_variance_ratio_)
+    plt.show()
+
+
     # sns.FacetGrid(data=df, row='C_m')
     # plt.show()
     # violin(df)

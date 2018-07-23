@@ -51,7 +51,7 @@ INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
 MIN_TAU = 1.
 MAX_TAU = 1000.
-MAX_G = 50.
+MAX_G = 10.
 MIN_SCALE = 1.
 MAX_SCALE = 50.
 MIN_MDP = -50.
