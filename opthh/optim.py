@@ -140,7 +140,7 @@ class Optimizer(ABC):
             for i in range(self._parallel):
                 # clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
-                gi = [tf.where(tf.is_nan(g), tf.zeros_like(g), g) for g in gi]
+                # gi = [tf.where(tf.is_nan(g), tf.zeros_like(g), g) for g in gi]
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
             grads_normed = [tf.stack([grads_normed[i][j] for i in range(self._parallel)], axis=-1) for j in range(len(grads))]

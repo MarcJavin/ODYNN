@@ -70,7 +70,7 @@ def give_rand():
         'q__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
         'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
-        'n__tau': random.uniform(MAX_TAU, 5*MAX_TAU),
+        'n__tau': random.uniform(MAX_TAU/5, MAX_TAU),
         'n__scale': random.uniform(MIN_SCALE, MAX_SCALE),
         'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
 
@@ -90,7 +90,7 @@ def give_rand():
         'g_Ca': random.uniform(0.1, MAX_G),
         'g_Ks': random.uniform(0.1, MAX_G),
         'g_Kf': random.uniform(0.1, MAX_G),
-        'g_L': random.uniform(0.001, 0.5),
+        'g_L': random.uniform(0.0001, 0.5),
         'E_Ca': random.uniform(0., 40),
         'E_K': random.uniform(-80, -40.),
         'E_L': random.uniform(-80, -40.),

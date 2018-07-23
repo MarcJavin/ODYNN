@@ -20,44 +20,44 @@ from . import utils, model, neuron
 from .optim import Optimized
 
 SYNAPSE1 = {
-    'G': 5.,
+    'G': 0.005,
     'mdp': -30.,
     'scale': 2.,
     'E': 20.
 }
 SYNAPSE2 = {
-    'G': 10.,
+    'G': 0.01,
     'mdp': 0.,
     'scale': 5.,
     'E': -10.
 }
 SYNAPSE = {
-    'G': 5.,
+    'G': 0.005,
     'mdp': -25.,
     'scale': 8.,
     'E': 0.
 }
 SYNAPSE_inhib = {
-    'G': 2.,
+    'G': 0.002,
     'mdp': -25.,
     'scale': 8.,
     'E': -70.
 }
 SYNAPSE_inhib2 = {
-    'G': 3.,
+    'G': 0.003,
     'mdp': -35.,
     'scale': -6.,
     'E': 20.
 }
-GAP = {'G_gap': 1.}
+GAP = {'G_gap': 0.001}
 
 MAX_TAU = 200.
-MIN_SCALE = 1.
+MIN_SCALE = 0.1
 MAX_SCALE = 50.
 MIN_MDP = -40.
 MAX_MDP = 30.
-MIN_G = 1.e-6
-MAX_G = 0.1
+MIN_G = 1.e-7
+MAX_G = 0.01
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
@@ -75,8 +75,8 @@ def give_constraints_syn(conns):
         dict: constraints
     """
     E_con = np.array([const_E(p['E'] > -60) for p in conns.values()]).transpose()
-    return {'G': np.array([1e-7, MAX_G]),
-            'scale': np.array([1e-3, np.infty]),
+    return {'G': np.array([MIN_G, MAX_G]),
+            'scale': np.array([MIN_SCALE, np.infty]),
             'E' : E_con}
 
 
@@ -109,7 +109,7 @@ def get_syn_rand(exc=True):
     }
 
 def get_gap_rand():
-    return {'G_gap' : random.uniform(0.01, MAX_G)}
+    return {'G_gap' : random.uniform(MIN_G, MAX_G)}
 
 VARS_SYN = list(SYNAPSE1.keys())
 VARS_GAP = list(GAP.keys())
@@ -478,8 +478,8 @@ class CircuitTf(Circuit, Optimized):
         return ('Circuit optimization'.center(20, '.') + '\n' +
                 'Chemical connections : \n %s' % (self.synapses.keys()) + '\n' +
                 'Gap junctions : \n %s' % self.gaps.keys() + '\n' +
-                'Initial synaptic params : %s' % self._init_p + '\n' +
                 'Synaptic constraints : %s' % self.constraints_dic + '\n' +
+                'Initial synaptic params : %s' % self._init_p + '\n' +
                 self._neurons.settings())
 
     def apply_constraints(self, session):
