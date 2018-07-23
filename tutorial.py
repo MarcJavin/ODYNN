@@ -26,7 +26,7 @@ def scatt(df):
     f, ax = plt.subplots(figsize=(6.5, 6.5))
     sns.despine(f, left=True, bottom=True)
     sns.scatterplot(x="E_K", y="g_L",
-                    hue="C_m",
+                    hue="C_m", size='loss',
                     palette="autumn", linewidth=0,
                     data=df, ax=ax)
     plt.show()
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     from opthh import hhmodel
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
-    # hhmodel.CElegansNeuron.study_vars(dic, show=True, save=False)
+    hhmodel.CElegansNeuron.study_vars(dic, show=True, save=False)
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)

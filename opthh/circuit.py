@@ -527,8 +527,8 @@ class CircuitTf(Circuit, Optimized):
                 func(df, utils.COLORS[:len(labels)], labels)
             else:
                 for i, var in enumerate(labels):
-                    plt.subplot(2, 2, i + 1)
-                    func(plt, var_d[var])
+                    ax = plt.subplot(2, 2, i + 1)
+                    func(ax, var_d[var])
                     plt.ylabel(var)
             plt.tight_layout()
             utils.save_show(show, save, name='{}{}_{}'.format(utils.SYN_DIR, name, suffix), dpi=300)
@@ -555,7 +555,6 @@ class CircuitTf(Circuit, Optimized):
 
             if self._neurons.trainable:
                 for i in range(self._neurons.num):
-                    print('hola')
                     if dim > 2:
                         var_d = {l: var_dic[l][:, i] for l in self._neurons.init_params.keys()}
                     else:

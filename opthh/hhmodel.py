@@ -532,6 +532,7 @@ class CElegansNeuron(model.BioNeuron):
         for i, var in enumerate(CONDS):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var_dic[var])  # )
+            ax.axhline(y=cls.default_params[var], color='r', label='target value')
             ax.set_ylabel(var)
             if (i == 0):
                 ax.set_title('Conductances')
@@ -540,6 +541,7 @@ class CElegansNeuron(model.BioNeuron):
         for i, var in enumerate(MEMB):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var_dic[var])  # )
+            ax.axhline(y=cls.default_params[var], color='r', label='target value')
             ax.set_ylabel(var)
             if (i == 0):
                 ax.set_title('Membrane')
@@ -551,10 +553,12 @@ class CElegansNeuron(model.BioNeuron):
         plt.figure()
         ax = plt.subplot(211)
         func(ax, var_dic['rho_ca'])  # , 'r')
+        ax.axhline(y=cls.default_params['rho_ca'], color='r', label='target value')
         plt.ylabel('Rho_ca')
         plt.yscale('log')
         ax = plt.subplot(212)
         func(ax, var_dic['decay_ca'])  # , 'b')
+        ax.axhline(y=cls.default_params['decay_ca'], color='r', label='target value')
         plt.ylabel('Decay_ca')
         save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
@@ -577,9 +581,13 @@ class CElegansNeuron(model.BioNeuron):
         """
         subgrid = gridspec.GridSpecFromSubplotSpec(3, 1, pos, hspace=0.1)
         vars = [('Midpoint', mdp), ('Scale', scale), ('Tau', tau)]
+        keys = ['mdp', 'scale', 'tau']
+        if name=='h':
+            keys[-1] = 'alpha'
         for i, var in enumerate(vars):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var[1])  # , 'r')
+            ax.axhline(y=CElegansNeuron.default_params['%s__%s'%(name, keys[i])], color='r', label='target value')
             ax.set_xlabel([])
             ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             if (labs):

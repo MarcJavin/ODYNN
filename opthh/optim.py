@@ -122,13 +122,13 @@ class Optimizer(ABC):
             self.l_rate[1],  # Decay step.
             self.l_rate[2],  # Decay rate.
             staircase=True)
+        tf.summary.scalar("learning rate", self.learning_rate)
         return global_step
 
     def _build_train(self):
         """learning rate and optimization"""
         global_step = self._init_l_rate()
         # self.learning_rate = 0.1
-        tf.summary.scalar("learning rate", self.learning_rate)
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
         gvs = opt.compute_gradients(self._loss)
@@ -140,12 +140,14 @@ class Optimizer(ABC):
             for i in range(self._parallel):
                 # clip by norm for each parallel model (neuron or circuit)
                 gi = [g[..., i] for g in grads]
+                gi = tf.unstack(tf.where(tf.is_nan(gi), tf.zeros_like(gi), gi))
                 gi_norm, _ = tf.clip_by_global_norm(gi, 5.)
                 grads_normed.append(gi_norm)
             grads_normed = [tf.stack([grads_normed[i][j] for i in range(self._parallel)], axis=-1) for j in range(len(grads))]
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
+        tf.summary.histogram(name='gradients', values=gvs)
 
         self.saver = tf.train.Saver()
 
@@ -368,7 +370,10 @@ def get_vars(dir, i=-1):
     """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        dic = pickle.load(f, encoding="latin1")[-1]
+        load = pickle.load(f, encoding="latin1")
+        l = load[0]
+        dic = load[-1]
+        dic['loss'] = l
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 

@@ -51,10 +51,9 @@ TODO
 
 - documentation
 - tutorial
-- try gpu
-- different models
 - add noise target
 - pca
+- target value plots
 0) lstm model to generate the outputs of AVA and AVB.
 1) full HH model.
 2) full LSTM model with our synapses.

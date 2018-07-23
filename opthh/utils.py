@@ -83,7 +83,7 @@ def save_show(show, save, name='', dpi=100):
         plt.show()
     plt.close()
 
-def bar(ax, var):
+def bar(ax, var, good_val=None):
     sns.barplot(x=np.arange(len(var)), y=var, ax=ax)
     ax.set_xticks([])
 def plot(ax, var):
