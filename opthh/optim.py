@@ -147,7 +147,7 @@ class Optimizer(ABC):
         else:
             grads_normed, _ = tf.clip_by_global_norm(grads, 5.)
         self.train_op = opt.apply_gradients(zip(grads_normed, vars), global_step=global_step)
-        tf.summary.histogram(name='gradients', values=gvs)
+        # tf.summary.histogram(name='gradients', values=gvs)
 
         self.saver = tf.train.Saver()
 
