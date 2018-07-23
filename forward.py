@@ -5,10 +5,6 @@
 .. moduleauthor:: Marc Javin
 """
 
-import matplotlib as mpl
-import socket
-if (socket.gethostname()=='1080' or socket.gethostname()=='pixi'):
-    mpl.use("Agg")
 import numpy as np
 import pickle
 import pylab as plt
@@ -23,7 +19,7 @@ from opthh import circuit as cr
 from opthh import coptim as co
 
 dt = 0.1
-n_parallel = 5
+n_parallel = 100
 
 labels = {0: 'AVBL',
               1: 'AVBR',

@@ -49,28 +49,74 @@ INIT_STATE = np.array([INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']])
 INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
+MIN_TAU = 1.
+MAX_TAU = 1000.
+MAX_G = 50.
+MIN_SCALE = 1.
+MAX_SCALE = 50.
+MIN_MDP = -50.
+MAX_MDP = 50.
 
+
+def give_rand():
+    rand_par = {
+        'decay_ca': random.uniform(10.,500.),
+        'rho_ca': random.uniform(1e-5,10.),
+        'p__tau': random.uniform(MIN_TAU, MAX_TAU/5),
+        'p__scale': random.uniform(MIN_SCALE, MAX_SCALE),
+        'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
+
+        'q__tau': random.uniform(MIN_TAU, MAX_TAU/5),
+        'q__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
+        'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
+
+        'n__tau': random.uniform(MAX_TAU, 5*MAX_TAU),
+        'n__scale': random.uniform(MIN_SCALE, MAX_SCALE),
+        'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
+
+        'f__tau': random.uniform(MIN_TAU, MAX_TAU/5),
+        'f__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
+        'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
+
+        'e__tau': random.uniform(MIN_TAU, MAX_TAU/5),
+        'e__scale': random.uniform(MIN_SCALE, MAX_SCALE),
+        'e__mdp': random.uniform(-30., 0.),
+
+        'h__alpha': random.uniform(0.1, 0.9),
+        'h__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
+        'h__mdp': random.uniform(1, 100),
+
+        'C_m': random.uniform(0.1, 40.),
+        'g_Ca': random.uniform(0.1, MAX_G),
+        'g_Ks': random.uniform(0.1, MAX_G),
+        'g_Kf': random.uniform(0.1, MAX_G),
+        'g_L': random.uniform(0.001, 0.5),
+        'E_Ca': random.uniform(0., 40),
+        'E_K': random.uniform(-80, -40.),
+        'E_L': random.uniform(-80, -40.),
+    }
+    return collections.OrderedDict(sorted(rand_par.items(), key=lambda t: t[0]))
 
 CONSTRAINTS = {
     'decay_ca': [1e-3, np.infty],
     'rho_ca': [1e-3, np.infty],
     'C_m': [5e-1, np.infty],
-    'e__scale': [1e-3, np.infty],
-    'e__tau': [1e-3, np.infty],
-    'f__scale': [-np.infty, 1e-3],
-    'f__tau': [1e-3, np.infty],
-    'g_Ca': [1e-5, np.infty],
-    'g_Kf': [1e-5, np.infty],
-    'g_Ks': [1e-5, np.infty],
-    'g_L': [1e-5, np.infty],
+    'e__scale': [MIN_SCALE, np.infty],
+    'e__tau': [MIN_TAU, np.infty],
+    'f__scale': [-np.infty, -MIN_SCALE],
+    'f__tau': [MIN_TAU, MAX_TAU],
+    'g_Ca': [1e-5, MAX_G],
+    'g_Kf': [1e-5, MAX_G],
+    'g_Ks': [1e-5, MAX_G],
+    'g_L': [1e-5, MAX_G],
     'h__alpha': [0, 1],
-    'h__scale': [-np.infty, 1e-3],
-    'n__scale': [1e-3, np.infty],
-    'n__tau': [1e-3, np.infty],
-    'p__scale': [1e-3, np.infty],
-    'p__tau': [1e-3, np.infty],
-    'q__scale': [-np.infty, 1e-3],
-    'q__tau': [1e-3, np.infty]
+    'h__scale': [-np.infty, -MIN_SCALE],
+    'n__scale': [MIN_SCALE, np.infty],
+    'n__tau': [MIN_TAU, MAX_TAU],
+    'p__scale': [MIN_SCALE, np.infty],
+    'p__tau': [MIN_TAU, MAX_TAU],
+    'q__scale': [-np.infty, -MIN_SCALE],
+    'q__tau': [MIN_TAU, MAX_TAU]
 }
 CONSTRAINTS = collections.OrderedDict(sorted(CONSTRAINTS.items(), key=lambda t: t[0]))
 
@@ -198,52 +244,6 @@ DEFAULT_3 = {
 
 
 ALL = set(DEFAULT.keys())
-
-MAX_TAU = 200.
-MIN_SCALE = 1.
-MAX_SCALE = 50.
-MIN_MDP = -40.
-MAX_MDP = 30.
-MAX_G = 10.
-
-def give_rand():
-    rand_par = {
-        'decay_ca': random.uniform(10.,500.),
-        'rho_ca': random.uniform(1e-5,1.),
-        'p__tau': random.uniform(0.1, MAX_TAU),
-        'p__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
-
-        'q__tau': random.uniform(0.1, MAX_TAU),
-        'q__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
-
-        'n__tau': random.uniform(MAX_TAU, 5*MAX_TAU),
-        'n__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
-
-        'f__tau': random.uniform(0.1, MAX_TAU),
-        'f__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
-
-        'e__tau': random.uniform(0.1, MAX_TAU),
-        'e__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'e__mdp': random.uniform(-30., 0.),
-
-        'h__alpha': random.uniform(0.1, 0.9),
-        'h__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'h__mdp': random.uniform(1, 100),
-
-        'C_m': random.uniform(0.1, 40.),
-        'g_Ca': random.uniform(0.1, MAX_G),
-        'g_Ks': random.uniform(0.1, MAX_G),
-        'g_Kf': random.uniform(0.1, MAX_G),
-        'g_L': random.uniform(0.001, 0.5),
-        'E_Ca': random.uniform(0., 40),
-        'E_K': random.uniform(-80, -40.),
-        'E_L': random.uniform(-80, -40.),
-    }
-    return collections.OrderedDict(sorted(rand_par.items(), key=lambda t: t[0]))
 
 
 

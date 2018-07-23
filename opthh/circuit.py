@@ -51,11 +51,19 @@ SYNAPSE_inhib2 = {
 }
 GAP = {'G_gap': 1.}
 
+MAX_TAU = 200.
+MIN_SCALE = 1.
+MAX_SCALE = 50.
+MIN_MDP = -40.
+MAX_MDP = 30.
+MIN_G = 1.e-6
+MAX_G = 0.1
+
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
 
 def give_constraints_gap():
-    return {'G_gap': np.array([1e-5, np.infty])}
+    return {'G_gap': np.array([1e-7, MAX_G])}
 
 def give_constraints_syn(conns):
     """constraints for synapse parameters
@@ -67,7 +75,7 @@ def give_constraints_syn(conns):
         dict: constraints
     """
     E_con = np.array([const_E(p['E'] > -60) for p in conns.values()]).transpose()
-    return {'G': np.array([1e-5, np.infty]),
+    return {'G': np.array([1e-7, MAX_G]),
             'scale': np.array([1e-3, np.infty]),
             'E' : E_con}
 
@@ -77,14 +85,6 @@ def const_E(exc=True):
         return [-70, np.infty]
     else:
         return [-np.infty, -50]
-
-
-MAX_TAU = 200.
-MIN_SCALE = 1.
-MAX_SCALE = 50.
-MIN_MDP = -40.
-MAX_MDP = 30.
-MAX_G = 10.
 
 
 def get_syn_rand(exc=True):
@@ -102,7 +102,7 @@ def get_syn_rand(exc=True):
     else:
         E = random.uniform(-100, -60)
     return {
-        'G': random.uniform(0.01, MAX_G),
+        'G': random.uniform(MIN_G, MAX_G),
         'mdp': random.uniform(MIN_MDP, MAX_MDP),
         'scale': random.uniform(MIN_SCALE, MAX_SCALE),
         'E': E

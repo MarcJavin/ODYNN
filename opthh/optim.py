@@ -259,6 +259,7 @@ class Optimizer(ABC):
         self._build_loss(w)
         self._build_train()
         self.summary = tf.summary.merge_all()
+        get_vars_op = []
 
         with tf.Session() as sess:
 
