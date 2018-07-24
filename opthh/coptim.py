@@ -82,7 +82,7 @@ class CircuitOpt(Optimizer):
             self.circuit.plot_output(self.circuit.dt*np.arange(len(X)), X[:, b, 0], results[:, :, b, self.n_out], res_t,
                                     suffix='trace%s%s_%s' % (name, b, i), show=False, save=True, l=0.8, lt=1.5)
 
-    def opt_circuits(self, subdir, train=None, test=None, w=(1, 1), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1], plot=True):
+    def opt_circuits(self, subdir, train=None, test=None, w=(1, 1), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1], evol_var=True, plot=True):
         """Optimize the neuron parameters
 
         Args:
@@ -107,7 +107,7 @@ class CircuitOpt(Optimizer):
         self.circuit.plot(show=False, save=True)
         self.n_out = n_out
         yshape = [2, None, None, len(n_out)]
-        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, plot=plot)
+        Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, evol_var=evol_var, plot=plot)
 
                     #
                     # for b in range(self.n_batch):
