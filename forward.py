@@ -428,5 +428,5 @@ if __name__=='__main__':
                                   labels=labels, commands=commands, n_rand=n_parallel)
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
-    copt.opt_circuits(subdir=dir, train=[res[...,0], cur, res[...,1:], None], n_out=list(np.arange(39)))
+    copt.opt_circuits(subdir=dir, train=[res[...,0], cur, res[...,1:], None], n_out=list(np.arange(39)), l_rate=(0.01, 9, 0.95))
 
