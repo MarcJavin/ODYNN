@@ -98,8 +98,8 @@ def give_rand():
     return collections.OrderedDict(sorted(rand_par.items(), key=lambda t: t[0]))
 
 CONSTRAINTS = {
-    'decay_ca': [1e-3, np.infty],
-    'rho_ca': [1e-3, np.infty],
+    'decay_ca': [1e-1, np.infty],
+    'rho_ca': [1e-5, 100.],
     'C_m': [5e-1, np.infty],
     'e__scale': [MIN_SCALE, np.infty],
     'e__tau': [MIN_TAU, np.infty],
@@ -498,6 +498,7 @@ class CElegansNeuron(model.BioNeuron):
             cols = RATE_COLORS.values()
             if (type == 'tau'):
                 labels = ['h__alpha' if x == 'h__tau' else x for x in labels]
+                plt.yscale('log')
             box(df, cols, labels)
         save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
