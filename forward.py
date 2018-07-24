@@ -22,7 +22,7 @@ from opthh import utils
 from opthh import circuit as cr
 from opthh import coptim as co
 
-dt = 0.1
+dt = 0.01
 n_parallel = 5
 
 labels = {0: 'AVBL',

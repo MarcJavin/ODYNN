@@ -63,7 +63,7 @@ def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
 
 def give_constraints_gap():
-    return {'G_gap': np.array([1e-7, MAX_G])}
+    return {'G_gap': np.array([MIN_G, MAX_G])}
 
 def give_constraints_syn(conns):
     """constraints for synapse parameters
@@ -82,9 +82,9 @@ def give_constraints_syn(conns):
 
 def const_E(exc=True):
     if exc:
-        return [-70, np.infty]
+        return [-70, 50.]
     else:
-        return [-np.infty, -50]
+        return [-120., -50.]
 
 
 def get_syn_rand(exc=True):
@@ -98,9 +98,9 @@ def get_syn_rand(exc=True):
     """
     # scale is negative if inhibitory
     if exc:
-        E = random.uniform(-60, 30)
+        E = random.uniform(-60., 30.)
     else:
-        E = random.uniform(-100, -60)
+        E = random.uniform(-100., -60.)
     return {
         'G': random.uniform(MIN_G, MAX_G),
         'mdp': random.uniform(MIN_MDP, MAX_MDP),
