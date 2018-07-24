@@ -503,12 +503,16 @@ class CircuitTf(Circuit, Optimized):
         else:
             return self._param
 
-    def study_vars(self, p, show=False, save=True):
+    def study_vars(self, p, loss=None, show=False, save=True):
         self.plot_vars(p, func=utils.bar, suffix='compared', show=show, save=save)
         self.plot_vars(p, func=utils.box, suffix='boxes', show=show, save=save)
         if self._neurons.trainable:
-            for i in range(self._neurons.num):
-                self._neurons.study_vars({var: val[i] for var, val in p.items()}, suffix=self.labels[i], show=show, save=save)
+            p_n = {var: val for var, val in p.items() if var in self._neurons.init_params.keys()}
+            if self._num == 1:
+                self._neurons.study_vars(p_n, suffix='All neurons', show=show, save=save)
+            else:
+                for i in range(self._neurons.num):
+                    self._neurons.study_vars({var: val[i] for var, val in p_n.items()}, suffix=self.labels[i], show=show, save=save)
 
     def plot_vars(self, var_dic, suffix="", show=True, save=False, func=utils.plot):
         """plot variation/comparison/boxplots of synaptic variables
@@ -523,7 +527,8 @@ class CircuitTf(Circuit, Optimized):
 
         def oneplot(var_d, name, labels):
             if func == utils.box:
-                df = pd.DataFrame.from_dic(var_d)
+                varl = {k: v for k, v in var_d.items() if k in labels}
+                df = pd.DataFrame(varl)
                 func(df, utils.COLORS[:len(labels)], labels)
             else:
                 for i, var in enumerate(labels):
@@ -563,8 +568,10 @@ class CircuitTf(Circuit, Optimized):
 
         else:
             # if not, compare all synapses together
-            oneplot(var_dic, 'All_Synapses', ['G', 'mdp', 'E', 'scale'])
-            oneplot(var_dic, 'All_gaps', ['G_gap'])
+            if len(self.synapses) != 0:
+                oneplot(var_dic, 'All_Synapses', ['G', 'mdp', 'E', 'scale'])
+            if len(self.gaps) != 0:
+                oneplot(var_dic, 'All_gaps', ['G_gap'])
 
             if self._neurons.trainable:
                 self._neurons.plot_vars(var_dic, suffix='evolution_all', show=show, save=save)

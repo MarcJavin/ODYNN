@@ -533,7 +533,6 @@ class CElegansNeuron(model.BioNeuron):
         for i, var in enumerate(CONDS):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var_dic[var])  # )
-            ax.axhline(y=cls.default_params[var], color='r', label='target value')
             ax.set_ylabel(var)
             if (i == 0):
                 ax.set_title('Conductances')
@@ -542,7 +541,6 @@ class CElegansNeuron(model.BioNeuron):
         for i, var in enumerate(MEMB):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var_dic[var])  # )
-            ax.axhline(y=cls.default_params[var], color='r', label='target value')
             ax.set_ylabel(var)
             if (i == 0):
                 ax.set_title('Membrane')
@@ -554,12 +552,10 @@ class CElegansNeuron(model.BioNeuron):
         plt.figure()
         ax = plt.subplot(211)
         func(ax, var_dic['rho_ca'])  # , 'r')
-        ax.axhline(y=cls.default_params['rho_ca'], color='r', label='target value')
         plt.ylabel('Rho_ca')
         plt.yscale('log')
         ax = plt.subplot(212)
         func(ax, var_dic['decay_ca'])  # , 'b')
-        ax.axhline(y=cls.default_params['decay_ca'], color='r', label='target value')
         plt.ylabel('Decay_ca')
         save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
@@ -588,7 +584,6 @@ class CElegansNeuron(model.BioNeuron):
         for i, var in enumerate(vars):
             ax = plt.Subplot(fig, subgrid[i])
             func(ax, var[1])  # , 'r')
-            ax.axhline(y=CElegansNeuron.default_params['%s__%s'%(name, keys[i])], color='r', label='target value')
             ax.set_xlabel([])
             ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             if (labs):
@@ -601,16 +596,16 @@ class CElegansNeuron(model.BioNeuron):
     def study_vars(cls, p, suffix='', show=False, save=True):
         cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=show, save=save)
         cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=show, save=save)
-        corr = pd.DataFrame.from_dict(p).corr()
 
-        # Set up the matplotlib figure
-        f, ax = plt.subplots(figsize=(11, 9))
-        # Generate a custom diverging colormap
-        cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        # Draw the heatmap with the mask and correct aspect ratio
-        sns.heatmap(corr, cmap=cmap, center=0,
-                    square=True, linewidths=.5, cbar_kws={"shrink": .5})
-        save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
+        if p['C_m'].shape != (1,):
+            corr = pd.DataFrame(p).corr()
+            plt.subplots(figsize=(11, 9))
+            # Generate a custom diverging colormap
+            cmap = sns.diverging_palette(220, 10, as_cmap=True)
+            # Draw the heatmap with the mask and correct aspect ratio
+            sns.heatmap(corr, cmap=cmap, center=0,
+                        square=True, linewidths=.5, cbar_kws={"shrink": .5})
+            save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
 
     @staticmethod
     def ica_from_v(X, v_fix, self):

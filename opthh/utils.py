@@ -85,9 +85,13 @@ def save_show(show, save, name='', dpi=100):
 
 def bar(ax, var, good_val=None):
     sns.barplot(x=np.arange(len(var)), y=var, ax=ax)
+    if good_val is not None:
+        ax.axhline(y=good_val, color='r', label='target value')
     ax.set_xticks([])
-def plot(ax, var):
+def plot(ax, var, good_val=None):
     ax.plot(var, linewidth=0.5)
+    if good_val is not None:
+        ax.axhline(y=good_val, color='r', label='target value')
 def boxplot(ax, var):
     ax.boxplot(var, vert=True, showmeans=True)
 

@@ -22,6 +22,9 @@ SAVE_PATH = utils.TMP_DIR + 'model.ckpt'
 FILE_LV = utils.TMP_DIR + 'dump_lossratevars'
 FILE_OBJ = utils.TMP_DIR + 'optimized'
 
+INTRA_PAR = 1
+INTER_PAR = 1
+
 
 class Optimized(ABC):
     """Abstract class for object to be optimized. It could represent on or a set of neurons, or a circuit."""
@@ -90,7 +93,7 @@ class Optimized(ABC):
     def todump(self, sess):
         return []
 
-    def study_vars(self, p):
+    def study_vars(self, p, *args, **kwargs):
         pass
 
 
@@ -259,9 +262,11 @@ class Optimizer(ABC):
         self._build_loss(w)
         self._build_train()
         self.summary = tf.summary.merge_all()
-        get_vars_op = []
+        session_conf = tf.ConfigProto(
+            intra_op_parallelism_threads=INTRA_PAR,
+            inter_op_parallelism_threads=INTER_PAR)
 
-        with tf.Session() as sess:
+        with tf.Session(config=session_conf) as sess:
 
             Vt = train[2] if train[2] is not None else np.zeros(train[-1].shape)
             Cat = train[-1] if train[-1] is not None else np.zeros(train[2].shape)
@@ -360,7 +365,7 @@ def get_model(dir):
         obj = pickle.load(f)
     return obj
 
-def get_vars(dir, i=-1):
+def get_vars(dir, i=-1, loss=False):
     """get dic of vars from dumped file
 
     Args:
@@ -374,7 +379,8 @@ def get_vars(dir, i=-1):
         load = pickle.load(f, encoding="latin1")
         l = load[0]
         dic = load[-1]
-        dic['loss'] = l
+        if loss:
+            dic['loss'] = l
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 
