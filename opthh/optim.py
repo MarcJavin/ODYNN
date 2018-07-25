@@ -22,7 +22,7 @@ SAVE_PATH = utils.TMP_DIR + 'model.ckpt'
 FILE_LV = utils.TMP_DIR + 'dump_lossratevars'
 FILE_OBJ = utils.TMP_DIR + 'optimized'
 
-INTRA_PAR = 1
+INTRA_PAR = 4
 INTER_PAR = 1
 
 

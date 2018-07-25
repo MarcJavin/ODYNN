@@ -417,7 +417,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(True, False, 'Target_Voltage', dpi=300)
+    utils.save_show(False, True, 'Target_Voltage', dpi=300)
 
     cur = cur[:, np.newaxis, :]
     res = res[:, np.newaxis, :]
