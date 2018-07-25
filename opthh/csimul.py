@@ -50,9 +50,9 @@ def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], d
         states = states[:,:,np.newaxis,:]
         i_injs = i_injs[:,np.newaxis,:]
 
-    V = np.stack([states[:, 0, :, n] for n in n_out], axis=-1)
-    Ca = np.stack([states[:, -1, :, n] for n in n_out], axis=-1)
-    todump = [t, i_injs, V, Ca]
+    V = np.moveaxis(states[:, 0, :, np.array(n_out)], 0, -1)
+    Ca = np.moveaxis(states[:, -1, :, np.array(n_out)], 0, -1)
+    todump = [t, i_injs, [V, Ca]]
     if dump:
         with open(DUMP_FILE, 'wb') as f:
             pickle.dump(todump, f)

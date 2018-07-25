@@ -27,7 +27,7 @@ MODEL = cfg_model.NEURON_MODEL
 pars = [MODEL.get_random() for i in range(10)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt = 1
+dt = 0.2
 t, iinj = datas.give_train(dt)
 i_inj = iinj
 tt, it = datas.give_test(dt)
@@ -141,7 +141,6 @@ def alternate(name='', suffix='', lstm=True):
         wv -= 1./50
         wca += 1./50
         n = opt.optimize(dir, suffix=suffix, train=train, w=[wv, wca], epochs=10, l_rate=l_rate, reload=True, step=i + 1)
-    comp_pars(dir, n)
     test_xp(dir)
 
 
@@ -165,7 +164,6 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     train = sim.simul(p=default, dt=dt, i_inj=i_inj, show=False, suffix='train')
     test= sim.simul(p=default, dt=dt, i_inj=it, show=False, suffix='test')
     n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, l_rate=l_rate, evol_var=False)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
-    comp_pars(dir, n)
     test_xp(dir, default=default)
 
 

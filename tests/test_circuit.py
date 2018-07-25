@@ -50,6 +50,39 @@ class TestCircuit(TestCase):
         with self.assertRaises(AttributeError):
             cbad = Circuit(neuron_bad, self.conns2)
 
+    def test_load(self):
+        neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
+        conns = {(0, 4): opthh.circuit.SYNAPSE,
+                 (1, 4): opthh.circuit.SYNAPSE,
+                 (2, 4): opthh.circuit.SYNAPSE,
+                 (3, 2): opthh.circuit.SYNAPSE,
+                 }
+        c = CircuitTf(neuron, conns)
+        circ = CircuitTf.load({'dt': c.dt,
+        'num': c._num,
+        'vars': c.init_params,
+        'labels': c.labels,
+        'syn_k': c.synapses,
+        'gap_k': c.gaps,
+        'commands': c.commands,
+        'sensors': c.sensors,
+        'constraints': c.constraints_dic,
+        'neurons': {'dt' : c._neurons.dt,
+                'vars' : c._neurons.init_params,
+                'fixed' : c._neurons._fixed,
+                'constraints' : c._neurons._constraints_dic}})
+        self.assertEqual(c.num, circ.num)
+        self.assertEqual(circ._pres.all(), c._pres.all())
+        self.assertEqual(c._posts.all(), circ._posts.all())
+        self.assertEqual(circ._neurons.num, c._neurons.num)
+        self.assertEqual(circ._neurons.init_state.all(), c._neurons.init_state.all())
+        self.assertEqual(c.n_gap, circ.n_gap)
+        self.assertEqual(c.n_synapse, circ.n_synapse)
+        for k in c.gaps.keys():
+            self.assertEqual(c.gaps[k].all(), circ.gaps[k].all())
+        for k in c.init_params.keys():
+            self.assertEqual(c.init_params[k].all(), circ.init_params[k].all())
+
     def test_create_random(self):
         c = CircuitTf.create_random(n_neuron=3, syn_keys={(0, 1):True, (1, 2):False}, n_rand=4)
         self.assertEqual(c.num, 4)

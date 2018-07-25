@@ -86,7 +86,7 @@ def give_rand():
         'h__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
         'h__mdp': random.uniform(1, 100),
 
-        'C_m': random.uniform(0.1, 40.),
+        'C_m': random.uniform(0.5, 40.),
         'g_Ca': random.uniform(0.1, MAX_G),
         'g_Ks': random.uniform(0.1, MAX_G),
         'g_Kf': random.uniform(0.1, MAX_G),
@@ -266,16 +266,7 @@ class CElegansNeuron(model.BioNeuron):
         model.BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _inf(self, V, rate):
-        """Compute the steady state value of a gate activation rate
-
-        Args:
-          V(float): voltage
-          rate(string): 
-
-        Returns:
-
-        
-        """
+        """Compute the steady state value of a gate activation rate"""
         mdp = self._param['%s__mdp' % rate]
         scale = self._param['%s__scale' % rate]
         if self._tensors:
@@ -286,65 +277,24 @@ class CElegansNeuron(model.BioNeuron):
             return 1 / (1 + sp.exp((mdp - V) / scale))
 
     def _h(self, cac):
-        """Channel gating kinetics. Functions of membrane voltage
-
-        Args:
-          cac: 
-
-        Returns:
-
-        """
+        """Channel gating kinetics. Functions of membrane voltage"""
         q = self._inf(cac, 'h')
         return 1 + (q - 1) * self._param['h__alpha']
 
     def _i_ca(self, V, e, f, h):
-        """Membrane current (in uA/cm^2) for Calcium
-
-        Args:
-          V: 
-          e: 
-          f: 
-          h: 
-
-        Returns:
-
-        """
+        """Membrane current (in uA/cm^2) for Calcium"""
         return self._param['g_Ca'] * e ** 2 * f * h * (V - self._param['E_Ca'])
 
     def _i_kf(self, V, p, q):
-        """Membrane current (in uA/cm^2) for Potassium
-
-        Args:
-          V: 
-          p: 
-          q: 
-
-        Returns:
-
-        """
+        """Membrane current (in uA/cm^2) for Potassium"""
         return self._param['g_Kf'] * p ** 4 * q * (V - self._param['E_K'])
 
     def _i_ks(self, V, n):
-        """Membrane current (in uA/cm^2) for Potassium
-
-        Args:
-          V: 
-          n: 
-
-        Returns:
-
-        """
+        """Membrane current (in uA/cm^2) for Potassium"""
         return self._param['g_Ks'] * n * (V - self._param['E_K'])
 
     def _i_leak(self, V):
-        """Membrane leak current (in uA/cm^2)
-
-        Args:
-          V: 
-
-        Returns:
-
-        """
+        """Membrane leak current (in uA/cm^2)"""
         return self._param['g_L'] * (V - self._param['E_L'])
 
     def step(self, X, i_inj):

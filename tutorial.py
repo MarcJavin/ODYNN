@@ -2,6 +2,7 @@ from opthh import optim, utils
 import pandas as pd
 import seaborn as sns
 import pylab as plt
+import numpy as np
 import collections
 from sklearn.decomposition import PCA
 
@@ -44,11 +45,28 @@ def get_df(dir):
     dic = optim.get_vars(dir)
     return pd.DataFrame.from_dict(dic)
 
+def real_std(df):
+    variation = df.std() / df.mean()
+    d = {'Variation': abs(variation.values),
+         'Parameter': df.columns.values}
+    df2 = pd.DataFrame(d)
+    df2 = df2.sort_values(['Variation']).reset_index(drop=True)
+    mx = np.max(d['Variation'])
+    r = np.array([1., 0., 0.])
+    g = np.array([0., 1., 0.])
+    colors = [r * (1. - v / mx) + g * (v / mx) for v in df2['Variation']]
+    df2.plot.bar(x='Parameter', y='Variation', colors=colors, title='Relative standard deviation')
+    # ax = sns.barplot(x='Parameter', y='Variation', data=df2, palette=colors)
+    # plt.yscale('log')
+    plt.show()
+
 if __name__ == '__main__':
-    dir = utils.set_dir('Integcomp_both_500rate-YAY')
-    dic = optim.get_vars(dir)
+    dir = utils.set_dir('Forward_lr0.1_2')
+    dic = optim.get_best_result(dir, loss=True)
+    [print(k, v.shape) for k,v in dic.items()]
     df = pd.DataFrame.from_dict(dic)
     df = df.dropna()
+    print(df)
     # dir = utils.set_dir('Integcomp_both_500-YE')
     # dic2 = optim.get_vars(dir)
     # df = pd.DataFrame.from_dict(dic2)
@@ -61,15 +79,17 @@ if __name__ == '__main__':
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)
 
+
+
     scatt(df)
 
-    pca = PCA()
-    pca.fit(df)
-    for c in pca.components_:
-        for i, name in enumerate(df):
-            print(name, '%.2f'%c[i])
-    plt.plot(pca.explained_variance_ratio_)
-    plt.show()
+    # pca = PCA()
+    # pca.fit(df)
+    # for c in pca.components_:
+    #     for i, name in enumerate(df):
+    #         print(name, '%.2f'%c[i])
+    # plt.plot(pca.explained_variance_ratio_)
+    # plt.show()
 
 
     # sns.FacetGrid(data=df, row='C_m')

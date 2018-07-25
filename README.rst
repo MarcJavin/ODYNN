@@ -4,7 +4,7 @@ A hybrid optimization suite for biological neural networks
 
 Motivation
 ------------
-Optimization of biological models of neurons (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
+Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
 
 .. image:: img/final_goal.png
     :width: 800px
@@ -19,6 +19,8 @@ Optimization of biological models of neurons (Integrate and Fire, Hodgkin-Huxley
     :height: 500px
     :scale: 50
     :alt: alternate text
+
+
 
 Commands
 ---------------
@@ -52,7 +54,6 @@ TODO
 - documentation
 - tutorial
 - add noise target
-- pca
 - target value plots
 0) lstm model to generate the outputs of AVA and AVB.
 1) full HH model.

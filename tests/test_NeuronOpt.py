@@ -22,6 +22,11 @@ class TestNeuronOpt(TestCase):
         opt = NeuronOpt(neuron=n)
         self.assertEqual(opt._parallel, 1)
         n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)
+        print('LSTM, calcium None'.center(40, '#'))
+        train2 = train
+        train2[-1][-1] = None
+        n = opt.optimize(dir, w=[1, 1], train=train, epochs=1, plot=plot)
+
 
         print('One neuron'.center(40, '#'))
         opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))

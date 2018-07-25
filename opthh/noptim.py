@@ -15,8 +15,6 @@ from .optim import Optimizer
 class NeuronOpt(Optimizer):
     """Class for optimization of a neuron"""
 
-    yshape = [2, None, None]
-
     def __init__(self, neuron):
         """
         Initializer, takes a NeuronTf object as argument
@@ -36,14 +34,19 @@ class NeuronOpt(Optimizer):
           w(list): weights for the voltage and the ions concentrations
 
         """
+        if self._parallel > 1:
+            # [time, state, batch, model]
+            res = tf.transpose(self.res, perm=[3, 0, 1, 2])
+        else:
+            res = self.res
         with tf.variable_scope('Loss'):
-            out = self.res[:, self.neuron.V_pos]
+            out = res[..., self.neuron.V_pos, :]
             losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
             losses = losses_v
             for ion, pos in self.neuron.ions.items():
-                ionc = self.res[:, pos]
-                losses += w[1] * tf.square(tf.subtract(ionc, self.ys_[-1]))
-            self._loss = tf.reduce_mean(losses, axis=[0, 1])
+                ionc = res[..., pos, :]
+                losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
+            self._loss = tf.reduce_mean(losses, axis=[-1, -2])
         # print(self.loss)
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 
@@ -81,6 +84,7 @@ class NeuronOpt(Optimizer):
             :obj:`NeuronTf`: neuron attribute after optimization
 
         """
-        Optimizer.optimize(self, dir, train, test, w, epochs, l_rate, suffix, step, reload, reload_dir, yshape=self.yshape,
+        yshape = [None, None]
+        Optimizer.optimize(self, dir, train, test, w, epochs, l_rate, suffix, step, reload, reload_dir, yshape=yshape,
                            evol_var=evol_var, plot=plot)
 

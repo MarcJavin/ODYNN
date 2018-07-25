@@ -192,19 +192,15 @@ class Optimizer(ABC):
             f.write(sett)
 
         if self._parallel > 1:
-            # add dimension for neurons trained in parallel
-            # [time, n_batch, neuron]
-            for i in range(1, len(train)):
-                if train[i] is not None:
-                    train[i] = np.stack([train[i] for _ in range(self._parallel)], axis=train[i].ndim)
+            # add dimension to current for neurons trained in parallel
+            train[1] = np.stack([train[1] for _ in range(self._parallel)], axis=-1)
 
             if self._test:
-                for i in range(1, len(test)):
-                    test[i] = np.stack([test[i] for _ in range(self._parallel)], axis=test[i].ndim)
-            yshape.append(self._parallel)
+                test[1] = np.stack([test[1] for _ in range(self._parallel)], axis=-1)
 
         self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
-        self.ys_ = tf.placeholder(shape=yshape, dtype=tf.float32, name="voltage_Ca")
+        self.ys_ = [tf.placeholder(shape=yshape, dtype=tf.float32, name="Measure_out_%s"%i) if t is not None
+                    else 0. for i,t in enumerate(train[-1])]
 
         print("i expected : ", self.xs_.shape)
         print("i : ", train[1].shape)
@@ -220,9 +216,9 @@ class Optimizer(ABC):
         Returns:
             str: settings
         """
-        show_shape = train[2]
-        if train[2] is None:
-            show_shape = train[-1]
+        show_shape = train[2][0]
+        if train[2][0] is None:
+            show_shape = train[2][-1]
         return ("Weights (out, cac) : {}".format(w) + "\n" +
                 "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
                                                                            self.l_rate[2]) + "\n" +
@@ -244,20 +240,19 @@ class Optimizer(ABC):
                  reload=False, reload_dir=None, yshape=None, evol_var=True, plot=True):
 
         print('Optimization'.center(40,'_'))
-        import psutil
-        p = psutil.Process()
-        # print('%s MB 1 '%(p.memory_info().vms>>20))
-        T, X, V, Ca = train_
-        res_targ = [V, Ca]
+
+        T, X, res_targ = train_
+        if (len(w) < len(res_targ)):
+            raise ValueError('There are more measurable variables than associated weights')
+        w = [wi if res_targ[i] is not None else 0 for i, wi in enumerate(w)]
+
         if test_ is not None:
-            T_test, X_test, V_test, Ca_test = test_
-            res_targ_test = [V_test, Ca_test]
+            T_test, X_test, res_targ_test = test_
 
         if reload_dir is None:
             reload_dir = dir
-        train, test = self._init(dir, suffix, copy.copy(train_), copy.copy(test_), l_rate, w, yshape)
-        # print('%s MB parall'%(p.memory_info().vms>>20))
-        # print(self.settings(w))
+
+        train, test = self._init(dir, suffix, copy.deepcopy(train_), copy.deepcopy(test_), l_rate, w, yshape)
 
         self._build_loss(w)
         self._build_train()
@@ -267,9 +262,6 @@ class Optimizer(ABC):
             inter_op_parallelism_threads=INTER_PAR)
 
         with tf.Session(config=session_conf) as sess:
-
-            Vt = train[2] if train[2] is not None else np.zeros(train[-1].shape)
-            Cat = train[-1] if train[-1] is not None else np.zeros(train[2].shape)
 
             self.tdb = tf.summary.FileWriter(self.dir + '/tensorboard',
                                              sess.graph)
@@ -298,11 +290,9 @@ class Optimizer(ABC):
 
             for j in tqdm(range(epochs)):
                 i = len_prev + j
-                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict={
-                    self.xs_: train[1],
-                    self.ys_: np.array([Vt, Cat])
-                })
-                print('%s MB after tf'%(p.memory_info().vms>>20))
+                feed_d = {self.ys_[i]: m for i,m in enumerate(train[-1]) if m is not None}
+                feed_d[self.xs_] = train[1]
+                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict=feed_d)
 
                 self.tdb.add_summary(summ, i)
 
@@ -328,10 +318,9 @@ class Optimizer(ABC):
                 if i % self.freq_test == 0 or j == epochs - 1:
                     res_test = None
                     if test is not None:
-                        test_loss, res_test = sess.run([self._loss, self.res], feed_dict={
-                            self.xs_: test[1],
-                            self.ys_: np.array([test[2], test[-1]])
-                        })
+                        feed_d = {self.ys_[i]: m for i,m in enumerate(test[-1]) if m is not None}
+                        feed_d[self.xs_] = test[1]
+                        test_loss, res_test = sess.run([self._loss, self.res], feed_dict=feed_d)
                         self._test_losses.append(test_loss)
 
                     with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
@@ -401,7 +390,7 @@ def get_vars_all(dir, i=-1):
     return dic
 
 
-def get_best_result(dir, i=-1):
+def get_best_result(dir, i=-1, loss=False):
     """
 
     Args:
@@ -413,11 +402,18 @@ def get_best_result(dir, i=-1):
     """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        l = pickle.load(f)[0]
-        dic = pickle.load(f)[-1]
+        load = pickle.load(f, encoding="latin1")
+        l = load[0]
+        dic = load[-1]
         idx = np.nanargmin(l[-1])
-        dic['loss'] = l[i,idx]
-        dic = dict([(var, val[i,idx]) for var, val in dic.items()])
+        # [epoch, model] for neuron, [epoch, element, model] for circuit
+        ndim = list(dic.values())[0].ndim
+        if ndim > 2:
+            dic = dict([(var, val[i, :, idx]) for var, val in dic.items()])
+        else:
+            dic = dict([(var, val[i,idx]) for var, val in dic.items()])
+        if (loss):
+            dic['loss'] = l[i, idx]
     return dic
 
 

@@ -159,7 +159,12 @@ class BioNeuron(Neuron):
         elif isinstance(init_p, list):
             self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=1)
+            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
+        elif hasattr(init_p['C_m'], '__len__'):
+            self._num = len(init_p['C_m'])
+            if isinstance(init_p['C_m'], list):
+                init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
+            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
         else:
             self._num = 1
         self._tensors = tensors

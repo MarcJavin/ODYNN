@@ -6,6 +6,7 @@
 """
 
 from .hhmodel import CElegansNeuron
+from .leakint import Custom
 
-NEURON_MODEL = CElegansNeuron
+NEURON_MODEL = Custom
 """Class used for biological neuron models"""

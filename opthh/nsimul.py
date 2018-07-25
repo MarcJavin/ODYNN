@@ -159,7 +159,7 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix=''
         else:
             neuron.plot_results(t, i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
-    todump = [t, i_inj, X[:, neuron.V_pos], X[:, neuron.Ca_pos]]
+    todump = [t, i_inj, [X[:, neuron.V_pos], X[:, neuron.Ca_pos]]]
     if dump:
         with open(datas.DUMP_FILE, 'wb') as f:
             pickle.dump(todump, f)

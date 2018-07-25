@@ -51,13 +51,15 @@ SYNAPSE_inhib2 = {
 }
 GAP = {'G_gap': 0.001}
 
-MAX_TAU = 200.
+SYN_VARS = list(SYNAPSE.keys())
+GAP_VARs = list(GAP.keys())
+
 MIN_SCALE = 0.1
-MAX_SCALE = 50.
-MIN_MDP = -40.
-MAX_MDP = 30.
+MAX_SCALE = 100.
+MIN_MDP = -60.
+MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 0.01
+MAX_G = 0.02
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
@@ -82,9 +84,9 @@ def give_constraints_syn(conns):
 
 def const_E(exc=True):
     if exc:
-        return [-70, 50.]
+        return [-60, 50.]
     else:
-        return [-120., -50.]
+        return [-120., -60.]
 
 
 def get_syn_rand(exc=True):
@@ -286,6 +288,9 @@ class Circuit:
                 curs_post.append(current_in)
             final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
             try:
+                print(hprev)
+                print(final_curs)
+                print(self._neurons._param['C_m'])
                 h = self._neurons.step(hprev, final_curs)
             except:
                 h = self._neurons.step(hprev, extra, final_curs)
@@ -397,6 +402,7 @@ class CircuitTf(Circuit, Optimized):
         else:
             self.constraints_dic = give_constraints(synapses)
 
+
     @classmethod
     def create_random(cls, n_neuron, syn_keys={}, gap_keys={}, n_rand=10, dt=0.1, labels=None, sensors=set(),
                       commands=set()):
@@ -424,6 +430,7 @@ class CircuitTf(Circuit, Optimized):
         self.reset()
         xshape = [None]
         initializer = self._init_state.astype(np.float32)
+        print('initstate circuit', initializer)
 
         xshape.append(None)
         initializer = np.stack([initializer for _ in range(batch)], axis=1)
@@ -458,13 +465,13 @@ class CircuitTf(Circuit, Optimized):
         Iterate over i (current) and return the state variables obtained after each step
 
         Args:
-          i(ndarray): input current
+          i(ndarray): input current, [time, batch, neuron, model]
 
         Returns:
             ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
         """
         if i.ndim > 1 and self._num == 1 or i.ndim > 2 and self._num > 1:
-            input_cur, res_ = self.build_graph(batch=i.shape[i.ndim-2])
+            input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
             input_cur, res_ = self.build_graph()
         with tf.Session() as sess:
@@ -488,6 +495,44 @@ class CircuitTf(Circuit, Optimized):
 
     def apply_init(self, session):
         self._neurons.apply_init(session)
+
+    def todump(self, sess=None):
+        if sess is None:
+            vars = self.init_params
+        else:
+            vars = {name: sess.run(v) for name, v in self._param.items()}
+        return {'dt': self.dt,
+                'num': self._num,
+                'vars' : vars,
+                'labels': self.labels,
+                'syn_k': self.synapses,
+                'gap_k': self.gaps,
+                'commands': self.commands,
+                'sensors': self.sensors,
+                'constraints': self.constraints_dic,
+                'neurons' : self._neurons.todump(sess)}
+
+    @classmethod
+    def load(cls, load_dict):
+        num = load_dict['num']
+        labels = load_dict['labels']
+        commands = load_dict['commands']
+        sensors = load_dict['sensors']
+        constraints_dic = load_dict['constraints']
+        neurons = neuron.BioNeuronTf.load(load_dict['neurons'])
+        syn_k = load_dict['syn_k']
+        gap_k = load_dict['gap_k']
+        vars = load_dict['vars']
+
+        if num > 1:
+            synapses = [{key: {name: vars[name][i,n] for name in SYN_VARS} for i,key in enumerate(syn_k)} for n in range(num)]
+            gaps = [{key: {name: vars[name][i, n] for name in GAP_VARs} for i, key in enumerate(gap_k)} for n in range(num)]
+        else:
+            synapses = {key: {name: vars[name][i] for name in SYN_VARS} for i, key in enumerate(syn_k)}
+            gaps = {key: {name: vars[name][i] for name in GAP_VARs} for i, key in enumerate(gap_k)}
+
+        return cls(neurons, synapses, gaps, labels, sensors, commands)
+
 
     @property
     def init_params(self):
@@ -584,6 +629,8 @@ class CircuitFix(Circuit):
         Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps,
                          tensors=False, labels=labels, sensors=sensors, commands=commands)
         self._param = self._init_p
+
+
 
     def calculate(self, i_inj):
         """

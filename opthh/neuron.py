@@ -23,7 +23,6 @@ class NeuronTf(Neuron, Optimized):
     """
 
     _ions = MODEL.ions
-    Ca_pos = MODEL.Ca_pos
     default_init_state = MODEL.default_init_state
     nb = 0
 
@@ -103,7 +102,7 @@ class BioNeuronTf(MODEL, NeuronTf):
         Args:
           n(int): size of the new dimension
         """
-        if self._num > 1:
+        if self._num > 1 and list(self._init_p.values())[0].ndim == 1:
             if self.n_rand is not None:
                 keys = self._init_p.keys()
                 toadd = [[self.get_random() for _ in range(self._num)] for __ in range(n-1)]
@@ -112,7 +111,7 @@ class BioNeuronTf(MODEL, NeuronTf):
                 self._init_p = {var: np.stack([l[i][var] for i in range(n)], axis=-1) for var in keys}
             else:
                 self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
-        else:
+        elif not hasattr(list(self._init_p.values())[0], '__len__'):
             if self.n_rand is not None:
                 keys = self._init_p.keys()
                 l = [self._init_p] + [self.get_random() for _ in range(n - 1)]
@@ -183,6 +182,35 @@ class BioNeuronTf(MODEL, NeuronTf):
     def apply_constraints(self, session):
         session.run(self._constraints)
 
+    def todump(self, sess=None):
+        if sess is None:
+            vars = self.init_params
+        else:
+            vars = {name: sess.run(v) for name, v in self._param.items()}
+        return {'dt' : self.dt,
+                'vars' : vars,
+                'fixed' : self._fixed,
+                'constraints' : self._constraints_dic}
+
+    @classmethod
+    def load(cls, load_dict):
+        """
+        Instanciate an object based on the information save from todump
+
+        Args:
+            load_dict(dict): dictionnary generated with todump
+
+        Returns:
+            BioNeuronTf: instance of this class
+
+        """
+        dt = load_dict['dt']
+        init_p = load_dict['vars']
+        fixed = load_dict['fixed']
+        constraints = load_dict['constraints']
+        return cls(init_p=init_p, dt=dt, fixed=fixed, constraints=constraints)
+
+
     @property
     def init_params(self):
         return self._init_p
@@ -200,16 +228,13 @@ class NeuronLSTM(NeuronTf):
     _scale_v = 100.
     _scale_ca = 500.
 
-    def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1, load=None):
-        self.vars_init = {}
-        if load is not None:
-            dt = self.load(load)
-        else:
-            self._hidden_layer_nb = nb_layer
-            self._hidden_layer_size = layer_size
-            self._extra_ca = extra_ca
-            self._volt_net = None
-            self._ca_net = None
+    def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1, vars_init={}):
+        self.vars_init = vars_init
+        self._hidden_layer_nb = nb_layer
+        self._hidden_layer_size = layer_size
+        self._extra_ca = extra_ca
+        self._volt_net = None
+        self._ca_net = None
         self.vstate = None
         self.castate = None
         NeuronTf.__init__(self, dt=dt)
@@ -266,7 +291,7 @@ class NeuronLSTM(NeuronTf):
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
-            Ca = ca_outputs[:, :, self.Ca_pos] * self._scale_ca
+            Ca = ca_outputs[:, :, -1] * self._scale_ca
             results = tf.stack([V, Ca], axis=1)
 
         return curs_, results
@@ -329,7 +354,7 @@ class NeuronLSTM(NeuronTf):
                 .format(self._max_cur, self._rest_v, self._scale_v, self._scale_ca)
                 )
 
-    def todump(self, sess):
+    def todump(self, sess=None):
         """Informations to save to retrieve the object later
 
         Args:
@@ -339,7 +364,10 @@ class NeuronLSTM(NeuronTf):
             dict: dictionary of objects to dump
 
         """
-        vars = {v.name: sess.run(v) for v in tf.trainable_variables()}#self._ca_net.trainable_variables+self._volt_net.trainable_variables}
+        if sess is None:
+            vars = self.init_params
+        else:
+            vars = {v.name: sess.run(v) for v in tf.trainable_variables()}#self._ca_net.trainable_variables+self._volt_net.trainable_variables}
         return {'dt' : self.dt,
                 '_max_cur': self._max_cur,
                 '_rest_v': self._rest_v,
@@ -351,25 +379,26 @@ class NeuronLSTM(NeuronTf):
                 'vars' : vars
                 }
 
-    def load(self, load):
+    @classmethod
+    def load(cls, load_dict):
         """Load settings from a past object
 
         Args:
-          load(dict): containing object having been dumped before
+          load_dict(dict): containing object having been dumped before
 
         Returns:
-            float: dt
+            NeuronLSTM: instance of this class
         """
-        self.dt = load['dt']
-        self._max_cur = load['_max_cur']
-        self._rest_v = load['_rest_v']
-        self._scale_v = load['_scale_v']
-        self._scale_ca = load['_scale_ca']
-        self._hidden_layer_nb = load['_hidden_layer_nb']
-        self._hidden_layer_size = load['_hidden_layer_size']
-        self._extra_ca = load['extra_ca']
-        self.vars_init = load['vars']
-        return self.dt
+        dt = load_dict['dt']
+        cls._max_cur = load_dict['_max_cur']
+        cls._rest_v = load_dict['_rest_v']
+        cls._scale_v = load_dict['_scale_v']
+        cls._scale_ca = load_dict['_scale_ca']
+        hidden_layer_nb = load_dict['_hidden_layer_nb']
+        hidden_layer_size = load_dict['_hidden_layer_size']
+        extra_ca = load_dict['extra_ca']
+        vars_init = load_dict['vars']
+        return cls(nb_layer=hidden_layer_nb, layer_size=hidden_layer_size, extra_ca=extra_ca, dt=dt, vars_init=vars_init)
 
     def apply_init(self, sess):
         """Initialize the variables if loaded object
