@@ -3,8 +3,6 @@ import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
-import collections
-from sklearn.decomposition import PCA
 
 
 def corr(df):
@@ -72,7 +70,6 @@ if __name__ == '__main__':
     # df = pd.DataFrame.from_dict(dic2)
     # df.merge(df1)
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
-    from opthh import hhmodel
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
     # hhmodel.CElegansNeuron.study_vars(dic, show=True, save=False)
     # for i in range(9):

@@ -1,10 +1,8 @@
 from unittest import TestCase
-from context import opthh
 from opthh.neuron import BioNeuronTf, BioNeuronFix
-from opthh.hhmodel import CElegansNeuron
-from opthh import hhmodel
+from models.hhmodel import CElegansNeuron
+from models import hhmodel
 import numpy as np
-import tensorflow as tf
 
 p = hhmodel.DEFAULT
 

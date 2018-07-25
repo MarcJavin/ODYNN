@@ -18,8 +18,9 @@ from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 import collections
 
-from .utils import box, save_show
-from . import utils, model
+from opthh.utils import box
+from opthh import utils
+from . import model
 from pylab import plt
 
 RATE_COLORS = {'p' : '#00ccff',
@@ -427,7 +428,7 @@ class CElegansNeuron(model.BioNeuron):
         cols = ['b', RATE_COLORS['n'], RATE_COLORS['f'], 'k']
         box(df, cols, MEMB)
         plt.title('Membrane')
-        save_show(show, save, name='{}MEmbrane_{}'.format(utils.NEUR_DIR, suffix).format(suffix), dpi=300)
+        utils.save_show(show, save, name='{}MEmbrane_{}'.format(utils.NEUR_DIR, suffix).format(suffix), dpi=300)
 
         plt.figure()
         plt.subplot(211)
@@ -438,7 +439,7 @@ class CElegansNeuron(model.BioNeuron):
         box(df, ['#0000ff'], ['decay_ca'])  # , 'b')
         plt.title('Decay_ca')
         plt.tight_layout()
-        save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
+        utils.save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         plt.figure()
         for i, type in enumerate(['mdp', 'scale', 'tau']):
@@ -450,7 +451,7 @@ class CElegansNeuron(model.BioNeuron):
                 labels = ['h__alpha' if x == 'h__tau' else x for x in labels]
                 plt.yscale('log')
             box(df, cols, labels)
-        save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
+        utils.save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
     @classmethod
     def plot_vars(cls, var_dic, suffix="evolution", show=False, save=True, func=utils.plot):
@@ -475,7 +476,7 @@ class CElegansNeuron(model.BioNeuron):
         cls.plot_vars_gate('h', var_dic['h__mdp'], var_dic['h__scale'],
                        var_dic['h__alpha'], fig, grid[5], False, func=func)
         plt.tight_layout()
-        save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
+        utils.save_show(show, save, name='{}Rates_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         fig = plt.figure()
         grid = plt.GridSpec(1, 2)
@@ -497,7 +498,7 @@ class CElegansNeuron(model.BioNeuron):
             ax.yaxis.tick_right()
             fig.add_subplot(ax)
         plt.tight_layout()
-        save_show(show, save, name='{}Membrane_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
+        utils.save_show(show, save, name='{}Membrane_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
         plt.figure()
         ax = plt.subplot(211)
@@ -507,7 +508,7 @@ class CElegansNeuron(model.BioNeuron):
         ax = plt.subplot(212)
         func(ax, var_dic['decay_ca'])  # , 'b')
         plt.ylabel('Decay_ca')
-        save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
+        utils.save_show(show, save, name='{}CalciumPump_{}'.format(utils.NEUR_DIR, suffix), dpi=300)
 
     @staticmethod
     def plot_vars_gate(name, mdp, scale, tau, fig, pos, labs, func=utils.plot):
@@ -555,7 +556,7 @@ class CElegansNeuron(model.BioNeuron):
             # Draw the heatmap with the mask and correct aspect ratio
             sns.heatmap(corr, cmap=cmap, center=0,
                         square=True, linewidths=.5, cbar_kws={"shrink": .5})
-            save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
+            utils.save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
 
     @staticmethod
     def ica_from_v(X, v_fix, self):
@@ -640,7 +641,7 @@ def plots_ica_from_v(ts, V, results, name="ica", show=False, save=True):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    save_show(show, save, name)
+    utils.save_show(show, save, name)
 
 
 def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
@@ -681,5 +682,5 @@ def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
     plt.ylabel('V (input) (mV)')
     plt.xlabel('t (ms)')
 
-    save_show(show, save, name)
+    utils.save_show(show, save, name)
     plt.close()

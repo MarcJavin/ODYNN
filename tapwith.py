@@ -6,15 +6,11 @@
 """
 import sys
 
-import numpy as np
-import scipy as sp
-
-import psutil
-from opthh import neuron as nr
 from opthh import circuit
 from opthh.circuit import CircuitTf
 from opthh import datas
-from opthh import cfg_model, utils
+from opthh import utils
+from models import cfg_model
 from opthh.coptim import CircuitOpt
 import opthh.csimul as sim
 

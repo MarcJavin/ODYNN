@@ -9,8 +9,8 @@ import pylab as plt
 from cycler import cycler
 from abc import ABC, abstractmethod
 import numpy as np
-from . import utils
-from .utils import classproperty
+from opthh import utils
+from opthh.utils import classproperty
 
 
 class Neuron(ABC):

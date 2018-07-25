@@ -9,8 +9,8 @@
 import numpy as np
 import tensorflow as tf
 
-from . import cfg_model
-from .model import Neuron
+from models import cfg_model
+from models.model import Neuron
 from .optim import Optimized
 
 

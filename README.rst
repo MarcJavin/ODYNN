@@ -20,6 +20,17 @@ Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...)
     :scale: 50
     :alt: alternate text
 
+Description
+------------
+
+- Parallel Simulation
+- Parallel Optimization
+- User defined model
+- Tensorflow
+- LSTM
+- Unit tests
+- Documentation
+- Tutorial
 
 
 Commands

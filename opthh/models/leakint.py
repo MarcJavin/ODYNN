@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from opthh.model import BioNeuron
+from .model import BioNeuron
 from opthh import utils
 from pylab import plt
 import random

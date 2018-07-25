@@ -9,7 +9,8 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import utils, cfg_model, hhmodel, datas, optim
+from opthh import utils, datas, optim
+from models import hhmodel, cfg_model
 from opthh.neuron import NeuronLSTM, BioNeuronTf
 from opthh.noptim import NeuronOpt
 from opthh import nsimul as sim

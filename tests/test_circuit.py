@@ -1,7 +1,7 @@
 from unittest import TestCase
 from context import opthh
 import opthh.circuit
-from opthh import hhmodel
+from models import hhmodel
 from opthh.circuit import Circuit, CircuitTf
 import numpy as np
 from opthh.neuron import BioNeuronTf

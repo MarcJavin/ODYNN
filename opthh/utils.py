@@ -19,7 +19,7 @@ NEUR_DIR = 'neurons/'
 SYN_DIR = 'synapses/'
 TMP_DIR = 'tmp/'
 subdirs = [IMG_DIR, NEUR_DIR, SYN_DIR, TMP_DIR]
-current_dir = RES_DIR
+_current_dir = RES_DIR
 OUT_PARAMS = 'params'
 OUT_SETTINGS = 'settings'
 REGEX_VARS = '(.*) : (.*)'
@@ -43,14 +43,14 @@ def set_dir(subdir):
     Returns:
 
     """
-    global current_dir
-    current_dir = RES_DIR + subdir + '/'
-    if not os.path.exists(current_dir):
-        os.makedirs(current_dir)
+    global _current_dir
+    save_show._current_dir = RES_DIR + subdir + '/'
+    if not os.path.exists(_current_dir):
+        os.makedirs(_current_dir)
     for sd in subdirs:
-        if not os.path.exists(current_dir + sd):
-            os.makedirs(current_dir + sd)
-    return current_dir
+        if not os.path.exists(_current_dir + sd):
+            os.makedirs(_current_dir + sd)
+    return _current_dir
 
 
 def get_dic_from_var(dir, name=""):
@@ -77,8 +77,9 @@ def get_dic_from_var(dir, name=""):
     return dic
 
 def save_show(show, save, name='', dpi=100):
+    global _current_dir
     if (save):
-        plt.savefig('{}{}.png'.format(current_dir,name), dpi=dpi)
+        plt.savefig('{}{}.png'.format(_current_dir,name), dpi=dpi)
     if (show):
         plt.show()
     plt.close()

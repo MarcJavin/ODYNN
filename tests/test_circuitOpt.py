@@ -2,7 +2,8 @@ from unittest import TestCase
 from context import opthh
 import opthh.circuit as cr
 import opthh.datas
-from opthh import hhmodel, utils, cfg_model
+from opthh import utils
+from models import hhmodel
 import numpy as np
 from opthh.coptim import CircuitOpt
 import opthh.csimul as csim

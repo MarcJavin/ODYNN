@@ -15,7 +15,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.patches import ArrowStyle
 
-from . import utils, model, neuron
+from . import utils, neuron
 
 from .optim import Optimized
 

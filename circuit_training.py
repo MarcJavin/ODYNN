@@ -13,7 +13,8 @@ import scipy as sp
 from opthh import neuron as nr
 from opthh import circuit
 from opthh import datas
-from opthh import cfg_model, utils
+from opthh import utils
+from models import cfg_model
 from opthh.coptim import CircuitOpt, CircuitTf
 import opthh.csimul as sim
 

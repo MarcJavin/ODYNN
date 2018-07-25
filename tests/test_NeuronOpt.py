@@ -1,6 +1,6 @@
 from unittest import TestCase
-from context import opthh
-from opthh import cfg_model, utils, datas
+from opthh import utils, datas
+from models import cfg_model
 from opthh.neuron import NeuronLSTM, BioNeuronTf
 from opthh.noptim import NeuronOpt
 from opthh.nsimul import simul
