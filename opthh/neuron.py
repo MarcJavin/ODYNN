@@ -98,6 +98,15 @@ class BioNeuronTf(MODEL, NeuronTf):
             if len(v) != self._num:
                 raise ValueError('The shape of the parameters don\'t match the object structure')
 
+    def set_param(self, name, value=None):
+        if name not in self.parameter_names:
+            raise ValueError('The parameter "{}" does not exist'.format(name))
+        if value is None:
+            value = self.default_params[name]
+        shape = self._init_p[name].shape
+        val = np.full(shape, value, dtype=np.float32)
+        self._init_p[name] = val
+
     @property
     def trainable(self):
         return (self._fixed != set(self._init_p.keys()))

@@ -111,7 +111,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
         cas[:,j] = s_ca
     plt.show()
     plt.close()
-    train = [t, curs, None, cas]
+    train = [t, curs, [None, cas]]
     t_all = sp.arange(0., len(trace)*unit_time, dt)
     td_all = sp.arange(0., len(trace))*unit_time
     spl = splrep(td_all, trace, s=0.25)
@@ -122,7 +122,7 @@ def dump_data(delta=500, final_time=4000., dt=0.2):
     plt.plot(t_all, s_ca_all)
     plt.show()
     plt.close()
-    test = [t_all, s_i_all, None, s_ca_all]
+    test = [t_all, s_i_all, [None, s_ca_all]]
     return train, test
 
 
