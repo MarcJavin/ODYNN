@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 from opthh import utils
 from opthh.utils import classproperty
+import tensorflow as tf
+import scipy as sp
 
 
 class Neuron(ABC):
@@ -95,8 +97,8 @@ class Neuron(ABC):
                 plt.legend()
         plt.ylabel('Voltage (mV)')
 
-        for ion, pos in cls._ions.items():
-            p = plt.subplot(nb_plots, 1, 2)
+        for i, (ion, pos) in enumerate(cls._ions.items()):
+            p = plt.subplot(nb_plots, 1, 2+i)
             if custom_cycler is not None:
                 p.set_prop_cycle(custom_cycler)
             plt.plot(ts, states[:, pos], linewidth=l)
@@ -153,6 +155,7 @@ class BioNeuron(Neuron):
 
         """
         Neuron.__init__(self, dt=dt)
+        self.init_names()
         if(init_p is None):
             init_p = self.default_params
         elif(init_p == 'random'):
@@ -161,17 +164,30 @@ class BioNeuron(Neuron):
             self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
             self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
-        elif hasattr(init_p['C_m'], '__len__'):
-            self._num = len(init_p['C_m'])
-            if isinstance(init_p['C_m'], list):
+        elif hasattr(init_p[self.parameter_names[0]], '__len__'):
+            self._num = len(init_p[self.parameter_names[0]])
+            if isinstance(init_p[self.parameter_names[0]], list):
                 init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
             self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
         else:
             self._num = 1
         self._tensors = tensors
         self._init_p = init_p
+        self._param = self._init_p.copy()
         self.dt = dt
-        self.init_names()
+
+    def _inf(self, V, rate):
+        """Compute the steady state value of a gate activation rate"""
+        mdp = self._param['%s__mdp' % rate]
+        scale = self._param['%s__scale' % rate]
+        if self._tensors:
+            return tf.sigmoid((V - mdp) / scale)
+        else:
+            return 1 / (1 + sp.exp((mdp - V) / scale))
+
+    def _update_gate(self, rate, name, V):
+        tau = self._param['%s__tau'%name]
+        return ((tau * self.dt) / (tau + self.dt)) * ((rate / self.dt) + (self._inf(V, name) / tau))
 
     @classmethod
     def init_names(cls):

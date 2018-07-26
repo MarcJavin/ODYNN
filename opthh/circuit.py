@@ -14,9 +14,9 @@ import pylab as plt
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.patches import ArrowStyle
+import seaborn as sns
 
 from . import utils, neuron
-
 from .optim import Optimized
 
 SYNAPSE1 = {
@@ -178,6 +178,7 @@ class Circuit:
         self._posts = np.hstack((syns[1], gaps_c[1], gaps_c[0])).astype(np.int32)
         self.n_synapse = len(syns[0])
         self.n_gap = len(gaps_c[0])
+        self._param = self._init_p.copy()
 
         nb_neurons = len(np.unique(np.hstack((self._pres,self._posts))))
         if nb_neurons != self._neurons.num:
@@ -371,9 +372,68 @@ class Circuit:
     def plot_output(self, *args, **kwargs):
         return self._neurons.plot_output(*args, **kwargs)
 
-    def plots_output_mult(self, *args, **kwargs):
-        labels = [self.labels[i] for i in range(len(self.labels))]
-        return utils.plots_output_mult(labels=labels, *args, **kwargs)
+    def plots_output_mult(self, ts, i_inj, states, i_syn=None, suffix="", show=True, save=False, l=1):
+        """plot multiple voltages and Ca2+ concentration
+
+        Args:
+          ts:
+          i_inj:
+          states:
+          i_syn:  (Default value = None)
+          suffix:  (Default value = "")
+          show(bool): If True, show the figure (Default value = True)
+          save(bool): If True, save the figure (Default value = False)
+
+        """
+        plt.figure()
+        n_plots = len(self._neurons.ions) + 2
+
+        meas = [states[:,self._neurons.V_pos]]
+        for i in self._neurons.ions.values():
+            meas.append(states[:,i])
+        if (states.ndim > 3):
+            meas = [np.reshape(m, (m.shape[0], -1)) for m in meas]
+
+        if (i_syn is not None):
+            n_plots += 1
+            plt.subplot(n_plots, 1, 3)
+            plt.plot(ts, i_syn, linewidth=l)
+            plt.xlabel('t (ms)')
+            plt.ylabel('$I_{syn}$ ($\\mu{A}/cm^2$)')
+
+        plt.subplot(n_plots, 1, 1)
+        plt.plot(ts, meas[self._neurons.V_pos], linewidth=l)
+        plt.ylabel('Voltage (mV)')
+        leg = plt.legend(self.labels, bbox_to_anchor=(1, 0.5), handlelength=0.2)
+        for legobj in leg.legendHandles:
+            legobj.set_linewidth(3.0)
+
+        for i, ion in enumerate(self._neurons._ions.keys()):
+            plt.subplot(n_plots, 1, 2+i)
+            plt.plot(ts, meas[i+1], linewidth=l)
+            plt.ylabel('[{}]'.format(ion))
+
+        plt.subplot(n_plots, 1, n_plots)
+        if (i_inj.ndim < 2):
+            plt.plot(ts, i_inj, 'b')
+        else:
+            plt.plot(ts, i_inj)
+        plt.xlabel('t (ms)')
+        plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
+
+        utils.save_show(show, save, 'Output_%s' % suffix, dpi=250)
+
+        sns.heatmap(meas[self._neurons.V_pos].transpose(), yticklabels=self.labels, cmap='RdYlBu_r', xticklabels=False)
+        plt.title('Membrane potentials (mV)')
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Neuron')
+        utils.save_show(show, save, 'Voltage_%s' % suffix, dpi=250)
+
+        # sns.heatmap(Cacs.transpose(), yticklabels=self.labels, cmap='RdYlBu_r', xticklabels=False)
+        # plt.title('Calcium concentrations')
+        # plt.xlabel('Time (ms)')
+        # plt.ylabel('Neuron')
+        # utils.save_show(show, save, 'Calcium_%s' % suffix, dpi=250)
 
 
 class CircuitTf(Circuit, Optimized):
@@ -607,10 +667,9 @@ class CircuitTf(Circuit, Optimized):
 
 class CircuitFix(Circuit):
 
-    def __init__(self, pars, dt=0.1, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
+    def __init__(self, pars=None, dt=0.1, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
         Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps,
                          tensors=False, labels=labels, sensors=sensors, commands=commands)
-        self._param = self._init_p
 
 
 

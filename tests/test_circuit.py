@@ -1,7 +1,7 @@
 from unittest import TestCase
 from context import opthh
 import opthh.circuit
-from models import hhmodel
+from models import celeg
 from opthh.circuit import Circuit, CircuitTf
 import numpy as np
 from opthh.neuron import BioNeuronTf
@@ -14,7 +14,7 @@ class TestCircuit(TestCase):
 
 
     dir = utils.set_dir('unittest')
-    neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
+    neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
     conns = {(0, 4): opthh.circuit.SYNAPSE,
              (1, 4): opthh.circuit.SYNAPSE,
              (2, 4): opthh.circuit.SYNAPSE,
@@ -30,7 +30,7 @@ class TestCircuit(TestCase):
     circ2 = Circuit(neuron, conns2)
 
     def test_init(self):
-        neuron_bad = BioNeuronTf([hhmodel.DEFAULT for _ in range(3)])
+        neuron_bad = BioNeuronTf([celeg.DEFAULT for _ in range(3)])
 
         self.assertEqual(self.circ.num, 1)
         self.assertEqual(self.circ._pres.all(), np.array([0, 1, 2, 3]).all())
@@ -57,7 +57,7 @@ class TestCircuit(TestCase):
             cbad = Circuit(neuron_bad, self.conns2)
 
     def test_pickle(self):
-        neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
+        neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
         conns = {(0, 4): opthh.circuit.SYNAPSE,
                  (1, 4): opthh.circuit.SYNAPSE,
                  (2, 4): opthh.circuit.SYNAPSE,

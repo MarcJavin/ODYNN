@@ -445,5 +445,5 @@ if __name__=='__main__':
 
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
-    copt.opt_circuits(subdir=dir, train=[res[...,0], cur, [res[...,1:], None]], n_out=list(np.arange(39)), l_rate=(0.01, 9, 0.95))
+    copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], n_out=list(np.arange(39)), l_rate=(0.01, 9, 0.95))
 

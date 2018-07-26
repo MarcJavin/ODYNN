@@ -52,7 +52,7 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     n = nr.BioNeuronTf(init_p=pars, fixed='all', dt=t[1]-t[0])
     cr = CircuitTf(n, synapses=conns_opt)
     c = CircuitOpt(cr)
-    c.opt_circuits(dir, n_out=n_out, train=train)
+    c.optimize(dir, n_out=n_out, train=train)
 
 def full4to1():
     t,i = datas.full4(nb_neuron_zero=1)
@@ -120,7 +120,7 @@ def with_LSTM():
     neurons = nr.Neurons([nr.BioNeuronTf(cfg_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
     c = CircuitTf(neurons=neurons, synapses=conns_opt)
     co = CircuitOpt(circuit=c)
-    co.opt_circuits(dir, train=train, n_out=[0,1], l_rate=(0.01,9,0.95))
+    co.optimize(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95))
 
 
 

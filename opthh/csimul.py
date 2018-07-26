@@ -7,7 +7,6 @@
 
 import numpy as np
 from .circuit import CircuitFix
-from .utils import plots_output_mult
 from .datas import DUMP_FILE
 import pickle
 import time
@@ -40,12 +39,11 @@ def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], d
 
     if states.ndim > 3:
         for i in range(i_injs.shape[1]):
-            circuit.plots_output_mult(t, i_injs[:,i], states[:,circuit.neurons.V_pos,i,:], states[:,circuit.neurons.Ca_pos,i,:],
-                      i_syn=curs[:,i], show=show, save=save, suffix='TARGET_%s%s'%(suffix,i))
+            circuit.plots_output_mult(t, i_injs[:,i], states[:,:,i], i_syn=curs[:,i], show=show, save=save,
+                                      suffix='TARGET_%s%s'%(suffix,i))
         # [t, state, (batch,) neuron]
     else:
-        circuit.plots_output_mult(t, i_injs, states[:,circuit.neurons.V_pos,:], states[:,circuit.neurons.Ca_pos,:],
-                      i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
+        circuit.plots_output_mult(t, i_injs, states, i_syn=curs, show=show, save=save, suffix='TARGET_%s'%suffix)
         #reshape for batch dimension
         states = states[:,:,np.newaxis,:]
         i_injs = i_injs[:,np.newaxis,:]

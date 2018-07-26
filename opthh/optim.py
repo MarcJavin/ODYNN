@@ -223,16 +223,19 @@ class Optimizer(ABC):
         Returns:
             str: settings
         """
-        show_shape = train[2][0]
-        if train[2][0] is None:
-            show_shape = train[2][-1]
+        show_shape = None
+        for t in train[-1]:
+            if t is not None:
+                show_shape = t.shape
+                break
+
         return ("Weights (out, cac) : {}".format(w) + "\n" +
                 "Start rate : {}, decay_step : {}, decay_rate : {}".format(self.l_rate[0], self.l_rate[1],
                                                                            self.l_rate[2]) + "\n" +
                 "Number of batches : {}".format(self.n_batch) + "\n" +
                 "Number of time steps : {}".format(train[0].shape) + "Input current shape : {}".format(
                 train[1].shape) +
-                "Output shape : {}".format(show_shape.shape) + "\n" +
+                "Output shape : {}".format(show_shape) + "\n" +
                 "Number of models : {}".format(self._parallel) + '\n' +
                 self.optimized.settings())
 
@@ -243,14 +246,16 @@ class Optimizer(ABC):
     def _build_loss(self, w):
         pass
 
-    def optimize(self, dir, train_=None, test_=None, w=(1, 0), epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
+    def optimize(self, dir, train_=None, test_=None, w=None, epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
                  reload=False, reload_dir=None, yshape=None, evol_var=True, plot=True):
 
         print('Optimization'.center(40,'_'))
 
         T, X, res_targ = train_
-        if (len(w) < len(res_targ)):
-            raise ValueError('There are more measurable variables than associated weights')
+        if w is None:
+            w = [1] + [0 for _ in range(1, len(res_targ))]
+        if (len(w) != len(res_targ)):
+            raise ValueError('The number of measurable variables and weights must be the same')
         w = [wi if res_targ[i] is not None else 0 for i, wi in enumerate(w)]
 
         if test_ is not None:

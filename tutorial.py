@@ -3,6 +3,8 @@ import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
+from opthh import neuron as nr
+from opthh import nsimul as ns
 
 
 def corr(df):
@@ -59,6 +61,17 @@ def real_std(df):
     plt.show()
 
 if __name__ == '__main__':
+
+    t = np.arange(0., 2000., 0.1)
+    i = 10 * ((t>400) & (t<800)) + 20 * ((t>1200) & (t<1600))
+    ns.simul(i_inj=i, t=t, show=True, save=False)
+
+    exit(0)
+
+
+
+
+
     dir = utils.set_dir('Forward_lr0.1_2')
     dic = optim.get_best_result(dir, loss=True)
     [print(k, v.shape) for k,v in dic.items()]

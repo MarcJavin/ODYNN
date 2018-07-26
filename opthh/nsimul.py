@@ -151,15 +151,17 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix=''
     # elif neuron.loop_func == neuron.ik_from_v:
     #     plots_ik_from_v(t, i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save)
     # else:
-    if True:
-        if i_inj.ndim > 1:
-            for i in range(i_inj.shape[1]):
-                neuron.plot_results(t, i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
-                              save=save)
-        else:
-            neuron.plot_results(t, i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
+    if i_inj.ndim > 1:
+        for i in range(i_inj.shape[1]):
+            neuron.plot_results(t, i_inj[:,i], np.array(X[:,:,i]), suffix='target_%s%s' % (suffix,i), show=show,
+                          save=save)
+    else:
+        neuron.plot_results(t, i_inj, np.array(X), suffix='target_%s' % suffix, show=show, save=save, ca_true=ca_true)
 
-    todump = [t, i_inj, [X[:, neuron.V_pos], X[:, neuron.Ca_pos]]]
+    meas = [X[:, neuron.V_pos]]
+    for ion, pos in neuron.ions.items():
+        meas.append(X[:, pos])
+    todump = [t, i_inj, meas]
     if dump:
         with open(datas.DUMP_FILE, 'wb') as f:
             pickle.dump(todump, f)

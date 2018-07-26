@@ -13,7 +13,6 @@ import pylab as plt
 import pandas as pd
 import seaborn as sns
 import tensorflow as tf
-import scipy as sp
 from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 import collections
@@ -54,7 +53,7 @@ MIN_TAU = 1.
 MAX_TAU = 1000.
 MAX_G = 10.
 MIN_SCALE = 1.
-MAX_SCALE = 50.
+MAX_SCALE = 200.
 MIN_MDP = -50.
 MAX_MDP = 50.
 
@@ -254,8 +253,6 @@ class CElegansNeuron(model.BioNeuron):
 
     REST_CA = REST_CA
     _ions = {'$Ca^{2+}$': -1}
-    Ca_pos = -1
-    """int, Default position of the calcium concentration in state vectors"""
     default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
@@ -265,17 +262,6 @@ class CElegansNeuron(model.BioNeuron):
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         model.BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
-
-    def _inf(self, V, rate):
-        """Compute the steady state value of a gate activation rate"""
-        mdp = self._param['%s__mdp' % rate]
-        scale = self._param['%s__scale' % rate]
-        if self._tensors:
-            # print('V : ', V)
-            # print('mdp : ', mdp)
-            return tf.sigmoid((V - mdp) / scale)
-        else:
-            return 1 / (1 + sp.exp((mdp - V) / scale))
 
     def _h(self, cac):
         """Channel gating kinetics. Functions of membrane voltage"""
@@ -312,7 +298,7 @@ class CElegansNeuron(model.BioNeuron):
         n = X[3]
         e = X[4]
         f = X[5]
-        cac = X[self.Ca_pos]
+        cac = X[-1]
 
         h = self._h(cac)
         # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
@@ -322,16 +308,11 @@ class CElegansNeuron(model.BioNeuron):
 
         cac = cac + (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
                     (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(V, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self._inf(V, 'q') / tau))
-        tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self._inf(V, 'e') / tau))
-        tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self._inf(V, 'f') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self._inf(V, 'n') / tau))
+        p = self._update_gate(p, 'p', V)
+        q = self._update_gate(q, 'q', V)
+        n = self._update_gate(n, 'n', V)
+        e = self._update_gate(e, 'e', V)
+        f = self._update_gate(f, 'f', V)
 
         if self._tensors:
             return tf.stack([V, p, q, n, e, f, cac], 0)
@@ -562,7 +543,7 @@ class CElegansNeuron(model.BioNeuron):
     def ica_from_v(X, v_fix, self):
         e = X[1]
         f = X[2]
-        cac = X[self.Ca_pos]
+        cac = X[-1]
 
         h = self._h(cac)
         tau = self._param['e__tau']

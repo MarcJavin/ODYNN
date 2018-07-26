@@ -14,9 +14,9 @@ import tensorflow as tf
 
 
 # Class for our new model
-class Custom(BioNeuron):
+class LeakyIntegrate(BioNeuron):
     # Our model has membrane conductance as its only parameter
-    default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': 50.}
+    default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.}
     # Initial value for the voltage
     default_init_state = np.array([-60.])
     _constraints_dic = {'C_m': [0.5, 40.],
@@ -31,8 +31,11 @@ class Custom(BioNeuron):
     def step(self, X, i_inj):
         # Update the voltage
         V = X[0]
-        V += self.dt * (i_inj + self._i_L(V)) / self._param['C_m']
-        return tf.stack([V])
+        V = V + self.dt * (i_inj + self._i_L(V)) / self._param['C_m']
+        if self._tensors:
+            return tf.stack([V])
+        else:
+            return np.array([V])
 
     @staticmethod
     def get_random():

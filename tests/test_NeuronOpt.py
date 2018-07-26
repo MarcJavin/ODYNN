@@ -21,27 +21,28 @@ class TestNeuronOpt(TestCase):
         n = NeuronLSTM(dt=dt)
         opt = NeuronOpt(neuron=n)
         self.assertEqual(opt._parallel, 1)
-        n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)
+        w = [1 for _ in range(len(train[-1]))]
+        n = opt.optimize(dir, w=w,  train=train, epochs=1, plot=plot)
         print('LSTM, calcium None'.center(40, '#'))
         train2 = train
         train2[-1][-1] = None
-        n = opt.optimize(dir, w=[1, 1], train=train, epochs=1, plot=plot)
+        n = opt.optimize(dir, w=w, train=train, epochs=1, plot=plot)
 
 
         print('One neuron'.center(40, '#'))
         opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))
         self.assertEqual(opt._parallel, 1)
-        n = opt.optimize(dir, w=[1,1],  train=train, epochs=1, plot=plot)
+        n = opt.optimize(dir, w=w,  train=train, epochs=1, plot=plot)
         print('One neuron reload'.center(40, '#'))
-        n = opt.optimize(dir, w=[1, 1],  reload=True, train=train, epochs=1, plot=plot)
+        n = opt.optimize(dir, w=w,  reload=True, train=train, epochs=1, plot=plot)
         print('One neuron with test'.center(40, '#'))
-        n = opt.optimize(dir, w=[1, 1], train=train, test=train, epochs=1, plot=plot)
+        n = opt.optimize(dir, w=w, train=train, test=train, epochs=1, plot=plot)
 
 
         print('Parallel'.center(40, '#'))
         pars = [cfg_model.NEURON_MODEL.get_random() for _ in range(2)]
         opt = NeuronOpt(BioNeuronTf(init_p=pars, dt=dt))
         self.assertEqual(opt._parallel, 2)
-        n = opt.optimize(dir, w=[1, 1],  train=train, epochs=1, plot=plot)
+        n = opt.optimize(dir, w=w,  train=train, epochs=1, plot=plot)
         self.assertEqual(opt._loss.shape[0], opt._parallel)
 

@@ -114,4 +114,4 @@ if __name__=='__main__':
     ctf = CircuitTf.create_random(n_neuron=9, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
                     sensors={0, 1, 7, 8}, n_rand=n_parallel)
     copt = CircuitOpt(circuit=ctf)
-    copt.opt_circuits(subdir=dir, train=train, n_out=[4, 5])
+    copt.optimize(subdir=dir, train=train, n_out=[4, 5])

@@ -10,7 +10,7 @@ import numpy as np
 import scipy as sp
 
 from opthh import utils, datas, optim
-from models import hhmodel, cfg_model
+from models import celeg, cfg_model
 from opthh.neuron import NeuronLSTM, BioNeuronTf
 from opthh.noptim import NeuronOpt
 from opthh import nsimul as sim
@@ -20,8 +20,8 @@ CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__al
 K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau', 'n__mdp', 'n__scale', 'g_Kf', 'g_Ks',
          'E_K'}
 
-CA_CONST = hhmodel.ALL - CA_VAR
-K_CONST = hhmodel.ALL - K_VAR
+CA_CONST = celeg.ALL - CA_VAR
+K_CONST = celeg.ALL - K_VAR
 
 MODEL = cfg_model.NEURON_MODEL
 
@@ -191,8 +191,8 @@ def real_data(name, suffix='', lstm=True):
 def comp_pars(dir, i=-1):
     dir = utils.set_dir(dir)
     p = optim.get_vars(dir, i)
-    hhmodel.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-    hhmodel.boxplot_vars(p, suffix='boxes', show=False, save=True)
+    celeg.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
+    celeg.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
 
 def add_plots():

@@ -257,7 +257,6 @@ class NeuronLSTM(NeuronTf):
         del state['_ca_net']
         del state['_volt_net']
         del state['_hidden_init_state']
-        print(list(state.keys()))
         return state
 
     def __setstate__(self, state):
@@ -332,9 +331,12 @@ class NeuronLSTM(NeuronTf):
             ca = ca * self._scale_ca
 
         # Fill with void to mimic classical state
-        u = tf.fill(tf.shape(i_inj), 0.)
+        out = [v]
+        for i in range(len(self.default_init_state)-2):
+            out.append(tf.fill(tf.shape(i_inj), 0.))
+        out.append(ca)
 
-        return tf.stack([v,u,u,u,u,u,ca]), (vstate, castate)
+        return tf.stack(out), (vstate, castate)
 
     def calculate(self, i):
         """
@@ -493,7 +495,6 @@ class BioNeuronFix(MODEL):
 
     def __init__(self, init_p=MODEL.default_params, dt=0.1):
         MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
-        self._param = self._init_p
 
     def calculate(self, i_inj, currents=False):
         X = [self._init_state]

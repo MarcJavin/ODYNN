@@ -50,47 +50,14 @@ class CircuitOpt(Optimizer):
             losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
         self._loss = tf.reduce_mean(losses, axis=[-1, -2, -3])
 
-    @staticmethod
-    def train_neuron(dir, opt, num, file):
-        """train 1 neuron
-
-        Args:
-          dir(str): path to the directory          opt:
-          num: 
-          file: 
-
-        Returns:
-
-        """
-        wv = 0.2
-        wca = 0.8
-        suffix = 'neuron%s' % num
-        file = '%s%s' % (file, num)
-        opt.optimize(dir, (wv, wca), epochs=20, suffix=suffix, step=0, file=file)
-        for i in range(10):
-            wv = 1 - wv
-            wca = 1 - wca
-            opt.optimize(dir, (wv, wca), reload=True, epochs=20, suffix=suffix, step=i + 1, file=file)
-
-    def opt_neurons(self, file):
-        """optimize only neurons 1 by 1
-
-        Args:
-          file: 
-
-        Returns:
-
-        """
-        for i in range(self.circuit.neurons.num):
-            self.train_neuron('Circuit_0', NeuronOpt(dt=self.circuit.neurons.dt), i, file)
-
     def plot_out(self, X, results, res_targ, suffix, step, name, i):
         for b in range(self.n_batch):
             res_t = [res_targ[i][:, b] if res_targ[i] is not None else None for i in range(len(res_targ))]
             self.circuit.plot_output(self.circuit.dt*np.arange(len(X)), X[:, b, 0], results[:, :, b, self.n_out], res_t,
                                     suffix='trace%s%s_%s' % (name, b, i), show=False, save=True, l=0.8, lt=1.5)
 
-    def opt_circuits(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='', n_out=[1], evol_var=True, plot=True):
+    def optimize(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='',
+                 n_out=[1], evol_var=True, plot=True):
         """Optimize the neuron parameters
 
         Args:
@@ -117,9 +84,3 @@ class CircuitOpt(Optimizer):
         yshape = [None, None, len(n_out)]
         print('yshape', yshape)
         Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, evol_var=evol_var, plot=plot)
-
-                    #
-                    # for b in range(self.n_batch):
-                    #     plots_output_mult(self._T, X[:, b, 0], results[:, self.circuit.neurons.V_pos, b, :], results[:, self.circuit.neurons.Ca_pos, b, :],
-                    #                       suffix='circuit_trace%s_%s' % (b, i), show=False, save=True)
-
