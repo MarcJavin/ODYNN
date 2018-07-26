@@ -34,6 +34,9 @@ class Optimized(ABC):
 
     def __init__(self, dt):
         self.dt = dt
+        self._init_p = {}
+        self._param = {}
+        self._constraints = {}
 
     @property
     def num(self):
@@ -84,14 +87,18 @@ class Optimized(ABC):
 
     @property
     def init_params(self):
-        return {}
+        return self._init_p
+
+    @init_params.setter
+    def init_params(self, value):
+        self._init_p = value
 
     @property
     def variables(self):
         return {}
 
-    def todump(self, sess):
-        return []
+    def predump(self, sess):
+        pass
 
     def study_vars(self, p, *args, **kwargs):
         pass
@@ -325,8 +332,6 @@ class Optimizer(ABC):
 
                     with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
                         pickle.dump([losses, self._test_losses, rates, vars], f)
-                    with open(self.dir + FILE_OBJ + self.suffix, 'wb') as f:
-                        pickle.dump(self.optimized.todump(sess), f)
 
                     self.saver.save(sess, "{}{}{}".format(self.dir, SAVE_PATH, self.suffix))
 
@@ -339,6 +344,9 @@ class Optimizer(ABC):
                     if res_test is not None and plot:
                         self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
+            with open(self.dir + FILE_OBJ, 'wb') as f:
+                self.optimized.predump(sess)
+                pickle.dump(self.optimized, f)
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))
 

@@ -428,20 +428,20 @@ if __name__=='__main__':
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                   labels=labels, commands=commands, n_rand=n_parallel)
 
-    # from opthh import optim
-    # ld = ctf.todump()
-    # dir = utils.set_dir('Forward_lr0.1_2')
-    # dic = optim.get_vars(dir, loss=False)
-    # dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
-    # ld['vars'] = dic
-    # ld['neurons']['vars'] = dic
-    # circshow = cr.CircuitTf.load(ld)
-    # print(circshow.num)
-    # states = circshow.calculate(np.stack([cur for _ in range(5)], axis=-1))
-    # print(states.shape)
-    # for i in range(5):
-    #     circshow.plots_output_mult(res[...,0], cur[:,0,i], states[:,0,0,:,i], states[:,-1,0,:,i], show=True, save=False)
-    # exit(0)
+    from opthh import optim
+    with open('whynot', 'wb') as f:
+        pickle.dump(ctf, f)
+    dir = utils.set_dir('Forward_lr0.1_2')
+    dic = optim.get_vars(dir, loss=False)
+    dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
+    with open('whynot', 'rb') as f:
+        circshow = pickle.load(f)
+    circshow.init_params = dic
+    states = circshow.calculate(np.stack([cur for _ in range(5)], axis=-1))
+    print(states.shape)
+    for i in range(5):
+        circshow.plots_output_mult(res[...,0], cur[:,0,i], states[:,0,0,:,i], states[:,-1,0,:,i], show=True, save=False)
+    exit(0)
 
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)

@@ -1,8 +1,10 @@
 from unittest import TestCase
 from opthh.neuron import BioNeuronTf, BioNeuronFix
+from opthh import utils
 from models.hhmodel import CElegansNeuron
 from models import hhmodel
 import numpy as np
+import pickle
 
 p = hhmodel.DEFAULT
 
@@ -30,127 +32,124 @@ class TestHodgkinHuxley(TestCase):
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (7,hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (10,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh._init_p, dict)
+        self.assertEqual(list(hh._init_p.values())[0].shape, (10,))
+        self.assertEqual(hh._init_p.keys(), p.keys())
 
         hh = CElegansNeuron2(init_p=[hhmodel.give_rand() for _ in range(13)])
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (13,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh._init_p, dict)
+        self.assertEqual(list(hh._init_p.values())[0].shape, (13,))
+        self.assertEqual(hh._init_p.keys(), p.keys())
 
         hh = CElegansNeuron2(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (7,))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(hh._param, p)
+        self.assertIsInstance(hh._init_p, dict)
+        self.assertEqual(hh._init_p, p)
 
 
 class TestNeuronTf(TestCase):
+
+    dir = utils.set_dir('unittest')
 
     def test_init(self):
         hh = BioNeuronTf(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (7,hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (10,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(init_p={var: [val for _ in range(10)] for var, val in p.items()})
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (10,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(init_p=[hhmodel.give_rand() for _ in range(13)])
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (13,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (13,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (7,))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(hh._param, p)
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(hh.init_params, p)
 
         hh = BioNeuronTf(n_rand=15)
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 15)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (15,))
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (15,))
 
-    def test_load(self):
+    def test_pickle(self):
         hh = BioNeuronTf(init_p=[p for _ in range(10)])
-        load = {'dt': hh.dt,
-                'vars': hh.init_params,
-                'fixed': hh._fixed,
-                'constraints': hh._constraints_dic}
-        hh = BioNeuronTf.load(load)
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(hh, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            hh = pickle.load(f)
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (10,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(init_p={var: [val for _ in range(10)] for var, val in p.items()})
-        load = {'dt': hh.dt,
-                'vars': hh.init_params,
-                'fixed': hh._fixed,
-                'constraints': hh._constraints_dic}
-        hh = BioNeuronTf.load(load)
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(hh, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            hh = pickle.load(f)
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (10,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(init_p=[hhmodel.give_rand() for _ in range(13)])
-        load = {'dt': hh.dt,
-                'vars': hh.init_params,
-                'fixed': hh._fixed,
-                'constraints': hh._constraints_dic}
-        hh = BioNeuronTf.load(load)
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(hh, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            hh = pickle.load(f)
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (13,))
-        self.assertEqual(hh._param.keys(), p.keys())
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (13,))
+        self.assertEqual(hh.init_params.keys(), p.keys())
 
         hh = BioNeuronTf(n_rand=15)
-        load = {'dt' : hh.dt,
-                'vars' : hh.init_params,
-                'fixed' : hh._fixed,
-                'constraints' : hh._constraints_dic}
-        hh = BioNeuronTf.load(load)
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(hh, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            hh = pickle.load(f)
         self.assertEqual(len(hh._init_state), 7)
         self.assertEqual(hh.num, 15)
         self.assertEqual(hh._init_state.shape, (7, hh.num))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(list(hh._param.values())[0].shape, (15,))
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(list(hh.init_params.values())[0].shape, (15,))
 
         hh = BioNeuronTf(p)
-        load = {'dt': hh.dt,
-                'vars': hh.init_params,
-                'fixed': hh._fixed,
-                'constraints': hh._constraints_dic}
-        hh = BioNeuronTf.load(load)
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(hh, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            hh = pickle.load(f)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (7,))
-        self.assertIsInstance(hh._param, dict)
-        self.assertEqual(hh._param, p)
+        self.assertIsInstance(hh.init_params, dict)
+        self.assertEqual(hh.init_params, p)
 
 
     def test_parallelize(self):

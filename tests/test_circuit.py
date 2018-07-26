@@ -5,9 +5,15 @@ from models import hhmodel
 from opthh.circuit import Circuit, CircuitTf
 import numpy as np
 from opthh.neuron import BioNeuronTf
+from opthh import utils
+import pickle
+
 
 
 class TestCircuit(TestCase):
+
+
+    dir = utils.set_dir('unittest')
     neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
     conns = {(0, 4): opthh.circuit.SYNAPSE,
              (1, 4): opthh.circuit.SYNAPSE,
@@ -50,7 +56,7 @@ class TestCircuit(TestCase):
         with self.assertRaises(AttributeError):
             cbad = Circuit(neuron_bad, self.conns2)
 
-    def test_load(self):
+    def test_pickle(self):
         neuron = BioNeuronTf([hhmodel.DEFAULT for _ in range(5)])
         conns = {(0, 4): opthh.circuit.SYNAPSE,
                  (1, 4): opthh.circuit.SYNAPSE,
@@ -58,19 +64,10 @@ class TestCircuit(TestCase):
                  (3, 2): opthh.circuit.SYNAPSE,
                  }
         c = CircuitTf(neuron, conns)
-        circ = CircuitTf.load({'dt': c.dt,
-        'num': c._num,
-        'vars': c.init_params,
-        'labels': c.labels,
-        'syn_k': c.synapses,
-        'gap_k': c.gaps,
-        'commands': c.commands,
-        'sensors': c.sensors,
-        'constraints': c.constraints_dic,
-        'neurons': {'dt' : c._neurons.dt,
-                'vars' : c._neurons.init_params,
-                'fixed' : c._neurons._fixed,
-                'constraints' : c._neurons._constraints_dic}})
+        with open(self.dir + 'yeee', 'wb') as f:
+            pickle.dump(c, f)
+        with open(self.dir + 'yeee', 'rb') as f:
+            circ = pickle.load(f)
         self.assertEqual(c.num, circ.num)
         self.assertEqual(circ._pres.all(), c._pres.all())
         self.assertEqual(c._posts.all(), circ._posts.all())

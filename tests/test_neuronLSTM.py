@@ -6,10 +6,14 @@
 """
 from unittest import TestCase
 from opthh.neuron import NeuronLSTM
+from opthh import utils
 import tensorflow as tf
+import pickle
 
 
 class TestNeuronLSTM(TestCase):
+
+    dir = utils.set_dir('unittest')
 
     def test_build_graph(self):
         l = NeuronLSTM()
@@ -31,8 +35,11 @@ class TestNeuronLSTM(TestCase):
         l.reset()
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        load = l.todump(sess)
-        l2 = NeuronLSTM.load(load)
+        l.predump(sess)
+        with open(self.dir+'yeee', 'wb') as f:
+            pickle.dump(l, f)
+        with open(self.dir+'yeee', 'rb') as f:
+            l2 = pickle.load(f)
         self.assertEqual(l.dt, l2.dt)
         self.assertEqual(l._max_cur, l2._max_cur)
         self.assertEqual(l._rest_v, l2._rest_v)

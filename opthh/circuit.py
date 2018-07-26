@@ -118,6 +118,8 @@ VARS_GAP = list(GAP.keys())
 
 class Circuit:
 
+    parameter_names = SYN_VARS + GAP_VARs
+
     """Circuit of neurons with synapses and gap junctions"""
 
     def __init__(self, neurons, synapses={}, gaps={}, tensors=False, labels=None, sensors=set(), commands=set()):
@@ -288,9 +290,6 @@ class Circuit:
                 curs_post.append(current_in)
             final_curs = tf.add_n([tf.stack(curs_post, axis=1), curs])
             try:
-                print(hprev)
-                print(final_curs)
-                print(self._neurons._param['C_m'])
                 h = self._neurons.step(hprev, final_curs)
             except:
                 h = self._neurons.step(hprev, extra, final_curs)
@@ -411,17 +410,53 @@ class CircuitTf(Circuit, Optimized):
         gaps = [{k: get_gap_rand() for k in gap_keys} for _ in range(n_rand)]
         return cls(neurons, synapses, gaps, labels, sensors, commands)
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['neurons'] = self._neurons.__getstate__().copy()
+        del state['_param']
+        del state['_constraints']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._param = {}
+        self._constraints = {}
+        self._neurons.__setstate__(state['neurons'])
+
+    @property
+    def init_params(self):
+        if self._neurons.trainable:
+            return {**self._init_p, **self._neurons.init_params}
+        else:
+            return self._init_p
+
+    @init_params.setter
+    def init_params(self, value):
+        self._init_p = {v: value[v] for v in self.parameter_names}
+        for k, v in self._init_p.items():
+            if k in SYN_VARS and len(v) != len(self.synapses):
+                raise ValueError('The shape of the parameters don\'t match the object structure')
+            if k in GAP_VARs and len(v) != 2 * len(self.gaps):
+                raise ValueError('The shape of the parameters don\'t match the object structure')
+        self._neurons.init_params = value
+
+    @property
+    def variables(self):
+        if self._neurons.trainable:
+            return {**self._param, **self._neurons.variables}
+        else:
+            return self._param
 
     def reset(self):
         """prepare the variables as tensors, prepare the constraints, call reset for self._neurons"""
         self._param = {}
-        self.constraints = []
+        self._constraints = []
         for var, val in self._init_p.items():
             self._param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
             if var in self.constraints_dic:
                 # add dimension for later
                 con = self.constraints_dic[var]
-                self.constraints.append(tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
+                self._constraints.append(tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
         self._neurons.reset()
         self._init_state = self._neurons.init_state
 
@@ -430,7 +465,6 @@ class CircuitTf(Circuit, Optimized):
         self.reset()
         xshape = [None]
         initializer = self._init_state.astype(np.float32)
-        print('initstate circuit', initializer)
 
         xshape.append(None)
         initializer = np.stack([initializer for _ in range(batch)], axis=1)
@@ -490,63 +524,11 @@ class CircuitTf(Circuit, Optimized):
                 self._neurons.settings())
 
     def apply_constraints(self, session):
-        session.run(self.constraints)
+        session.run(self._constraints)
         self._neurons.apply_constraints(session)
 
     def apply_init(self, session):
         self._neurons.apply_init(session)
-
-    def todump(self, sess=None):
-        if sess is None:
-            vars = self.init_params
-        else:
-            vars = {name: sess.run(v) for name, v in self._param.items()}
-        return {'dt': self.dt,
-                'num': self._num,
-                'vars' : vars,
-                'labels': self.labels,
-                'syn_k': self.synapses,
-                'gap_k': self.gaps,
-                'commands': self.commands,
-                'sensors': self.sensors,
-                'constraints': self.constraints_dic,
-                'neurons' : self._neurons.todump(sess)}
-
-    @classmethod
-    def load(cls, load_dict):
-        num = load_dict['num']
-        labels = load_dict['labels']
-        commands = load_dict['commands']
-        sensors = load_dict['sensors']
-        constraints_dic = load_dict['constraints']
-        neurons = neuron.BioNeuronTf.load(load_dict['neurons'])
-        syn_k = load_dict['syn_k']
-        gap_k = load_dict['gap_k']
-        vars = load_dict['vars']
-
-        if num > 1:
-            synapses = [{key: {name: vars[name][i,n] for name in SYN_VARS} for i,key in enumerate(syn_k)} for n in range(num)]
-            gaps = [{key: {name: vars[name][i, n] for name in GAP_VARs} for i, key in enumerate(gap_k)} for n in range(num)]
-        else:
-            synapses = {key: {name: vars[name][i] for name in SYN_VARS} for i, key in enumerate(syn_k)}
-            gaps = {key: {name: vars[name][i] for name in GAP_VARs} for i, key in enumerate(gap_k)}
-
-        return cls(neurons, synapses, gaps, labels, sensors, commands)
-
-
-    @property
-    def init_params(self):
-        if self._neurons.trainable:
-            return {**self._init_p, **self._neurons.init_params}
-        else:
-            return self._init_p
-
-    @property
-    def variables(self):
-        if self._neurons.trainable:
-            return {**self._param, **self._neurons.variables}
-        else:
-            return self._param
 
     def study_vars(self, p, loss=None, show=False, save=True):
         self.plot_vars(p, func=utils.bar, suffix='compared', show=show, save=save)

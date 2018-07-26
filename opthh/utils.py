@@ -44,7 +44,7 @@ def set_dir(subdir):
 
     """
     global _current_dir
-    save_show._current_dir = RES_DIR + subdir + '/'
+    _current_dir = RES_DIR + subdir + '/'
     if not os.path.exists(_current_dir):
         os.makedirs(_current_dir)
     for sd in subdirs:

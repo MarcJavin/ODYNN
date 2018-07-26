@@ -134,6 +134,7 @@ class BioNeuron(Neuron):
     """
     default_params = None
     """dict, Default set of parameters for the model, of the form {<param_name> : value}"""
+    parameter_names = None
     _constraints_dic = None
     """dict, Constraints to be applied during optimization
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
@@ -168,9 +169,13 @@ class BioNeuron(Neuron):
         else:
             self._num = 1
         self._tensors = tensors
-        self._param = init_p
         self._init_p = init_p
         self.dt = dt
+        self.init_names()
+
+    @classmethod
+    def init_names(cls):
+        cls.parameter_names = list(cls.default_params.keys())
 
     @staticmethod
     def get_random():
