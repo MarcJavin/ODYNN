@@ -425,7 +425,7 @@ if __name__=='__main__':
     commands = [labels.values()]
     commands = set(commands[2:])
 
-    fixed = ['E_K, E_L, E_Ca', 'rho_ca', 'decay_ca', 'h__mdp', 'h__scale', 'h__alpha']
+    fixed = ['E_K', 'E_L', 'E_Ca', 'rho_ca', 'decay_ca', 'h__mdp', 'h__scale', 'h__alpha']
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
     for f in fixed:
