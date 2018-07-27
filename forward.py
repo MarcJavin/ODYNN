@@ -403,6 +403,7 @@ def show_res(dir):
 
     dir = utils.set_dir(dir)
     dic = optim.get_vars(dir, 650, loss=False)
+    print()
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                      labels=labels, commands=commands, n_rand=dic['C_m'].shape[-1])
