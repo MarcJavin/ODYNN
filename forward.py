@@ -418,8 +418,8 @@ def show_res(dir):
 
 if __name__=='__main__':
 
-    show_res('Forward_celeggroup')
-    exit(0)
+    # show_res('Forward_celeggroup')
+    # exit(0)
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
