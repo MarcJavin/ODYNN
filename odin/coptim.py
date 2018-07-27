@@ -32,12 +32,10 @@ class CircuitOpt(Optimizer):
 
         """
         # [time, state, batch, neuron, model]
-        print(self.res)
         res = []
         for n in self.n_out:
             res.append(self.res[:,:,:,n])
         res = tf.stack(res, axis=0)
-        print(res)
         if self._parallel > 1:
             res = tf.transpose(res, perm=[4, 1, 2, 3, 0])
         else:

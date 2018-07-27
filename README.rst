@@ -4,6 +4,8 @@ A hybrid optimization suite for biological neural networks
 
 .. image:: https://travis-ci.com/MarcusJP/Odin.svg?token=vE9NzRRorvxxsXbKCSRZ&branch=master
     :target: https://travis-ci.com/MarcusJP/Odin
+.. image:: https://codecov.io/gh/MarcusJP/Odin/branch/master/graph/badge.svg?token=OdU9UHy8ZV
+    :target: https://codecov.io/gh/MarcusJP/Odin
 
 Motivation
 ------------

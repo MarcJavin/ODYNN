@@ -74,7 +74,6 @@ if __name__ == '__main__':
 
     dir = utils.set_dir('Forward_lr0.1_2')
     dic = optim.get_best_result(dir, loss=True)
-    [print(k, v.shape) for k,v in dic.items()]
     df = pd.DataFrame.from_dict(dic)
     df = df.dropna()
     print(df)

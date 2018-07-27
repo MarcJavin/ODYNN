@@ -443,7 +443,6 @@ class Neurons(NeuronTf):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        print(list(state.keys()))
         state['neurons'] = [n.__getstate__().copy() for n in self._neurons]
         for n in state['neurons']:
             pass
