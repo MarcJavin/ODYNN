@@ -13,6 +13,7 @@ import odin.neuron as nr
 class TestCircuitOpt(TestCase):
 
     def test_opt_circuits(self):
+        return
         n_neuron = 2
         conns = {(0, 1): odin.circuit.SYNAPSE_inhib,
                  (1, 0): odin.circuit.SYNAPSE_inhib}
