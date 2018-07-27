@@ -387,7 +387,6 @@ class Circuit:
         """
         plt.figure()
         n_plots = len(self._neurons.ions) + 2
-        print(states.shape)
 
         meas = [states[:,self._neurons.V_pos]]
         for i in self._neurons.ions.values():
@@ -424,8 +423,6 @@ class Circuit:
 
         utils.save_show(show, save, 'Output_%s' % suffix, dpi=250)
 
-        print(len(meas), meas[0].shape)
-        print(meas[self._neurons.V_pos])
         sns.heatmap(meas[self._neurons.V_pos].transpose(), yticklabels=self.labels, cmap='RdYlBu_r', xticklabels=False)
         plt.title('Membrane potentials (mV)')
         plt.xlabel('Time (ms)')
