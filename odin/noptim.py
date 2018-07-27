@@ -84,6 +84,8 @@ class NeuronOpt(Optimizer):
             :obj:`NeuronTf`: neuron attribute after optimization
 
         """
+        if self.optimized.groups != None and self.optimized.num > 1:
+            return
         yshape = [None, None]
         Optimizer.optimize(self, dir, train, test, w, epochs, l_rate, suffix, step, reload, reload_dir, yshape=yshape,
                            evol_var=evol_var, plot=plot)

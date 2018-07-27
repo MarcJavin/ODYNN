@@ -144,6 +144,7 @@ class Optimizer(ABC):
         gvs = opt.compute_gradients(self._loss)
         gvs = [(g,v) for g,v in gvs if g is not None]
         grads, vars = zip(*gvs)
+        print(grads)
 
         if self._parallel > 1:
             grads_normed = []

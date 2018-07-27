@@ -32,6 +32,13 @@ class NeuronTf(Neuron, Optimized):
         self.id = self.give_id()
 
     @property
+    def groups(self):
+        return None
+
+    def init(self, batch):
+        pass
+
+    @property
     def trainable(self):
         return True
 
@@ -76,9 +83,11 @@ class BioNeuronTf(MODEL, NeuronTf):
         if constraints is not None :
             self._constraints_dic = constraints
         if groups is None:
-            groups = np.arange(self.num)
+            pass
         elif len(np.unique(groups)) > self.num:
             raise ValueError('Too many groups defined')
+        elif len(groups) < self.num:
+            raise ValueError('Some neurons are not assigned to any group')
         self._groups = groups
 
 
@@ -92,6 +101,10 @@ class BioNeuronTf(MODEL, NeuronTf):
         self.__dict__.update(state)
         self._param = {}
         self._constraints = {}
+
+    @property
+    def groups(self):
+        return self._groups
 
     @property
     def init_params(self):
@@ -124,15 +137,25 @@ class BioNeuronTf(MODEL, NeuronTf):
             self._constraints = []
             for var, val in self._init_p.items():
                 if var in self._fixed:
-                    self._param[var] = tf.stack([tf.constant(val[i], name=var + str(i), dtype=tf.float32) for i in self._groups])
+                    if self._groups is None:
+                        vals = tf.constant(val, name=var, dtype=tf.float32)
+                    else:
+                        vals = [tf.constant(val[i], name=var + str(i), dtype=tf.float32) for i in self._groups]
                 else:
                     with tf.variable_scope(self.id, reuse=tf.AUTO_REUSE):
-                        vals = [tf.get_variable(var + str(i), initializer=val[i], dtype=tf.float32) for i in self._groups]
-                        self._param[var] = tf.stack(vals)
+                        if self._groups is None:
+                            vals = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                        else:
+                            vals = [tf.get_variable(var + str(i), initializer=val[i], dtype=tf.float32) for i in self._groups]
                     if var in self._constraints_dic:
                         con = self._constraints_dic[var]
-                        self._constraints.extend(
+                        if self.groups is None:
+                            self._constraints.append(
+                                tf.assign(vals, tf.clip_by_value(vals, con[0], con[1])))
+                        else:
+                            self._constraints.extend(
                             [tf.assign(val, tf.clip_by_value(val, con[0], con[1])) for val in vals])
+                self._param[var] = tf.stack(vals)
         # print('neuron_params after reset : ', self._param)
 
     def parallelize(self, n):
@@ -159,10 +182,7 @@ class BioNeuronTf(MODEL, NeuronTf):
                 self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
         self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
 
-    def init(self, batch):
-        pass
-
-    def build_graph(self, batch=None):
+    def build_graph(self, batch=1):
         """
         Build a tensorflow graph for running the neuron(s) on a series of input
         Args:
@@ -175,7 +195,7 @@ class BioNeuronTf(MODEL, NeuronTf):
         self.reset()
         xshape = [None]
         initializer = self._init_state
-        if batch is not None:
+        if batch > 1:
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
         if self._num > 1:

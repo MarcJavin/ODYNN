@@ -66,6 +66,7 @@ labels = {0: 'AVBL',
               38: 'VD13'
               }
 rev_labels = {v: k for k,v in labels.items()}
+groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in range(11)] + [4 for _ in range(13)]
 
 commands = [labels.values()]
 commands = set(commands[2:])
@@ -416,7 +417,7 @@ def show_res(dir):
 
 if __name__=='__main__':
 
-    show_res('Forward_hhsimple-SOSO')
+    show_res('Forward_leaky50-SOSO')
     exit(0)
 
     with open('forward_input', 'rb') as f:
@@ -452,12 +453,9 @@ if __name__=='__main__':
     res = res[:, np.newaxis, :]
 
 
-
-    fixed = ['E_K', 'E_L', 'E_Ca', 'rho_ca', 'decay_ca', 'h__mdp', 'h__scale', 'h__alpha']
-    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
+    fixed = ()
+    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k, groups=groups,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
-    for f in fixed:
-        ctf.neurons.set_init_param(f)
 
 
 
