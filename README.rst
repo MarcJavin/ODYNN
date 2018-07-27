@@ -33,8 +33,11 @@ Description
 - Tutorial
 
 
-Commands
+Getting started
 ---------------
+
+You need python 3.5 or higher !
+
 Run in the root directory :
 
 1) install the required libraries

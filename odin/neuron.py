@@ -54,7 +54,7 @@ class BioNeuronTf(MODEL, NeuronTf):
     represent the entire neurons in a Circuit.
     """
 
-    def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None, n_rand=None):
+    def __init__(self, init_p=None, dt=0.1, fixed=(), constraints=None, groups=None, n_rand=None):
         """
         Initializer
         Args:
@@ -70,11 +70,17 @@ class BioNeuronTf(MODEL, NeuronTf):
             init_p = [self.get_random() for _ in range(n_rand)]
         self.n_rand = n_rand
         MODEL.__init__(self, init_p=init_p, tensors=True, dt=dt)
+        if fixed == 'all' :
+            fixed = set(self.parameter_names)
         self._fixed = fixed
-        if(fixed == 'all'):
-            self._fixed = set(self.parameter_names)
-        if(constraints is not None):
+        if constraints is not None :
             self._constraints_dic = constraints
+        if groups is None:
+            groups = np.arange(self.num)
+        elif len(np.unique(groups)) > self.num:
+            raise ValueError('Too many groups defined')
+        self._groups = groups
+
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -118,13 +124,15 @@ class BioNeuronTf(MODEL, NeuronTf):
             self._constraints = []
             for var, val in self._init_p.items():
                 if var in self._fixed:
-                    self._param[var] = tf.constant(val, name=var, dtype=tf.float32)
+                    self._param[var] = tf.stack([tf.constant(val[i], name=var + str(i), dtype=tf.float32) for i in self._groups])
                 else:
-                    self._param[var] = tf.get_variable(var, initializer=val, dtype=tf.float32)
+                    with tf.variable_scope(self.id, reuse=tf.AUTO_REUSE):
+                        vals = [tf.get_variable(var + str(i), initializer=val[i], dtype=tf.float32) for i in self._groups]
+                        self._param[var] = tf.stack(vals)
                     if var in self._constraints_dic:
                         con = self._constraints_dic[var]
-                        self._constraints.append(
-                            tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
+                        self._constraints.extend(
+                            [tf.assign(val, tf.clip_by_value(val, con[0], con[1])) for val in vals])
         # print('neuron_params after reset : ', self._param)
 
     def parallelize(self, n):

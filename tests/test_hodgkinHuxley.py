@@ -5,6 +5,7 @@ from odin.models.celeg import CElegansNeuron
 from odin.models import cfg_model, celeg
 import numpy as np
 import pickle
+import tensorflow as tf
 
 p = cfg_model.NEURON_MODEL.default_params
 
@@ -83,6 +84,40 @@ class TestNeuronTf(TestCase):
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (15,))
+
+    def test_init_groups(self):
+        hh = BioNeuronTf(n_rand=15, groups=np.zeros(15, dtype=np.int32))
+        hh.reset()
+        sess = tf.Session()
+        sess.run(tf.global_variables_initializer())
+        pars = sess.run(hh._param['C_m'])
+        for i in range(1,15):
+            self.assertEqual(pars[i-1], pars[i])
+
+        hh = BioNeuronTf(n_rand=6, groups=[1,0,0,0,2,2])
+        hh = BioNeuronTf(n_rand=3, groups=[1, 0, 0, 0, 2, 2])
+        hh.reset()
+        loss = tf.square(hh._param['C_m'] - [1.,20.,80.,-10.,-7.,90.])
+        train = tf.train.AdamOptimizer(0.1).minimize(loss)
+        sess = tf.Session()
+        sess.run(tf.global_variables_initializer())
+        pars = sess.run(hh._param['C_m'])
+        print(pars)
+        print(tf.trainable_variables())
+        self.assertEqual(pars[1], pars[2])
+        self.assertEqual(pars[1], pars[3])
+        self.assertEqual(pars[4], pars[5])
+        sess.run(train)
+        pars = sess.run(hh._param['C_m'])
+        print(pars)
+        self.assertEqual(pars[1], pars[2])
+        self.assertEqual(pars[1], pars[3])
+        self.assertEqual(pars[4], pars[5])
+
+        with self.assertRaises(ValueError):
+            hh = BioNeuronTf(n_rand=2, groups=[1, 0, 0, 0, 2, 2])
+
+
 
     def test_pickle(self):
         hh = BioNeuronTf(init_p=[p for _ in range(10)])
