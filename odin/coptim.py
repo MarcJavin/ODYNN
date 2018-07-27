@@ -46,6 +46,7 @@ class CircuitOpt(Optimizer):
         for ion, pos in self.optimized._neurons.ions.items():
             ionc = res[..., pos, :, :]
             losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
+        losses += tf.nn.moments(losses, axes=[-1])[1]
         self._loss = tf.reduce_mean(losses, axis=[-1, -2, -3])
 
     def plot_out(self, X, results, res_targ, suffix, step, name, i):
