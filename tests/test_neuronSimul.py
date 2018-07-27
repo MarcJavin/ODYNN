@@ -1,7 +1,7 @@
 from unittest import TestCase
 import odin.nsimul as sim
 from odin import datas
-from models import cfg_model
+from odin.models import cfg_model
 from odin.neuron import BioNeuronFix
 
 

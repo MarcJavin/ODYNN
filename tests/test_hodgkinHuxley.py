@@ -1,8 +1,8 @@
 from unittest import TestCase
 from odin.neuron import BioNeuronTf, BioNeuronFix
 from odin import utils
-from models.celeg import CElegansNeuron
-from models import cfg_model, celeg
+from odin.models.celeg import CElegansNeuron
+from odin.models import cfg_model, celeg
 import numpy as np
 import pickle
 

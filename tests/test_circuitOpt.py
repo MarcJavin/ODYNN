@@ -3,7 +3,7 @@ from context import odin
 import odin.circuit as cr
 import odin.datas
 from odin import utils
-from models import cfg_model
+from odin.models import cfg_model
 import numpy as np
 from odin.coptim import CircuitOpt
 import odin.csimul as csim

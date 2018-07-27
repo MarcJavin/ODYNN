@@ -1,7 +1,7 @@
 from unittest import TestCase
 from context import odin
 import odin.circuit
-from models import celeg
+from odin.models import celeg
 from odin.circuit import Circuit, CircuitTf
 import numpy as np
 from odin.neuron import BioNeuronTf

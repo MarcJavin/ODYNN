@@ -1,6 +1,6 @@
 from unittest import TestCase
 from odin import utils, datas
-from models import cfg_model
+from odin.models import cfg_model
 from odin.neuron import NeuronLSTM, BioNeuronTf
 from odin.noptim import NeuronOpt
 from odin.nsimul import simul
