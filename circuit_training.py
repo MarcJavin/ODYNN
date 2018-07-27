@@ -10,13 +10,13 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import neuron as nr
-from opthh import circuit
-from opthh import datas
-from opthh import utils
+from odin import neuron as nr
+from odin import circuit
+from odin import datas
+from odin import utils
 from models import cfg_model
-from opthh.coptim import CircuitOpt, CircuitTf
-import opthh.csimul as sim
+from odin.coptim import CircuitOpt, CircuitTf
+import odin.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
 

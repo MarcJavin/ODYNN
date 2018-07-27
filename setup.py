@@ -19,6 +19,6 @@ setup(
     long_description=read('README.rst'),
     license=read('LICENSE'),
     keywords="optimization neuron network machine learning neuroscience",
-    url="https://gitlab.com/MarcusJP/opt_HH",
-    packages=['opthh']
+    url="https://gitlab.com/MarcusJP/Odin",
+    packages=['odin']
 )

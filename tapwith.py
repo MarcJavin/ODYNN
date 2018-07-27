@@ -6,13 +6,13 @@
 """
 import sys
 
-from opthh import circuit
-from opthh.circuit import CircuitTf
-from opthh import datas
-from opthh import utils
+from odin import circuit
+from odin.circuit import CircuitTf
+from odin import datas
+from odin import utils
 from models import cfg_model
-from opthh.coptim import CircuitOpt
-import opthh.csimul as sim
+from odin.coptim import CircuitOpt
+import odin.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random

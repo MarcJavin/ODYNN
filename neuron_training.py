@@ -9,11 +9,11 @@ import sys
 import numpy as np
 import scipy as sp
 
-from opthh import utils, datas, optim
-from opthh.models import celeg, cfg_model
-from opthh.neuron import NeuronLSTM, BioNeuronTf
-from opthh.noptim import NeuronOpt
-from opthh import nsimul as sim
+from odin import utils, datas, optim
+from odin.models import celeg, cfg_model
+from odin.neuron import NeuronLSTM, BioNeuronTf
+from odin.noptim import NeuronOpt
+from odin import nsimul as sim
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}

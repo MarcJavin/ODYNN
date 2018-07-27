@@ -1,11 +1,11 @@
 from unittest import TestCase
-from context import opthh
-import opthh.circuit
+from context import odin
+import odin.circuit
 from models import celeg
-from opthh.circuit import Circuit, CircuitTf
+from odin.circuit import Circuit, CircuitTf
 import numpy as np
-from opthh.neuron import BioNeuronTf
-from opthh import utils
+from odin.neuron import BioNeuronTf
+from odin import utils
 import pickle
 
 
@@ -15,17 +15,17 @@ class TestCircuit(TestCase):
 
     dir = utils.set_dir('unittest')
     neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
-    conns = {(0, 4): opthh.circuit.SYNAPSE,
-             (1, 4): opthh.circuit.SYNAPSE,
-             (2, 4): opthh.circuit.SYNAPSE,
-             (3, 2): opthh.circuit.SYNAPSE,
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              }
     circ = Circuit(neuron, conns)
 
-    conns2 = [{(0, 4): opthh.circuit.SYNAPSE,
-             (1, 4): opthh.circuit.SYNAPSE,
-             (2, 4): opthh.circuit.SYNAPSE,
-             (3, 2): opthh.circuit.SYNAPSE,
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              } for _ in range(7)]
     circ2 = Circuit(neuron, conns2)
 
@@ -58,10 +58,10 @@ class TestCircuit(TestCase):
 
     def test_pickle(self):
         neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
-        conns = {(0, 4): opthh.circuit.SYNAPSE,
-                 (1, 4): opthh.circuit.SYNAPSE,
-                 (2, 4): opthh.circuit.SYNAPSE,
-                 (3, 2): opthh.circuit.SYNAPSE,
+        conns = {(0, 4): odin.circuit.SYNAPSE,
+                 (1, 4): odin.circuit.SYNAPSE,
+                 (2, 4): odin.circuit.SYNAPSE,
+                 (3, 2): odin.circuit.SYNAPSE,
                  }
         c = CircuitTf(neuron, conns)
         with open(self.dir + 'yeee', 'wb') as f:
@@ -90,11 +90,11 @@ class TestCircuit(TestCase):
 
     def test_gap(self):
 
-        circ = Circuit(self.neuron, self.conns, gaps={(0, 1): opthh.circuit.GAP})
+        circ = Circuit(self.neuron, self.conns, gaps={(0, 1): odin.circuit.GAP})
         self.assertEqual(circ.n_gap, 1)
         self.assertEqual(circ.n_synapse, 4)
         circ = Circuit(self.neuron, {},
-                       gaps={(0, 1): opthh.circuit.GAP, (2, 3): opthh.circuit.GAP, (0, 4): opthh.circuit.GAP})
+                       gaps={(0, 1): odin.circuit.GAP, (2, 3): odin.circuit.GAP, (0, 4): odin.circuit.GAP})
         self.assertEqual(circ.n_gap, 3)
         self.assertEqual(circ.n_synapse, 0)
 

@@ -1,10 +1,10 @@
-from opthh import optim, utils
+from odin import optim, utils
 import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
-from opthh import neuron as nr
-from opthh import nsimul as ns
+from odin import neuron as nr
+from odin import nsimul as ns
 
 
 def corr(df):

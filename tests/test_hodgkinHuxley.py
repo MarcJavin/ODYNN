@@ -1,6 +1,6 @@
 from unittest import TestCase
-from opthh.neuron import BioNeuronTf, BioNeuronFix
-from opthh import utils
+from odin.neuron import BioNeuronTf, BioNeuronFix
+from odin import utils
 from models.celeg import CElegansNeuron
 from models import cfg_model, celeg
 import numpy as np

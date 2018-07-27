@@ -1,9 +1,9 @@
 from unittest import TestCase
-from opthh import utils, datas
+from odin import utils, datas
 from models import cfg_model
-from opthh.neuron import NeuronLSTM, BioNeuronTf
-from opthh.noptim import NeuronOpt
-from opthh.nsimul import simul
+from odin.neuron import NeuronLSTM, BioNeuronTf
+from odin.noptim import NeuronOpt
+from odin.nsimul import simul
 
 
 class TestNeuronOpt(TestCase):

@@ -1,29 +1,29 @@
 from unittest import TestCase
-from context import opthh
-import opthh.circuit as cr
-import opthh.datas
-from opthh import utils
+from context import odin
+import odin.circuit as cr
+import odin.datas
+from odin import utils
 from models import cfg_model
 import numpy as np
-from opthh.coptim import CircuitOpt
-import opthh.csimul as csim
-import opthh.neuron as nr
+from odin.coptim import CircuitOpt
+import odin.csimul as csim
+import odin.neuron as nr
 
 
 class TestCircuitOpt(TestCase):
 
     def test_opt_circuits(self):
         n_neuron = 2
-        conns = {(0, 1): opthh.circuit.SYNAPSE_inhib,
-                 (1, 0): opthh.circuit.SYNAPSE_inhib}
-        conns_opt = {(0, 1): opthh.circuit.get_syn_rand(False),
-                     (1, 0): opthh.circuit.get_syn_rand(False)}
+        conns = {(0, 1): odin.circuit.SYNAPSE_inhib,
+                 (1, 0): odin.circuit.SYNAPSE_inhib}
+        conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+                     (1, 0): odin.circuit.get_syn_rand(False)}
         conns_opt_parallel = [conns_opt for _ in range(10)]
         dir = 'unittest/'
         dir = utils.set_dir(dir)
 
         dt = 0.5
-        t, i = opthh.datas.give_train(dt=dt, max_t=5.)
+        t, i = odin.datas.give_train(dt=dt, max_t=5.)
         length = int(5./0.5)
         i_1 = np.zeros(i.shape)
         i_injs = np.stack([i, i_1], axis=2)
@@ -72,7 +72,7 @@ class TestCircuitOpt(TestCase):
         co = CircuitOpt(circuit=c)
         co.optimize(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot)
 
-        conns_opt[(0, 2)] = opthh.circuit.get_syn_rand()
+        conns_opt[(0, 2)] = odin.circuit.get_syn_rand()
         with self.assertRaises(AttributeError):
             c = cr.CircuitTf(neurons=neurons, synapses=conns_opt)
             co = CircuitOpt(circuit=c)

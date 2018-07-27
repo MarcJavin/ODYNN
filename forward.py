@@ -18,9 +18,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-from opthh import utils
-from opthh import circuit as cr
-from opthh import coptim as co
+from odin import utils
+from odin import circuit as cr
+from odin import coptim as co
 
 dt = 0.1
 n_parallel = 5
@@ -399,11 +399,10 @@ def show_res(dir):
     cur = cur[:, np.newaxis, :]
     with open('forward_target', 'rb') as f:
         res = pickle.load(f)
-    from opthh import optim
+    from odin import optim
 
     dir = utils.set_dir(dir)
     dic = optim.get_vars(dir, 650, loss=False)
-    print()
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                      labels=labels, commands=commands, n_rand=dic['C_m'].shape[-1])

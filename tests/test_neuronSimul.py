@@ -1,8 +1,8 @@
 from unittest import TestCase
-import opthh.nsimul as sim
-from opthh import datas
+import odin.nsimul as sim
+from odin import datas
 from models import cfg_model
-from opthh.neuron import BioNeuronFix
+from odin.neuron import BioNeuronFix
 
 
 class TestNeuronSimul(TestCase):
