@@ -403,7 +403,8 @@ def show_res(dir):
     from odin import optim
 
     dir = utils.set_dir(dir)
-    dic = optim.get_vars(dir, 650, loss=False)
+    dic = optim.get_vars(dir, 90, loss=False)
+    print(dic)
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                      labels=labels, commands=commands, n_rand=dic['C_m'].shape[-1])
@@ -417,8 +418,8 @@ def show_res(dir):
 
 if __name__=='__main__':
 
-    # show_res('Forward_celeggroup')
-    # exit(0)
+    show_res('Forward_celeggroup')
+    exit(0)
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
