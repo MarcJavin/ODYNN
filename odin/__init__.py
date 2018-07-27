@@ -3,9 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Use on my server
 import matplotlib as mpl
-import socket
-if (socket.gethostname()=='1080' or socket.gethostname()=='pixi'):
-    mpl.use("Agg")
+mpl.use("Agg")
 from .utils import COLORS
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 # Tune the plots appearance
