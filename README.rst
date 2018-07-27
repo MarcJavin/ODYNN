@@ -2,6 +2,9 @@
 A hybrid optimization suite for biological neural networks
 ===============================================================
 
+.. image:: https://travis-ci.com/MarcusJP/Odin.svg?token=vE9NzRRorvxxsXbKCSRZ&branch=master
+    :target: https://travis-ci.com/MarcusJP/Odin
+
 Motivation
 ------------
 Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.

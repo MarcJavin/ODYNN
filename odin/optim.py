@@ -350,9 +350,11 @@ class Optimizer(ABC):
                     if res_test is not None and plot:
                         self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
 
-            with open(self.dir + FILE_OBJ, 'wb') as f:
-                self.optimized.predump(sess)
-                pickle.dump(self.optimized, f)
+                    with open(self.dir + FILE_OBJ, 'wb') as f:
+                        self.optimized.predump(sess)
+                        pickle.dump(self.optimized, f)
+
+
             with open(self.dir + 'time', 'w') as f:
                 f.write(str(time.time() - self.start_time))
 
