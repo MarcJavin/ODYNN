@@ -9,5 +9,5 @@ from .celeg import CElegansNeuron
 from .leakint import LeakyIntegrate
 from .hhsimple import HodgHuxSimple
 
-NEURON_MODEL = HodgHuxSimple
+NEURON_MODEL = CElegansNeuron
 """Class used for biological neuron models"""

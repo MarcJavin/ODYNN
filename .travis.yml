@@ -7,6 +7,7 @@ python:
 cache: pip
 # command to install dependencies
 install:
+  - pip install coverage
   - pip install codecov
   - make init
   - python setup.py install
@@ -15,3 +16,4 @@ script:
   - make test
 after_success:
   - codecov -t 9405d6b0-fae0-4691-81f5-9b663648dca7
+  - bash <(curl -s https://codecov.io/bash)
