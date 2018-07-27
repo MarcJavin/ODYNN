@@ -1,7 +1,7 @@
 PYTHON = python3
 
 init:
-	pip3 install -r requirements.txt
+	pip install -r requirements.txt
 
 test:
 	$(PYTHON) -m unittest discover tests/
