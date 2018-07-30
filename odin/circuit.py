@@ -299,7 +299,8 @@ class Circuit:
             # update neurons
             h = self._neurons.step(hprev, curs)
 
-            if h.ndim > 2:
+            # if batch
+            if h.ndim > 2 and self._num == 1 or h.ndim > 3 and self._num > 1:
                 hs = np.swapaxes(h, 1, 2)
                 vpres = np.swapaxes(hs[0, self._pres], 0, 1)
                 vposts = np.swapaxes(hs[0, self._posts], 0, 1)
@@ -310,11 +311,17 @@ class Circuit:
                 vposts = h[0, self._posts]
                 curs_intern = self.inter_curr(vpres, vposts)
             curs_post = np.zeros(curs.shape)
+
+            if self._num > 1:
+                curs_post = np.swapaxes(curs_post, -2, -1)
             for i in range(self._neurons.num):
                 if i not in self._posts:
                     curs_post[...,i] = 0
                     continue
+                print(curs_intern[self._posts == i].shape)
                 curs_post[...,i] = np.sum(curs_intern[self._posts == i], axis=0)
+            if self._num > 1:
+                curs_post = np.swapaxes(curs_post, -2, -1)
             return h, curs_post
 
     def plot(self, show=True, save=False):

@@ -143,12 +143,14 @@ class TestCircuitFix(TestCase):
     gaps2 = [{(0,3): odin.circuit.GAP} for _ in range(4)]
 
     def test_calculate(self):
+        print('#1 batch')
         c = CircuitFix([cfg_model.NEURON_MODEL.default_params for _ in range(5)], 0.1, self.conns, self.gaps)
         i = np.ones((7,5))
         st, cur = c.calculate(i)
         self.assertEqual(st.shape[0], 7)
         self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
         self.assertEqual(st.shape[2], 5)
+        print('#2 batches')
         i = np.ones((7,2,5))
         st, cur = c.calculate(i)
         self.assertEqual(st.shape[0], 7)
@@ -156,6 +158,7 @@ class TestCircuitFix(TestCase):
         self.assertEqual(st.shape[2], 2)
         self.assertEqual(st.shape[3], 5)
 
+        print('#1 batch, 4 models')
         c = CircuitFix([cfg_model.NEURON_MODEL.default_params for _ in range(5)], 0.1, self.conns2, self.gaps2)
         i = np.ones((7, 5, 4))
         st, cur = c.calculate(i)
@@ -163,6 +166,7 @@ class TestCircuitFix(TestCase):
         self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
         self.assertEqual(st.shape[2], 5)
         self.assertEqual(st.shape[-1], 4)
+        print('#2 batches, 4 models')
         i = np.ones((7, 2, 5, 4))
         st, cur = c.calculate(i)
         self.assertEqual(st.shape[0], 7)
