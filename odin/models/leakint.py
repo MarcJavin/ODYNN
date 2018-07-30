@@ -44,8 +44,9 @@ class LeakyIntegrate(BioNeuron):
                 'g_L': random.uniform(1e-5, 10.),
                 'E_L': random.uniform(-70., -45.)}
 
-    def plot_results(self, ts, i_inj_values, V, ca_true=None, suffix="", show=True, save=False):
+    def plot_results(self, ts, i_inj_values, X, ca_true=None, suffix="", show=True, save=False):
 
+        V = X[:,0]
         il = self._i_L(V)
 
         plt.figure()
