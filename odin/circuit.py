@@ -59,7 +59,7 @@ MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 0.02
+MAX_G = 0.05
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
@@ -501,9 +501,9 @@ class CircuitTf(Circuit, Optimized):
         self._init_p = {v: value[v] for v in self.parameter_names}
         for k, v in self._init_p.items():
             if k in SYN_VARS and len(v) != len(self.synapses):
-                raise ValueError('The shape of the parameters don\'t match the object structure')
+                raise ValueError('The shape of the parameters doesn\'t match the object structure')
             if k in GAP_VARs and len(v) != 2 * len(self.gaps):
-                raise ValueError('The shape of the parameters don\'t match the object structure')
+                raise ValueError('The shape of the parameters doesn\'t match the object structure')
         self._neurons.init_params = value
 
     @property
