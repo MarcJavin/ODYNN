@@ -1,46 +1,51 @@
 from unittest import TestCase
 from odin.neuron import BioNeuronTf, BioNeuronFix
 from odin import utils
-from odin.models.celeg import CElegansNeuron
-from odin.models import cfg_model, celeg
+from odin.models import cfg_model, model
 import numpy as np
 import pickle
 import tensorflow as tf
 
 p = cfg_model.NEURON_MODEL.default_params
 
+models2 = []
+for m in cfg_model.models:
+    class toto(m):
+    
+        def calculate(self, i):
+            pass
+    models2.append(toto)
 
-class CElegansNeuron2(CElegansNeuron):
 
-    def calculate(self, i):
-        pass
-
-
-class TestHodgkinHuxley(TestCase):
+class TestModels(TestCase):
 
     def test_init(self):
-        p = celeg.DEFAULT
-        hh = CElegansNeuron2(init_p=[p for _ in range(10)])
-        self.assertEqual(len(hh._init_state), len(hh.default_init_state))
-        self.assertEqual(hh.num, 10)
-        self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),hh.num))
-        self.assertIsInstance(hh._init_p, dict)
-        self.assertEqual(list(hh._init_p.values())[0].shape, (10,))
-        self.assertEqual(hh._init_p.keys(), p.keys())
-
-        hh = CElegansNeuron2(init_p=[celeg.CElegansNeuron.get_random() for _ in range(13)])
-        self.assertEqual(len(hh._init_state), len(hh.default_init_state))
-        self.assertEqual(hh.num, 13)
-        self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
-        self.assertIsInstance(hh._init_p, dict)
-        self.assertEqual(list(hh._init_p.values())[0].shape, (13,))
-        self.assertEqual(hh._init_p.keys(), p.keys())
-
-        hh = CElegansNeuron2(p)
-        self.assertEqual(hh.num, 1)
-        self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),))
-        self.assertIsInstance(hh._init_p, dict)
-        self.assertEqual(hh._init_p, p)
+        for mod in models2:
+            p = mod.default_params
+            hh = mod(init_p=[p for _ in range(10)])
+            self.assertEqual(len(hh._init_state), len(hh.default_init_state))
+            self.assertEqual(hh.num, 10)
+            self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),hh.num))
+            self.assertIsInstance(hh._init_p, dict)
+            self.assertEqual(list(hh._init_p.values())[0].shape, (10,))
+            self.assertEqual(hh._init_p.keys(), p.keys())
+            self.assertEqual(hh._init_p, hh._param)
+    
+            hh = mod(init_p=[mod.get_random() for _ in range(13)])
+            self.assertEqual(len(hh._init_state), len(hh.default_init_state))
+            self.assertEqual(hh.num, 13)
+            self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
+            self.assertIsInstance(hh._init_p, dict)
+            self.assertEqual(list(hh._init_p.values())[0].shape, (13,))
+            self.assertEqual(hh._init_p.keys(), p.keys())
+            self.assertEqual(hh._init_p, hh._param)
+    
+            hh = mod(p)
+            self.assertEqual(hh.num, 1)
+            self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),))
+            self.assertIsInstance(hh._init_p, dict)
+            self.assertEqual(hh._init_p, p)
+            self.assertEqual(hh._init_p, hh._param)
 
 
 class TestNeuronTf(TestCase):
