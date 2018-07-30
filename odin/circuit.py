@@ -318,7 +318,6 @@ class Circuit:
                 if i not in self._posts:
                     curs_post[...,i] = 0
                     continue
-                print(curs_intern[self._posts == i].shape)
                 curs_post[...,i] = np.sum(curs_intern[self._posts == i], axis=0)
             if self._num > 1:
                 curs_post = np.swapaxes(curs_post, -2, -1)

@@ -84,7 +84,7 @@ def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
         X.append(n.calculate(i_inj))
     X = np.stack(X, axis=2)
     print("Simulation time : ", time.time() - start)
-    t = sp.arange(0, len(i_inj)*neurons.dt, neurons.dt)
+    t = sp.arange(0, len(i_inj)*neurons[0].dt, neurons[0].dt)
     neurons[0].plot_output(t, i_inj, X, show=show, save=save)
 
 def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=False):

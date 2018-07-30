@@ -3,6 +3,7 @@ import odin.nsimul as sim
 from odin import datas
 from odin.models import cfg_model
 from odin.neuron import BioNeuronFix
+import numpy as np
 
 
 class TestNeuronSimul(TestCase):
@@ -20,7 +21,12 @@ class TestNeuronSimul(TestCase):
     def test_comp_targ(self):
         sim.comp_pars_targ(self.pars5, self.pars, dt=self.dt, i_inj=self.i, show=False)
 
+    def test_comp_neurons(self):
+        sim.comp_neurons([BioNeuronFix(self.pars) for _ in range(3)], i_inj=self.i, show=False)
+
+    def test_comp_neur_trqce(self):
+        sim.comp_neuron_trace(BioNeuronFix(self.pars), i_inj=self.i, trace=np.zeros((len(cfg_model.NEURON_MODEL.default_init_state),len(self.i))), show=False)
+
     def test_Sim(self):
-        sim.simul()
         nfix = BioNeuronFix(self.pars)
-        resfix = sim.simul(neuron=nfix, dt=self.dt, i_inj=self.i, dump=False)
+        sim.simul(neuron=nfix, dt=self.dt, i_inj=self.i, dump=False)
