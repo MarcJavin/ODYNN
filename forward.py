@@ -403,22 +403,24 @@ def show_res(dir):
     from odin import optim
 
     dir = utils.set_dir(dir)
-    dic = optim.get_vars(dir, 90, loss=False)
+    dic = optim.get_vars(dir, loss=False)
     print(dic)
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
                                      labels=labels, commands=commands, n_rand=dic['C_m'].shape[-1])
+    # ctf = optim.get_model(dir)
     ctf.init_params = dic
     states = ctf.calculate(np.stack([cur for _ in range(dic['C_m'].shape[-1])], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
-        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], show=True, save=False)
+        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix=i, show=True, save=True, trace=False)
     exit(0)
 
 
 if __name__=='__main__':
 
-    # show_res('Forward_celeggroup')
+    # show_res('Forward_5const0.1-SOSO')
+    # print('hola')
     # exit(0)
 
     with open('forward_input', 'rb') as f:

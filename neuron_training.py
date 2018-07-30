@@ -103,7 +103,6 @@ def steps2_exp_k(w_v2, w_ca2):
 
 
 def test_xp(dir, i=i_inj, default=MODEL.default_params, suffix='', show=False):
-    dir = utils.set_dir(dir)
     param = optim.get_best_result(dir)
     for j, i_ in enumerate(i.transpose()):
         sim.comp_pars_targ(param, default, dt=dt, i_inj=i_, show=show, save=True, suffix='train%s' % j)
@@ -189,7 +188,6 @@ def real_data(name, suffix='', lstm=True):
 
 
 def comp_pars(dir, i=-1):
-    dir = utils.set_dir(dir)
     p = optim.get_vars(dir, i)
     celeg.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
     celeg.boxplot_vars(p, suffix='boxes', show=False, save=True)
