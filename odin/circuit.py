@@ -235,7 +235,7 @@ class Circuit:
         else:
             syns = self.syn_curr(vprev[...,:self.n_synapse], vpost[...,:self.n_synapse])
             gaps = self.gap_curr(vprev[...,self.n_synapse:], vpost[...,self.n_synapse:])
-            axis = 1
+            axis = -1
         if self._tensors:
             return tf.concat([syns, gaps], axis=axis)
         else:

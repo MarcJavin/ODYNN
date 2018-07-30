@@ -203,7 +203,7 @@ DEFAULT = {
 DEFAULT = collections.OrderedDict(sorted(DEFAULT.items(), key=lambda t: t[0]))
 
 DEFAULT_3 = {
-'decay_ca': 110.,
+    'decay_ca': 110.,
     'rho_ca': 0.23,
     'p__tau': 2.25518, #ms
     'p__scale': 7.42636, #mV
@@ -229,10 +229,10 @@ DEFAULT_3 = {
     'h__scale': -1.,  # mol per m3
     'h__mdp': 6.42,
 
-    'E_K' : -60,
-    'E_Ca' : 40,
-    'E_L' : -50,
-    'C_m' : 1,
+    'E_K' : -60.,
+    'E_Ca' : 40.,
+    'E_L' : -50.,
+    'C_m' : 1.,
     'g_Ca': 3.,
 
     'g_Ks': 3.0,

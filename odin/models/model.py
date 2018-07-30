@@ -202,3 +202,16 @@ class BioNeuron(Neuron):
     def plot_results(*args, **kwargs):
         """Function for plotting detailed results of some experiment"""
         pass
+
+    def parallelize(self, n):
+        """Add a dimension of size n in the initial parameters and initial state
+
+        Args:
+          n(int): size of the new dimension
+        """
+        if self._num > 1 and list(self._init_p.values())[0].ndim == 1:
+                self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
+        elif not hasattr(list(self._init_p.values())[0], '__len__'):
+                self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
+        self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
+        self._param = self._init_p.copy()

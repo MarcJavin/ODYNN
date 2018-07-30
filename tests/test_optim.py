@@ -10,7 +10,7 @@ from odin import optim, neuron, circuit
 import numpy as np
 
 
-class TestNeurons(TestCase):
+class TestOptim(TestCase):
 
 
     def test_plot_loss_rate(self):

@@ -1,8 +1,8 @@
 from unittest import TestCase
 from context import odin
 import odin.circuit
-from odin.models import celeg
-from odin.circuit import Circuit, CircuitTf
+from odin.models import cfg_model
+from odin.circuit import Circuit, CircuitTf, CircuitFix
 import numpy as np
 from odin.neuron import BioNeuronTf
 from odin import utils
@@ -14,7 +14,7 @@ class TestCircuit(TestCase):
 
 
     dir = utils.set_dir('unittest')
-    neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
+    neuron = BioNeuronTf([cfg_model.NEURON_MODEL.default_params for _ in range(5)])
     conns = {(0, 4): odin.circuit.SYNAPSE,
              (1, 4): odin.circuit.SYNAPSE,
              (2, 4): odin.circuit.SYNAPSE,
@@ -30,7 +30,7 @@ class TestCircuit(TestCase):
     circ2 = Circuit(neuron, conns2)
 
     def test_init(self):
-        neuron_bad = BioNeuronTf([celeg.DEFAULT for _ in range(3)])
+        neuron_bad = BioNeuronTf([cfg_model.NEURON_MODEL.default_params for _ in range(3)])
 
         self.assertEqual(self.circ.num, 1)
         self.assertEqual(self.circ._pres.all(), np.array([0, 1, 2, 3]).all())
@@ -57,7 +57,7 @@ class TestCircuit(TestCase):
             cbad = Circuit(neuron_bad, self.conns2)
 
     def test_pickle(self):
-        neuron = BioNeuronTf([celeg.DEFAULT for _ in range(5)])
+        neuron = BioNeuronTf([cfg_model.NEURON_MODEL.default_params for _ in range(5)])
         conns = {(0, 4): odin.circuit.SYNAPSE,
                  (1, 4): odin.circuit.SYNAPSE,
                  (2, 4): odin.circuit.SYNAPSE,
@@ -124,6 +124,53 @@ class TestCircuit(TestCase):
 
     def test_step(self):
         pass
+
+class TestCircuitFix(TestCase):
+
+    dir = utils.set_dir('unittest')
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
+             }
+    gaps = {(0,3): odin.circuit.GAP}
+
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+               (1, 4): odin.circuit.SYNAPSE,
+               (2, 4): odin.circuit.SYNAPSE,
+               (3, 2): odin.circuit.SYNAPSE,
+               } for _ in range(4)]
+    gaps2 = [{(0,3): odin.circuit.GAP} for _ in range(4)]
+
+    def test_calculate(self):
+        c = CircuitFix([cfg_model.NEURON_MODEL.default_params for _ in range(5)], 0.1, self.conns, self.gaps)
+        i = np.ones((7,5))
+        st, cur = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 5)
+        i = np.ones((7,2,5))
+        st, cur = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 2)
+        self.assertEqual(st.shape[3], 5)
+
+        c = CircuitFix([cfg_model.NEURON_MODEL.default_params for _ in range(5)], 0.1, self.conns2, self.gaps2)
+        i = np.ones((7, 5, 4))
+        st, cur = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 5)
+        self.assertEqual(st.shape[-1], 4)
+        i = np.ones((7, 2, 5, 4))
+        st, cur = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 2)
+        self.assertEqual(st.shape[3], 5)
+        self.assertEqual(st.shape[-1], 4)
+
 
 
 

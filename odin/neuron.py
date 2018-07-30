@@ -164,23 +164,20 @@ class BioNeuronTf(MODEL, NeuronTf):
         Args:
           n(int): size of the new dimension
         """
-        if self._num > 1 and list(self._init_p.values())[0].ndim == 1:
-            if self.n_rand is not None:
+        if self.n_rand is not None:
+            if self._num > 1 and list(self._init_p.values())[0].ndim == 1:
                 keys = self._init_p.keys()
                 toadd = [[self.get_random() for _ in range(self._num)] for __ in range(n-1)]
                 toadd_ = [{var: np.array([par[i][var] for i in range(self._num)], dtype=np.float32) for var in keys} for par in toadd]
                 l = [self._init_p] + toadd_
                 self._init_p = {var: np.stack([l[i][var] for i in range(n)], axis=-1) for var in keys}
-            else:
-                self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
-        elif not hasattr(list(self._init_p.values())[0], '__len__'):
-            if self.n_rand is not None:
+            elif not hasattr(list(self._init_p.values())[0], '__len__'):
                 keys = self._init_p.keys()
                 l = [self._init_p] + [self.get_random() for _ in range(n - 1)]
                 self._init_p = {var: np.array([l[i][var] for i in range(n)], dtype=np.float32) for var in keys}
-            else:
-                self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
-        self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
+            self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
+        else:
+            MODEL.parallelize(self, n)
 
     def build_graph(self, batch=1):
         """
