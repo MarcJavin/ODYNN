@@ -25,7 +25,7 @@ K_CONST = celeg.ALL - K_VAR
 
 MODEL = cfg_model.NEURON_MODEL
 
-pars = [MODEL.get_random() for i in range(500)]
+pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 0.2

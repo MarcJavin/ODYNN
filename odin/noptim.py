@@ -46,8 +46,8 @@ class NeuronOpt(Optimizer):
             for ion, pos in self.neuron.ions.items():
                 ionc = res[..., pos, :]
                 losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
-            losses = tf.nn.moments(losses, axes=[-1])[1] + tf.reduce_mean(losses, axis=[-1])
-        self._loss = tf.reduce_mean(losses, axis=[-1])
+            # losses = tf.nn.moments(losses, axes=[-1])[1] + tf.reduce_mean(losses, axis=[-1])
+        self._loss = tf.reduce_mean(losses, axis=[-2, -1])
         # print(self.loss)
         # self.loss = self.loss[tf.random_uniform([1], 0, self.n_batch, dtype=tf.int32)[0]]  # tf.reduce_mean(losses, axis=[0, 1])
 
