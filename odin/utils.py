@@ -51,23 +51,6 @@ def set_dir(subdir):
     return _current_dir
 
 
-def get_dic_from_var(dir, name=""):
-    """Get variables values into a dictionnary"""
-    file = '{}{}/{}_{}.txt'.format(RES_DIR, dir, OUT_PARAMS, name)
-    dic = {}
-    with open(file, 'r') as f:
-        for line in f:
-            m = re.search(REGEX_VARS, line)
-            if(m.group(2)[0]=='['):
-                # several params
-                l = re.findall('[-]?[\d]*[\.]?[\d]+[e]?[+-]?[\d]+', m.group(2))
-                l = map(float, l)
-                dic[m.group(1)] = l
-            else:
-                dic[m.group(1)] = float(m.group(2))
-    return dic
-
-
 def save_show(show, save, name='', dpi=100):
     global _current_dir
     if (save):
