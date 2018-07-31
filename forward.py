@@ -394,7 +394,7 @@ if __name__=='__main__':
         res[:3000, i+1] = -35.
     for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
         res[:2000, i+1] = -35.
-    res = np.array([r + 1.5*np.random.randn(len(r)) for r in res])
+    res = np.array([r + 1.5*np.random.randn(len(r)) for r in res[1:]])
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
@@ -402,7 +402,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(True, False, 'Target_Voltage', dpi=300)
+    utils.save_show(False, True, 'Target_Voltage', dpi=300)
 
     cur = cur[:, np.newaxis, :]
     res = res[:, np.newaxis, :]
