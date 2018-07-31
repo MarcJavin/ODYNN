@@ -370,11 +370,11 @@ def count_in_out():
     w = [(count[i,0] + count[i,2])/(count[i,1] + 1) for i in range(39)]
     for i in range(39):
         print(labels[i], count[i], w[i])
-    exit(0)
+    return w
 
 if __name__=='__main__':
 
-    show_res('Forward_hhsimpinput', 270)
+    # show_res('Forward_hhsimpinput', 270)
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
@@ -426,5 +426,5 @@ if __name__=='__main__':
 
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
-    copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], n_out=list(np.arange(39)), l_rate=(0.4, 9, 0.92))
+    copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], w_n=count_in_out(), n_out=list(np.arange(39)), l_rate=(0.4, 9, 0.92))
 
