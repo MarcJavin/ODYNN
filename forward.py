@@ -394,7 +394,7 @@ if __name__=='__main__':
         res[:3000, i+1] = -35.
     for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
         res[:2000, i+1] = -35.
-    res = np.array([r + 1.5*np.random.randn(len(r)) for r in res[:,1:]])
+    res[:,1:] = np.array([r + 1.5*np.random.randn(len(r)) for r in res[:,1:]])
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
