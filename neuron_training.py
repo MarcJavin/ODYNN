@@ -163,6 +163,10 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     dir = utils.set_dir(dir)
     train = sim.simul(p=default, dt=dt, i_inj=i_inj, show=False, suffix='train')
     test= sim.simul(p=default, dt=dt, i_inj=it, show=False, suffix='test')
+    for t in train[-1]:
+        t = t + 1.5*np.random.randn(len(t))
+    for t in test[-1]:
+        t = t + 1.5*np.random.randn(len(t))
     n = opt.optimize(dir, w=[wv, wca], train=train, test=test, suffix=suffix, l_rate=l_rate, evol_var=False)#, reload=True, reload_dir='Integcomp_both_incr1-0_lstm-YAY')
     test_xp(dir, default=default)
 

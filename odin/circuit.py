@@ -100,7 +100,7 @@ def get_syn_rand(exc=True):
     """
     # scale is negative if inhibitory
     if exc:
-        E = random.uniform(-60., 30.)
+        E = random.uniform(-30., 50.)
     else:
         E = random.uniform(-100., -60.)
     return {

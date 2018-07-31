@@ -22,9 +22,10 @@ class CircuitOpt(Optimizer):
             circuit (:obj:`CircuitTf`): Circuit to be optimized
         """
         self.circuit = circuit
+        self.w_n = None
         Optimizer.__init__(self, self.circuit)
 
-    def _build_loss(self, w):
+    def _build_loss(self, results, ys_, w):
         """Define self._loss
 
         Args:
@@ -34,19 +35,21 @@ class CircuitOpt(Optimizer):
         # [time, state, batch, neuron, model]
         res = []
         for n in self.n_out:
-            res.append(self.res[:,:,:,n])
+            res.append(results[:,:,:,n])
         res = tf.stack(res, axis=0)
         if self._parallel > 1:
             res = tf.transpose(res, perm=[4, 1, 2, 3, 0])
         else:
             res = tf.transpose(res, perm=[1, 2, 3, 0])
         out = res[..., self.circuit.neurons.V_pos, :, :]
-        losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[self.circuit.neurons.V_pos]))
+        losses_v = w[0] * tf.square(tf.subtract(out, ys_[self.circuit.neurons.V_pos]))
         losses = losses_v
         for ion, pos in self.optimized._neurons.ions.items():
             ionc = res[..., pos, :, :]
-            losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
+            losses += w[pos] * tf.square(tf.subtract(ionc, ys_[pos]))
         # losses = tf.nn.moments(losses, axes=[-1])[1] + tf.reduce_mean(losses, axis=[-1])
+        if self.w_n is not None:
+            losses = losses * self.w_n
         self._loss = tf.reduce_mean(losses, axis=[-1, -2, -3])
 
     def plot_out(self, X, results, res_targ, suffix, step, name, i):
@@ -55,7 +58,7 @@ class CircuitOpt(Optimizer):
             self.circuit.plot_output(self.circuit.dt*np.arange(len(X)), X[:, b, 0], results[:, :, b, self.n_out], res_t,
                                     suffix='trace%s%s_%s' % (name, b, i), show=False, save=True, l=0.8, lt=1.5)
 
-    def optimize(self, subdir, train=None, test=None, w=(1, 0), epochs=700, l_rate=(0.9, 9, 0.95), suffix='',
+    def optimize(self, subdir, train=None, test=None, w=(1, 0), w_n=None, epochs=700, l_rate=(0.9, 9, 0.95), suffix='',
                  n_out=[1], evol_var=True, plot=True):
         """Optimize the neuron parameters
 
@@ -79,6 +82,7 @@ class CircuitOpt(Optimizer):
 
         """
         self.circuit.plot(show=False, save=True)
+        self.w_n = w_n
         self.n_out = n_out
         yshape = [None, None, len(n_out)]
         print('yshape', yshape)

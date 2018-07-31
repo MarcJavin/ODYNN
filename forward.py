@@ -337,7 +337,7 @@ def get_conns():
                         #     c.attrib['presynapticPopulation'], c.attrib['postsynapticPopulation'], 'exc' in cc.attrib['postComponent']))
 
 
-def show_res(dir):
+def show_res(dir, j=-1):
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
     cur = cur[:, np.newaxis, :]
@@ -346,10 +346,7 @@ def show_res(dir):
     from odin import optim
 
     dir = utils.set_dir(dir)
-    dic = optim.get_vars(dir, 620, loss=False)
-    print(len(dic['G_gap']))
-    print(np.unique(dic['G_gap'][:,0], return_counts=True))
-    exit(0)
+    dic = optim.get_vars(dir, j, loss=False)
     # print(dic)
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
@@ -359,12 +356,25 @@ def show_res(dir):
     states = ctf.calculate(np.stack([cur for _ in range(dic['C_m'].shape[-1])], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
-        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix=i, show=True, save=True, trace=False)
+        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
+    exit(0)
+
+def count_in_out():
+    count = np.zeros((39,3))
+    for s in syns_k.keys():
+        count[s[0], 0] += 1
+        count[s[1], 1] += 1
+    for g in gaps_k:
+        count[g[0], 2] += 1
+        count[g[1], 2] += 1
+    w = [(count[i,0] + count[i,2])/(count[i,1] + 1) for i in range(39)]
+    for i in range(39):
+        print(labels[i], count[i], w[i])
     exit(0)
 
 if __name__=='__main__':
 
-    # get_conns()
+    show_res('Forward_hhsimpinput', 270)
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)

@@ -205,14 +205,14 @@ class Optimizer(ABC):
             if self._test:
                 test[1] = np.stack([test[1] for _ in range(self._parallel)], axis=-1)
 
-        self.xs_, self.res = self.optimized.build_graph(batch=self.n_batch)
-        self.ys_ = [tf.placeholder(shape=yshape, dtype=tf.float32, name="Measure_out_%s"%i) if t is not None
+        xs_, res = self.optimized.build_graph(batch=self.n_batch)
+        ys_ = [tf.placeholder(shape=yshape, dtype=tf.float32, name="Measure_out_%s"%i) if t is not None
                     else 0. for i,t in enumerate(train[-1])]
 
-        print("i expected : ", self.xs_.shape)
+        print("i expected : ", xs_.shape)
         print("i : ", train[1].shape)
 
-        return train, test
+        return xs_, ys_, res, train, test
 
     def settings(self, w, train):
         """Give the settings of the optimization
@@ -243,7 +243,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def _build_loss(self, w):
+    def _build_loss(self, res, ys_, w):
         pass
 
     def optimize(self, dir, train_=None, test_=None, w=None, epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
@@ -264,9 +264,9 @@ class Optimizer(ABC):
         if reload_dir is None:
             reload_dir = dir
 
-        train, test = self._init(dir, suffix, copy.deepcopy(train_), copy.deepcopy(test_), l_rate, w, yshape)
+        xs_, ys_, res, train, test = self._init(dir, suffix, copy.deepcopy(train_), copy.deepcopy(test_), l_rate, w, yshape)
 
-        self._build_loss(w)
+        self._build_loss(res, ys_, w)
         self._build_train()
         self.summary = tf.summary.merge_all()
         session_conf = tf.ConfigProto(
@@ -302,9 +302,9 @@ class Optimizer(ABC):
 
             for j in tqdm(range(epochs)):
                 i = len_prev + j
-                feed_d = {self.ys_[i]: m for i,m in enumerate(train[-1]) if m is not None}
-                feed_d[self.xs_] = train[1]
-                summ, results, _, train_loss = sess.run([self.summary, self.res, self.train_op, self._loss], feed_dict=feed_d)
+                feed_d = {ys_[i]: m for i,m in enumerate(train[-1]) if m is not None}
+                feed_d[xs_] = train[1]
+                summ, results, _, train_loss = sess.run([self.summary, res, self.train_op, self._loss], feed_dict=feed_d)
 
                 self.tdb.add_summary(summ, i)
 
@@ -330,9 +330,9 @@ class Optimizer(ABC):
                 if i % self.freq_test == 0 or j == epochs - 1:
                     res_test = None
                     if test is not None:
-                        feed_d = {self.ys_[i]: m for i,m in enumerate(test[-1]) if m is not None}
-                        feed_d[self.xs_] = test[1]
-                        test_loss, res_test = sess.run([self._loss, self.res], feed_dict=feed_d)
+                        feed_d = {ys_[i]: m for i,m in enumerate(test[-1]) if m is not None}
+                        feed_d[xs_] = test[1]
+                        test_loss, res_test = sess.run([self._loss, res], feed_dict=feed_d)
                         self._test_losses.append(test_loss)
 
                     with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:

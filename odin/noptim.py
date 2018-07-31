@@ -27,7 +27,7 @@ class NeuronOpt(Optimizer):
             raise TypeError('The neuron attribute should be a NeuronTf instance')
         Optimizer.__init__(self, self.neuron)
 
-    def _build_loss(self, w):
+    def _build_loss(self, results, ys_, w):
         """Define self._loss
 
         Args:
@@ -36,16 +36,16 @@ class NeuronOpt(Optimizer):
         """
         if self._parallel > 1:
             # [time, state, batch, model]
-            res = tf.transpose(self.res, perm=[3, 0, 1, 2])
+            res = tf.transpose(results, perm=[3, 0, 1, 2])
         else:
-            res = self.res
+            res = results
         with tf.variable_scope('Loss'):
             out = res[..., self.neuron.V_pos, :]
-            losses_v = w[0] * tf.square(tf.subtract(out, self.ys_[0]))
+            losses_v = w[0] * tf.square(tf.subtract(out, ys_[0]))
             losses = losses_v
             for ion, pos in self.neuron.ions.items():
                 ionc = res[..., pos, :]
-                losses += w[pos] * tf.square(tf.subtract(ionc, self.ys_[pos]))
+                losses += w[pos] * tf.square(tf.subtract(ionc, ys_[pos]))
             # losses = tf.nn.moments(losses, axes=[-1])[1] + tf.reduce_mean(losses, axis=[-1])
         self._loss = tf.reduce_mean(losses, axis=[-2, -1])
         # print(self.loss)
