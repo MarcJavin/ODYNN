@@ -346,7 +346,10 @@ def show_res(dir):
     from odin import optim
 
     dir = utils.set_dir(dir)
-    dic = optim.get_vars(dir, loss=False)
+    dic = optim.get_vars(dir, 620, loss=False)
+    print(len(dic['G_gap']))
+    print(np.unique(dic['G_gap'][:,0], return_counts=True))
+    exit(0)
     # print(dic)
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
@@ -359,8 +362,9 @@ def show_res(dir):
         ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix=i, show=True, save=True, trace=False)
     exit(0)
 
-
 if __name__=='__main__':
+
+    # get_conns()
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
@@ -370,7 +374,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(False, False, 'Target_Voltage', dpi=300)
+    utils.save_show(False, False, 'Input Current', dpi=300)
 
     name = 'Forward_{}'.format(sys.argv[1])
     dir = utils.set_dir(name)
@@ -381,7 +385,16 @@ if __name__=='__main__':
     print(cur.shape)
     print(res.shape)
 
-
+    for i in range(4, len(labels)):
+        print(i, labels[i], labels[i-1])
+        res[:, i+1] = np.roll(res[:, i], 800, axis=0)
+    for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
+        res[:7000, i+1] = -35.
+    for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
+        res[:3000, i+1] = -35.
+    for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
+        res[:2000, i+1] = -35.
+    res = np.array([r + 1.5*np.random.randn(len(r)) for r in res])
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
@@ -389,7 +402,7 @@ if __name__=='__main__':
     plt.title('Membrane potentials (mV)')
     plt.xlabel('Time (ms)')
     plt.ylabel('Neuron')
-    utils.save_show(False, True, 'Target_Voltage', dpi=300)
+    utils.save_show(True, False, 'Target_Voltage', dpi=300)
 
     cur = cur[:, np.newaxis, :]
     res = res[:, np.newaxis, :]

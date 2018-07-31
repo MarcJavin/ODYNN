@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
+from odin.models import cfg_model
 from odin import neuron as nr
 from odin import nsimul as ns
 
@@ -61,36 +62,31 @@ def real_std(df):
     plt.show()
 
 if __name__ == '__main__':
+    plt.plot([1, 4])
+    plt.show()
+    plt.close()
 
-    t = np.arange(0., 2000., 0.1)
-    i = 10 * ((t>400) & (t<800)) + 20 * ((t>1200) & (t<1600))
-    ns.simul(i_inj=i, t=t, show=True, save=False)
-
-    exit(0)
-
-
-
-
-
-    dir = utils.set_dir('Forward_lr0.1_2')
-    dic = optim.get_best_result(dir, loss=True)
-    df = pd.DataFrame.from_dict(dic)
-    df = df.dropna()
+    dir = utils.set_dir('Integcomp_both_500rate-YAY')
+    dic = optim.get_vars(dir, loss=True)
+    df = pd.DataFrame.from_dict(dic).head(4)
+    # df = df.dropna()
     print(df)
+
+    scatt(df)
     # dir = utils.set_dir('Integcomp_both_500-YE')
     # dic2 = optim.get_vars(dir)
     # df = pd.DataFrame.from_dict(dic2)
     # df.merge(df1)
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
-    # hhmodel.CElegansNeuron.study_vars(dic, show=True, save=False)
+    # cfg_model.NEURON_MODEL.study_vars(dic, show=True, save=False)
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)
 
 
 
-    scatt(df)
+    # scatt(df)
 
     # pca = PCA()
     # pca.fit(df)
