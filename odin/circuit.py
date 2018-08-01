@@ -493,7 +493,6 @@ class CircuitTf(Circuit, Optimized):
     @property
     def init_params(self):
         if self._neurons.trainable:
-            print(self._neurons.init_params)
             return {**self._init_p, **self._neurons.init_params}
         else:
             return self._init_p
