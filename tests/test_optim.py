@@ -20,9 +20,9 @@ class TestOptim(TestCase):
         loss_test = np.array([3., 3., 2., 1.9])
         optim.plot_loss_rate(loss, rates, loss_test, save=False, show=False)
         loss = np.stack([loss for _ in range(7)], axis=-1)
-        optim.plot_loss_rate(loss, rates, save=False, show=False)
+        optim.plot_loss_rate(loss, rates, save=False, show=False, parallel=7)
         loss_test = np.stack([loss_test for _ in range(7)], axis=-1)
-        optim.plot_loss_rate(loss, rates, loss_test, save=False, show=False)
+        optim.plot_loss_rate(loss, rates, loss_test, save=False, show=False, parallel=7)
 
     def test_init(self):
 

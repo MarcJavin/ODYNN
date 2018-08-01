@@ -6,9 +6,6 @@
 """
 
 import math
-import pickle
-import time
-
 import numpy as np
 import pandas as pd
 import pylab as plt
@@ -20,13 +17,6 @@ from random import random as rd
 
 DUMP_FILE= 'data'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
-
-def get_data(file='AVAL_test.csv'):
-    df = pd.read_csv(file)
-    Y = np.array(df['trace'])
-    X = np.array(df['inputCurrent']) * 10 + np.full(Y.shape, 0.001)
-    T = np.array(df['timeVector']) * 1000
-    return T, X, Y
 
 df = pd.read_csv('data/AVAL1.csv')
 
@@ -245,45 +235,44 @@ i_test = 10. * ((t_test > 100) & (t_test < 300)) + 20. * ((t_test > 400) & (t_te
         (t_test > 800) & (t_test < 950)) + \
          (t_test - 1200) * (50. / 500) * ((t_test > 1200) & (t_test < 1700))
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    give_train2(0.5)
-    exit(0)
+    # give_train2(0.5)
+    # exit(0)
+    #
+    # df = pd.read_csv('data/SMDBoxes.csv')
+    # df = df.head(1510)
+    # trace = np.array(df['Calcium_bc'])
+    # i = np.array(df['Input']) * 100
+    # tinit = np.array(df['time [s]']) * 1000
+    # t = np.arange(0, tinit[-1], step=2)
+    #
+    #
+    # t1 = time.time()
+    #
+    # # f = interp1d(tinit, l, kind='cubic')
+    # # z = f(t)
+    # t2 = time.time()
+    # print('lowess+interp : %s'%(t2-t1))
+    #
+    # t1 = time.time()
+    # exact = splrep(tinit, trace, k=1)
+    # spl = splrep(tinit, trace, s=0.25)
+    # zexact = splev(tinit, exact)
+    # z = splev(tinit, spl)
+    # t2 = time.time()
+    # print('splrep : %s' % (t2-t1))
+    #
+    # spli = splrep(tinit, i, k=2)
+    # i = splev(tinit, spli)
+    #
+    # plt.subplot(211)
+    # plt.plot(tinit, trace, 'r', label='trace')
+    # plt.plot(tinit, z, 'b', label='splrev')
+    # plt.legend()
+    # plt.subplot(212)
+    # plt.plot(i)
+    # plt.show()
 
-    df = pd.read_csv('data/SMDBoxes.csv')
-    df = df.head(1510)
-    trace = np.array(df['Calcium_bc'])
-    i = np.array(df['Input']) * 100
-    tinit = np.array(df['time [s]']) * 1000
-    t = np.arange(0, tinit[-1], step=2)
-
-
-    t1 = time.time()
-
-    # f = interp1d(tinit, l, kind='cubic')
-    # z = f(t)
-    t2 = time.time()
-    print('lowess+interp : %s'%(t2-t1))
-
-    t1 = time.time()
-    exact = splrep(tinit, trace, k=1)
-    spl = splrep(tinit, trace, s=0.25)
-    zexact = splev(tinit, exact)
-    z = splev(tinit, spl)
-    t2 = time.time()
-    print('splrep : %s' % (t2-t1))
-
-    spli = splrep(tinit, i, k=2)
-    i = splev(tinit, spli)
-
-    plt.subplot(211)
-    plt.plot(tinit, trace, 'r', label='trace')
-    plt.plot(tinit, z, 'b', label='splrev')
-    plt.legend()
-    plt.subplot(212)
-    plt.plot(i)
-    plt.show()
-
-    pickle.dump([t, i, z], open(DUMP_FILE, 'wb'))
 
 

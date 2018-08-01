@@ -5,6 +5,7 @@ import odin.datas
 from odin import utils
 from odin.models import cfg_model
 import numpy as np
+from odin import optim
 from odin.coptim import CircuitOpt
 import odin.csimul as csim
 import odin.neuron as nr
@@ -61,6 +62,8 @@ class TestCircuitOpt(TestCase):
         train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         co.optimize(dir, n_out=n_out, train=train, epochs=1, plot=plot)
+        optim.get_best_result(dir)
+
         self.assertEqual(co._loss.shape, ())
 
         print('one target parallel'.center(40, '#'))
@@ -108,5 +111,7 @@ class TestCircuitOpt(TestCase):
         co = CircuitOpt(circuit=c)
         train[1] = i_injs3
         co.optimize(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot, evol_var=evol_var)
+
+
 
 

@@ -539,129 +539,129 @@ class CElegansNeuron(model.BioNeuron):
                         square=True, linewidths=.5, cbar_kws={"shrink": .5})
             utils.save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
 
-    @staticmethod
-    def ica_from_v(X, v_fix, self):
-        e = X[1]
-        f = X[2]
-        cac = X[-1]
-
-        h = self._h(cac)
-        tau = self._param['e__tau']
-        e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self._inf(v_fix, 'e') / tau))
-        tau = self._param['f__tau']
-        f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self._inf(v_fix, 'f') / tau))
-        ica = self._i_ca(v_fix, e, f, h)
-        cac += (-self._i_ca(v_fix, e, f, h) * self._param['rho_ca'] - (
-                (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-
-        if self._tensors:
-            return tf.stack([ica, e, f, h, cac], 0)
-        else:
-            return [ica, e, f, h, cac]
-
-    @staticmethod
-    def ik_from_v(X, v_fix, self):
-        p = X[1]
-        q = X[2]
-        n = X[3]
-
-        tau = self._param['p__tau']
-        p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(v_fix, 'p') / tau))
-        tau = self._param['q__tau']
-        q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self._inf(v_fix, 'q') / tau))
-        tau = self._param['n__tau']
-        n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self._inf(v_fix, 'n') / tau))
-        ik = self._i_kf(v_fix, p, q) + self._i_ks(v_fix, n)
-
-        if self._tensors:
-            return tf.stack([ik, p, q, n], 0)
-        else:
-            return [ik, p, q, n]
-
-
-def plots_ica_from_v(ts, V, results, name="ica", show=False, save=True):
-    """plot i_ca and Ca conc depending on the voltage
-
-    Args:
-      ts:
-      V:
-      results:
-      name:  (Default value = "ica")
-      show(bool): If True, show the figure (Default value = True)
-      save(bool): If True, save the figure (Default value = False)
-
-    Returns:
-
-    """
-    ica = results[:, 0]
-    e = results[:, 1]
-    f = results[:, 2]
-    h = results[:, 3]
-    cac = results[:, -1]
-
-    plt.figure()
-
-    plt.subplot(4, 1, 1)
-    plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
-    plt.plot(ts, ica, 'b')
-    plt.ylabel('I_ca')
-
-    plt.subplot(4, 1, 2)
-    plt.plot(ts, cac, 'r')
-    plt.ylabel('$Ca^{2+}$ concentration')
-
-    plt.subplot(4, 1, 3)
-    plt.plot(ts, e, RATE_COLORS['e'], label='e')
-    plt.plot(ts, f, RATE_COLORS['f'], label='f')
-    plt.plot(ts, h, RATE_COLORS['h'], label='h')
-    plt.ylabel('Gating Value')
-    plt.legend()
-
-    plt.subplot(4, 1, 4)
-    plt.plot(ts, V, 'k')
-    plt.ylabel('V (input) (mV)')
-    plt.xlabel('t (ms)')
-
-    utils.save_show(show, save, name)
-
-
-def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
-    """plot i_k depending on the voltage
-
-    Args:
-      ts:
-      V:
-      results:
-      name:  (Default value = "ik")
-      show(bool): If True, show the figure (Default value = True)
-      save(bool): If True, save the figure (Default value = False)
-
-    Returns:
-
-    """
-    ik = results[:, 0]
-    p = results[:, 1]
-    q = results[:, 2]
-    n = results[:, 3]
-
-    plt.figure()
-
-    plt.subplot(3, 1, 1)
-    plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
-    plt.plot(ts, ik, 'b')
-    plt.ylabel('I_k')
-
-    plt.subplot(3, 1, 2)
-    plt.plot(ts, p, RATE_COLORS['p'], label='p')
-    plt.plot(ts, q, RATE_COLORS['q'], label='q')
-    plt.plot(ts, n, RATE_COLORS['n'], label='n')
-    plt.ylabel('Gating Value')
-    plt.legend()
-
-    plt.subplot(3, 1, 3)
-    plt.plot(ts, V, 'k')
-    plt.ylabel('V (input) (mV)')
-    plt.xlabel('t (ms)')
-
-    utils.save_show(show, save, name)
-    plt.close()
+#     @staticmethod
+#     def ica_from_v(X, v_fix, self):
+#         e = X[1]
+#         f = X[2]
+#         cac = X[-1]
+#
+#         h = self._h(cac)
+#         tau = self._param['e__tau']
+#         e = ((tau * self.dt) / (tau + self.dt)) * ((e / self.dt) + (self._inf(v_fix, 'e') / tau))
+#         tau = self._param['f__tau']
+#         f = ((tau * self.dt) / (tau + self.dt)) * ((f / self.dt) + (self._inf(v_fix, 'f') / tau))
+#         ica = self._i_ca(v_fix, e, f, h)
+#         cac += (-self._i_ca(v_fix, e, f, h) * self._param['rho_ca'] - (
+#                 (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
+#
+#         if self._tensors:
+#             return tf.stack([ica, e, f, h, cac], 0)
+#         else:
+#             return [ica, e, f, h, cac]
+#
+#     @staticmethod
+#     def ik_from_v(X, v_fix, self):
+#         p = X[1]
+#         q = X[2]
+#         n = X[3]
+#
+#         tau = self._param['p__tau']
+#         p = ((tau * self.dt) / (tau + self.dt)) * ((p / self.dt) + (self._inf(v_fix, 'p') / tau))
+#         tau = self._param['q__tau']
+#         q = ((tau * self.dt) / (tau + self.dt)) * ((q / self.dt) + (self._inf(v_fix, 'q') / tau))
+#         tau = self._param['n__tau']
+#         n = ((tau * self.dt) / (tau + self.dt)) * ((n / self.dt) + (self._inf(v_fix, 'n') / tau))
+#         ik = self._i_kf(v_fix, p, q) + self._i_ks(v_fix, n)
+#
+#         if self._tensors:
+#             return tf.stack([ik, p, q, n], 0)
+#         else:
+#             return [ik, p, q, n]
+#
+#
+# def plots_ica_from_v(ts, V, results, name="ica", show=False, save=True):
+#     """plot i_ca and Ca conc depending on the voltage
+#
+#     Args:
+#       ts:
+#       V:
+#       results:
+#       name:  (Default value = "ica")
+#       show(bool): If True, show the figure (Default value = True)
+#       save(bool): If True, save the figure (Default value = False)
+#
+#     Returns:
+#
+#     """
+#     ica = results[:, 0]
+#     e = results[:, 1]
+#     f = results[:, 2]
+#     h = results[:, 3]
+#     cac = results[:, -1]
+#
+#     plt.figure()
+#
+#     plt.subplot(4, 1, 1)
+#     plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
+#     plt.plot(ts, ica, 'b')
+#     plt.ylabel('I_ca')
+#
+#     plt.subplot(4, 1, 2)
+#     plt.plot(ts, cac, 'r')
+#     plt.ylabel('$Ca^{2+}$ concentration')
+#
+#     plt.subplot(4, 1, 3)
+#     plt.plot(ts, e, RATE_COLORS['e'], label='e')
+#     plt.plot(ts, f, RATE_COLORS['f'], label='f')
+#     plt.plot(ts, h, RATE_COLORS['h'], label='h')
+#     plt.ylabel('Gating Value')
+#     plt.legend()
+#
+#     plt.subplot(4, 1, 4)
+#     plt.plot(ts, V, 'k')
+#     plt.ylabel('V (input) (mV)')
+#     plt.xlabel('t (ms)')
+#
+#     utils.save_show(show, save, name)
+#
+#
+# def plots_ik_from_v(ts, V, results, name="ik", show=True, save=False):
+#     """plot i_k depending on the voltage
+#
+#     Args:
+#       ts:
+#       V:
+#       results:
+#       name:  (Default value = "ik")
+#       show(bool): If True, show the figure (Default value = True)
+#       save(bool): If True, save the figure (Default value = False)
+#
+#     Returns:
+#
+#     """
+#     ik = results[:, 0]
+#     p = results[:, 1]
+#     q = results[:, 2]
+#     n = results[:, 3]
+#
+#     plt.figure()
+#
+#     plt.subplot(3, 1, 1)
+#     plt.title('Hodgkin-Huxley Neuron : I_ca from a fixed V')
+#     plt.plot(ts, ik, 'b')
+#     plt.ylabel('I_k')
+#
+#     plt.subplot(3, 1, 2)
+#     plt.plot(ts, p, RATE_COLORS['p'], label='p')
+#     plt.plot(ts, q, RATE_COLORS['q'], label='q')
+#     plt.plot(ts, n, RATE_COLORS['n'], label='n')
+#     plt.ylabel('Gating Value')
+#     plt.legend()
+#
+#     plt.subplot(3, 1, 3)
+#     plt.plot(ts, V, 'k')
+#     plt.ylabel('V (input) (mV)')
+#     plt.xlabel('t (ms)')
+#
+#     utils.save_show(show, save, name)
+#     plt.close()
