@@ -73,7 +73,7 @@ def get_real_data(delta=500, final_time=4000., dt=0.2):
     Returns:
 
     """
-    df = pd.read_csv('../data/AVAL1.csv')
+    df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
 

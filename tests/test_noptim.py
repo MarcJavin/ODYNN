@@ -35,7 +35,6 @@ class TestNeuronOpt(TestCase):
 
     def test_optimize(self):
 
-
         print('LSTM'.center(40, '#'))
         n = NeuronLSTM(dt=dt)
         opt = NeuronOpt(neuron=n)
