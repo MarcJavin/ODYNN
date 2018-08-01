@@ -423,10 +423,13 @@ def get_best_result(dir, i=-1, loss=False):
         idx = np.nanargmin(l[-1])
         # [epoch, model] for neuron, [epoch, element, model] for circuit
         ndim = list(dic.values())[0].ndim
-        if ndim > 2:
-            dic = dict([(var, val[i, :, idx]) for var, val in dic.items()])
+        if l.shape[1] > 1:
+            if ndim > 2:
+                dic = dict([(var, val[i, :, idx]) for var, val in dic.items()])
+            else:
+                dic = dict([(var, val[i,idx]) for var, val in dic.items()])
         else:
-            dic = dict([(var, val[i,idx]) for var, val in dic.items()])
+            dic = dict([(var, val[i]) for var, val in dic.items()])
         if (loss):
             dic['loss'] = l[i, idx]
     return dic
