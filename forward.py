@@ -18,7 +18,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-from odin import utils
+from odin import utils, neuron
 from odin import circuit as cr
 from odin import coptim as co
 
@@ -367,14 +367,12 @@ def count_in_out():
     for g in gaps_k:
         count[g[0], 2] += 1
         count[g[1], 2] += 1
-    w = [(count[i,0] + count[i,2])/(count[i,1] + 1) for i in range(39)]
+    w = [1+(count[i,0] + count[i,2]/2)/(count[i,1] + 1) for i in range(39)]
     for i in range(39):
         print(labels[i], count[i], w[i])
     return w
 
 if __name__=='__main__':
-
-    # show_res('Forward_hhsimpinput', 270)
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
@@ -396,7 +394,6 @@ if __name__=='__main__':
     print(res.shape)
 
     for i in range(4, len(labels)):
-        print(i, labels[i], labels[i-1])
         res[:, i+1] = np.roll(res[:, i], 800, axis=0)
     for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
         res[:7000, i+1] = -35.
@@ -419,8 +416,9 @@ if __name__=='__main__':
 
 
     fixed = ()
+    neurons = neuron.BioNeuronTf([neuron.BioNeuronTf.default_params for _ in range(39)], fixed='all')
     ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k, groups=groups,
-                                  labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
+                                  labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed, neurons=neurons)
 
 
 

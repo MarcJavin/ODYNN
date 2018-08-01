@@ -40,6 +40,13 @@ class TestCircuitOpt(TestCase):
         co.n_out = list(range(n_neuron))
         co._build_loss(res, ys_, w)
 
+    def test_settings(self):
+        co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
+        train = [np.zeros(2), np.zeros(2), [None, None, np.zeros(4)]]
+        co.l_rate = (0.1,0.1,0.1)
+        co.n_batch = 3
+        w = (1.,0,0)
+        co.settings(w, train)
 
     def test_opt_circuits(self):
 

@@ -470,8 +470,9 @@ class CircuitTf(Circuit, Optimized):
 
     @classmethod
     def create_random(cls, n_neuron, syn_keys={}, gap_keys={}, n_rand=10, dt=0.1, labels=None, sensors=set(),
-                      commands=set(), fixed=(), groups=None):
-        neurons = neuron.BioNeuronTf(n_rand=n_neuron, dt=dt, fixed=fixed, groups=groups)
+                      commands=set(), fixed=(), groups=None, neurons=None):
+        if neurons is None:
+            neurons = neuron.BioNeuronTf(n_rand=n_neuron, dt=dt, fixed=fixed, groups=groups)
         synapses = [{k: get_syn_rand(v) for k, v in syn_keys.items()} for _ in range(n_rand)]
         gaps = [{k: get_gap_rand() for k in gap_keys} for _ in range(n_rand)]
         return cls(neurons, synapses, gaps, labels, sensors, commands)
@@ -492,6 +493,7 @@ class CircuitTf(Circuit, Optimized):
     @property
     def init_params(self):
         if self._neurons.trainable:
+            print(self._neurons.init_params)
             return {**self._init_p, **self._neurons.init_params}
         else:
             return self._init_p

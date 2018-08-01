@@ -25,6 +25,9 @@ class CircuitOpt(Optimizer):
         self.w_n = None
         Optimizer.__init__(self, self.circuit)
 
+    def settings(self, w, train):
+        return 'Neural weights : %s'%self.w_n + '\n' + Optimizer.settings(self,w,train)
+
     def _build_loss(self, results, ys_, w):
         """Define self._loss
 
