@@ -12,7 +12,6 @@ for m in cfg_model.models:
             pass
     models2.append(toto)
 
-
 class TestModels(TestCase):
 
     def test_init(self):
@@ -57,6 +56,20 @@ class TestModels(TestCase):
             i = np.zeros((len(ts), 12))
             res = np.ones((len(ts), len(mod.default_init_state), 12))
             hh.plot_results(ts, i, res, show=False)
+
+    def test_step(self):
+        for mod in models2:
+            hh = mod(mod.default_params)
+            i = 1.
+            X = mod.default_init_state
+            X2 = hh.step(X, i)
+            self.assertEqual(X.shape, X2.shape)
+
+            mod(init_p=[mod.get_random() for _ in range(7)])
+            i = np.array([1. for _ in range(7)])
+            X = np.stack([mod.default_init_state for _ in range(7)], axis=1)
+            X2 = hh.step(X, i)
+            self.assertEqual(X.shape, X2.shape)
 
 
 

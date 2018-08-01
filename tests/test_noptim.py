@@ -18,6 +18,10 @@ nr = BioNeuronTf(init_p=pars, dt=dt)
 
 class TestNeuronOpt(TestCase):
 
+    def test_init(self):
+        with self.assertRaises(TypeError):
+            no = NeuronOpt(5)
+
     def test_loss(self):
         co = NeuronOpt(nr)
         res = tf.zeros((len(t), len(cfg_model.NEURON_MODEL.default_init_state), 3))
