@@ -4,6 +4,9 @@ from odin import datas
 
 class TestDatas(TestCase):
 
+    def test_check_alpha(self):
+        datas.check_alpha()
+
     def test_get_real_data(self):
         dt=0.3
         ft = 2000.

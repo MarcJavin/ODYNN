@@ -56,7 +56,6 @@ class TestCircuitOpt(TestCase):
         co.settings(w, train)
 
     def test_opt_circuits(self):
-
         print('one target'.center(40, '#'))
         n_out = [1]
         train = csim.simul(t=t, i_injs=i_injs, pars=pars, synapses=conns, n_out=n_out, show=False)

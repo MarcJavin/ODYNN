@@ -28,7 +28,9 @@ def get_data(file='AVAL_test.csv'):
     T = np.array(df['timeVector']) * 1000
     return T, X, Y
 
-def check_alpha(tinit, i, trace):
+df = pd.read_csv('data/AVAL1.csv')
+
+def check_alpha():
     """study the hill equation
 
     Args:
@@ -39,12 +41,16 @@ def check_alpha(tinit, i, trace):
     Returns:
 
     """
+    d = df.head(100)
+    t = d['timeVector']
+    i = d['inputCurrent']
+    trace = d['trace']
     vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
     idx=0
     plt.subplot(211)
     plt.plot(trace)
-    spl = splrep(tinit, trace, s=0.5)
-    trace = splev(tinit, spl)
+    spl = splrep(t, trace, s=0.5)
+    trace = splev(t, spl)
     plt.plot(trace)
     plt.subplot(212)
     plt.plot(i)
@@ -73,7 +79,6 @@ def get_real_data(delta=500, final_time=4000., dt=0.2):
     Returns:
 
     """
-    df = pd.read_csv('data/AVAL1.csv')
     # df = df.head(510)
     trace = np.array(df['trace'])*10
 
