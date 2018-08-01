@@ -46,7 +46,7 @@ class TestCircuitOpt(TestCase):
         train = [np.zeros(2), np.zeros(2), [None, None, np.zeros(4)]]
         co.l_rate = (0.1,0.1,0.1)
         co.n_batch = 3
-        w = (1.,0,0)
+        w = (1.,0)
         co.settings(w, train)
 
     def test_opt_circuits(self):
