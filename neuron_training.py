@@ -183,7 +183,7 @@ def real_data(name, suffix='', lstm=True):
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(neur)
     dir = utils.set_dir(dir)
-    train, test = datas.dump_data(dt=dt)
+    train, test = datas.get_real_data(dt=dt)
     n = opt.optimize(dir, w=[0, 1], train = train, suffix=suffix, l_rate=l_rate)
     comp_pars(dir, n)
     t, i, v, ca = test
@@ -212,7 +212,7 @@ def test_lstm():
     with open('data/optimized4', 'rb') as f:
         load = pickle.load(f)
     n = NeuronLSTM(load=load)
-    trace, test = datas.dump_data(dt=n.dt)
+    trace, test = datas.get_real_data(dt=n.dt)
     trace = np.array(test[2:])
     sim.comp_neuron_trace(n, trace, i_inj=test[1], scale=True)
     exit(0)
