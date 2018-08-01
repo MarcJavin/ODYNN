@@ -33,4 +33,4 @@ class TestNeuronSimul(TestCase):
 
     def test_Sim(self):
         nfix = BioNeuronFix(self.pars)
-        sim.simul(neuron=nfix, dt=self.dt, i_inj=self.i, dump=False)
+        sim.simul(neuron=nfix, dt=self.dt, i_inj=self.i)
