@@ -34,6 +34,9 @@ evol_var = False
 class TestCircuitOpt(TestCase):
 
     def test_loss(self):
+        pars = [p for _ in range(n_neuron)]
+        conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+                     (1, 0): odin.circuit.get_syn_rand(False)}
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         res = tf.zeros((len(t), len(cfg_model.NEURON_MODEL.default_init_state), 3, n_neuron))
         ys_ = [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test") for _ in cfg_model.NEURON_MODEL.ions.items()]
@@ -42,6 +45,9 @@ class TestCircuitOpt(TestCase):
         co._build_loss(res, ys_, w)
 
     def test_settings(self):
+        pars = [p for _ in range(n_neuron)]
+        conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+                     (1, 0): odin.circuit.get_syn_rand(False)}
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         train = [np.zeros(2), np.zeros(2), [None, None, np.zeros(4)]]
         co.l_rate = (0.1,0.1,0.1)
