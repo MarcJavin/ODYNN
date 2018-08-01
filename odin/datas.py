@@ -18,22 +18,7 @@ from scipy.interpolate import splrep, splev
 from scipy.signal import savgol_filter
 from random import random as rd
 
-DUMP_FILE = 'data/dump'
-DUMP_real = 'data/real'
-DUMP_real_all = 'data/real_all'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
-
-
-def get_data_dump(file=DUMP_FILE):
-    with open(file, 'rb') as f:
-        T, X, V, Ca = pickle.load(f)
-    return T, X, V, Ca
-
-def get_data_dump2(file=DUMP_FILE):
-    with open(file, 'rb') as f:
-        T, X, Ca = pickle.load(f)
-    return T, X, Ca
-
 
 def get_data(file='AVAL_test.csv'):
     df = pd.read_csv(file)
@@ -153,13 +138,12 @@ def give_train(dt=DT, nb_neuron_zero=None, max_t=1200.):
     # plt.show()
     if nb_neuron_zero is not None:
         i_zeros = np.zeros(i_fin.shape)
-        i_fin = np.stack([i_fin, i_zeros], axis=2)
+        i_fin = np.stack([i_fin] + [i_zeros for _ in range(nb_neuron_zero)], axis=2)
     return t, i_fin
 
 
 def give_periodic(t, max_i, size, freq):
     return np.sum([max_i * ((t > n) & (t < n + size)) for n in range(0, int(t[-1]), freq)], axis=0)
-
 
 
 def give_train2(dt=DT):
@@ -174,7 +158,7 @@ def give_train2(dt=DT):
     return t, i_fin
 
 
-def give_test(dt=DT):
+def give_test(dt=DT, max_t=1200.):
     """time and currents for optimization
 
     Args:
@@ -183,7 +167,7 @@ def give_test(dt=DT):
     Returns:
 
     """
-    t = np.array(sp.arange(0.0, 1200, dt))
+    t = np.array(sp.arange(0.0, max_t, dt))
     i1 = (t - 100) * (30. / 100) * ((t > 100) & (t <= 200)) + 30 * ((t > 200) & (t <= 1100)) - (t - 1000) * (
             30. / 100) * ((t > 1000) & (t <= 1100))
     i2 = 30. * ((t > 100) & (t < 300)) + 15. * ((t > 400) & (t < 500)) + 10. * ((t > 700) & (t < 1000))
@@ -195,8 +179,8 @@ def give_test(dt=DT):
     return t, i_fin
 
 
-def full4(dt=DT, nb_neuron_zero=None):
-    t = np.array(sp.arange(0.0, 1200., dt))
+def full4(dt=DT, nb_neuron_zero=None, max_t=1200.):
+    t = np.array(sp.arange(0.0, max_t, dt))
     i1 = 10. * ((t > 200) & (t < 600))
     i2 = 10. * ((t > 300) & (t < 700))
     i3 = 10. * ((t > 400) & (t < 800))
@@ -214,8 +198,8 @@ def full4(dt=DT, nb_neuron_zero=None):
         i_fin = np.append(i_fin, i_zeros, axis=2)
     return t, i_fin
 
-def full4_test(dt=DT, nb_neuron_zero=None):
-    t = np.array(sp.arange(0.0, 1200., dt))
+def full4_test(dt=DT, nb_neuron_zero=None, max_t=1200.):
+    t = np.array(sp.arange(0.0, max_t, dt))
     i1 = 10. * ((t > 100) & (t < 200))
     i2 = 10. * ((t > 500) & (t < 700))
     i3 = 10. * ((t > 500) & (t < 800))
