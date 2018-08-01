@@ -7,8 +7,10 @@
 from unittest import TestCase
 from odin.neuron import NeuronLSTM
 from odin import utils
+from odin.models.cfg_model import NEURON_MODEL
 import tensorflow as tf
 import pickle
+import numpy as np
 
 
 class TestNeuronLSTM(TestCase):
@@ -29,6 +31,17 @@ class TestNeuronLSTM(TestCase):
             l.hidden_init_state
         l.init(1)
         l.hidden_init_state
+
+    def test_calculate(self):
+        l = NeuronLSTM(4, 5, 6, 1)
+        x = l.calculate(np.array([2., 3., 4.]))
+        self.assertEqual(x.shape[0], 3)
+        self.assertEqual(x.shape[1], 2)
+        l = NeuronLSTM(4, 5, 6, 1)
+        x = l.calculate(np.array([[2., 3.], [2., 3.], [2., 3.]]))
+        self.assertEqual(x.shape[0], 3)
+        self.assertEqual(x.shape[1], 2)
+        self.assertEqual(x.shape[2], 2)
 
     def test_load(self):
         l = NeuronLSTM(4,5,6,1)

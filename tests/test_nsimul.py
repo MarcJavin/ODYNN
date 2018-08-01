@@ -17,15 +17,19 @@ class TestNeuronSimul(TestCase):
 
     def test_comp(self):
         sim.comp_pars(self.pars5, dt=self.dt, i_inj=self.i, show=False)
+        sim.comp_pars(self.pars5, t=self.t, i_inj=self.i, show=False)
 
     def test_comp_targ(self):
         sim.comp_pars_targ(self.pars5, self.pars, dt=self.dt, i_inj=self.i, show=False)
+        sim.comp_pars_targ(self.pars, self.pars, t=self.t, i_inj=self.i, show=False)
 
     def test_comp_neurons(self):
         sim.comp_neurons([BioNeuronFix(self.pars) for _ in range(3)], i_inj=self.i, show=False)
 
     def test_comp_neur_trqce(self):
         sim.comp_neuron_trace(BioNeuronFix(self.pars), i_inj=self.i, trace=np.zeros((len(cfg_model.NEURON_MODEL.default_init_state),len(self.i))), show=False)
+        sim.comp_neuron_trace(BioNeuronFix(self.pars), i_inj=self.i, scale=True,
+                              trace=np.zeros((len(cfg_model.NEURON_MODEL.default_init_state), len(self.i))), show=False)
 
     def test_Sim(self):
         nfix = BioNeuronFix(self.pars)

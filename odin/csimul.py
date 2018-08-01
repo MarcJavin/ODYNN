@@ -12,7 +12,7 @@ import time
 from .datas import DUMP_FILE
 
 
-def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], dump=False, suffix='', show=False,
+def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], suffix='', show=False,
           save=True, labels=None):
     """runs the entire simulation
 
@@ -49,12 +49,5 @@ def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], d
 
     V = np.moveaxis(states[:, 0, :, np.array(n_out)], 0, -1)
     Ca = np.moveaxis(states[:, -1, :, np.array(n_out)], 0, -1)
-    todump = [t, i_injs, [V, Ca]]
-    if dump:
-        with open(DUMP_FILE, 'wb') as f:
-            pickle.dump(todump, f)
-        return DUMP_FILE
-    else:
-        return todump
-
+    return [t, i_injs, [V, Ca]]
 

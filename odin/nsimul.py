@@ -112,7 +112,7 @@ def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=F
 
 
 """Runs and plot the neuron"""
-def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix='', show=False, save=True, ca_true=None):
+def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, suffix='', show=False, save=True, ca_true=None):
     """Main demo for the Hodgkin Huxley neuron model
 
     Args:
@@ -161,13 +161,7 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, dump=False, suffix=''
     meas = [X[:, neuron.V_pos]]
     for ion, pos in neuron.ions.items():
         meas.append(X[:, pos])
-    todump = [t, i_inj, meas]
-    if dump:
-        with open(datas.DUMP_FILE, 'wb') as f:
-            pickle.dump(todump, f)
-        return datas.DUMP_FILE
-    else:
-        return todump
+    return [t, i_inj, meas]
 
 
 if __name__ == "__main__":
