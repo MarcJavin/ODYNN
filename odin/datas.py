@@ -18,6 +18,7 @@ from scipy.interpolate import splrep, splev
 from scipy.signal import savgol_filter
 from random import random as rd
 
+DUMP_FILE= 'data'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
 def get_data(file='AVAL_test.csv'):

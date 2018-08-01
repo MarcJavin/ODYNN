@@ -7,10 +7,9 @@
 
 import numpy as np
 from .circuit import CircuitFix
-from .datas import DUMP_FILE
 import pickle
 import time
-
+from .datas import DUMP_FILE
 
 
 def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], dump=False, suffix='', show=False,
