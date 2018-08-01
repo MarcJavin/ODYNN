@@ -55,6 +55,12 @@ class TestCircuit(TestCase):
             cbad = Circuit(neuron_bad, self.conns)
         with self.assertRaises(AttributeError):
             cbad = Circuit(neuron_bad, self.conns2)
+        with self.assertRaises(AttributeError):
+            cbad = Circuit(neuron_bad, self.conns2, gaps={'G_gap':7})
+        with self.assertRaises(AttributeError):
+            cbad = Circuit(neuron_bad, gaps=[{'G_gap':7} for _ in range(2)], synapses={(0, 4): odin.circuit.SYNAPSE})
+
+        Circuit(neurons=self.neuron, gaps={k: {'G_gap':0.5} for k in self.conns.keys()})
 
     def test_pickle(self):
         neuron = BioNeuronTf([cfg_model.NEURON_MODEL.default_params for _ in range(5)])
@@ -124,6 +130,44 @@ class TestCircuit(TestCase):
 
     def test_step(self):
         pass
+
+class TestCircuitTf(TestCase):
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
+             }
+    gaps = {(0, 3): odin.circuit.GAP}
+
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+               (1, 4): odin.circuit.SYNAPSE,
+               (2, 4): odin.circuit.SYNAPSE,
+               (3, 2): odin.circuit.SYNAPSE,
+               } for _ in range(4)]
+    gaps2 = [{(0, 3): odin.circuit.GAP} for _ in range(4)]
+    neuron = BioNeuronTf([cfg_model.NEURON_MODEL.default_params for _ in range(5)])
+
+    def test_calculate(self):
+        print('#1 batch nope')
+        c = CircuitTf(self.neuron, self.conns, self.gaps)
+        print('#2 batches')
+        i = np.ones((7,2,5))
+        st = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 2)
+        self.assertEqual(st.shape[3], 5)
+
+        print('#1 batch, 4 models nope')
+        c = CircuitTf(self.neuron, self.conns2, self.gaps2)
+        print('#2 batches, 4 models')
+        i = np.ones((7, 2, 5, 4))
+        st = c.calculate(i)
+        self.assertEqual(st.shape[0], 7)
+        self.assertEqual(st.shape[1], len(cfg_model.NEURON_MODEL.default_init_state))
+        self.assertEqual(st.shape[2], 2)
+        self.assertEqual(st.shape[3], 5)
+        self.assertEqual(st.shape[-1], 4)
 
 class TestCircuitFix(TestCase):
 

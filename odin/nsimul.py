@@ -162,8 +162,3 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, suffix='', show=False
     for ion, pos in neuron.ions.items():
         meas.append(X[:, pos])
     return [t, i_inj, meas]
-
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
