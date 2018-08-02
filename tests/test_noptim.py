@@ -4,6 +4,7 @@ from odin.models import cfg_model
 from odin.neuron import NeuronLSTM, BioNeuronTf
 from odin.noptim import NeuronOpt
 from odin.nsimul import simul
+from odin import optim
 import tensorflow as tf
 import numpy as np
 
@@ -48,6 +49,8 @@ class TestNeuronOpt(TestCase):
         train2 = train
         train2[-1][-1] = None
         n = opt.optimize(dir, w=w, train=train, epochs=1, plot=plot)
+        optim.get_model(dir)
+        optim.get_vars_all(dir)
 
 
         print('One neuron'.center(40, '#'))

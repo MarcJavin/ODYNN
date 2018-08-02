@@ -164,6 +164,8 @@ class BioNeuron(Neuron):
             self._num = len(init_p)
             init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
             self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
+
+
         elif hasattr(init_p[self.parameter_names[0]], '__len__'):
             self._num = len(init_p[self.parameter_names[0]])
             if isinstance(init_p[self.parameter_names[0]], list):
