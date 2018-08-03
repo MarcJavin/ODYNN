@@ -7,7 +7,6 @@
 from unittest import TestCase
 from odynn.neuron import NeuronLSTM
 from odynn import utils
-from odynn.models.cfg_model import NEURON_MODEL
 import tensorflow as tf
 import pickle
 import numpy as np

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from context import odin
+from context import odynn
 import odynn.circuit as cr
 import odynn.datas
 from odynn import utils

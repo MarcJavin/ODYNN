@@ -1,5 +1,5 @@
 from unittest import TestCase
-from context import odin
+from context import odynn
 import odynn.circuit
 from odynn.circuit import CircuitTf, Circuit
 import numpy as np
