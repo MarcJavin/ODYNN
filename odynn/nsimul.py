@@ -5,11 +5,9 @@
 .. moduleauthor:: Marc Javin
 """
 
-from .neuron import BioNeuronFix
+from .neuron import PyBioNeuron
 import time
-from . import datas
 import numpy as np
-import pickle
 import scipy as sp
 
 DT = 0.1
@@ -34,7 +32,7 @@ def comp_pars(ps, t=None, dt=DT, i_inj=i_inj, show=True, save=False):
         dt = t[1] - t[0]
     else:
         t = sp.arange(0, len(i_inj) * dt, dt)
-    neurons = BioNeuronFix(init_p=ps, dt=dt)
+    neurons = PyBioNeuron(init_p=ps, dt=dt)
     X = neurons.calculate(i_inj)
     print("Simulation time : ", time.time() - start)
     neurons.plot_output(t, i_inj, X, show=show, save=save)
@@ -62,7 +60,7 @@ def comp_pars_targ(p, p_targ, t=None, dt=DT, i_inj=i_inj, suffix='', save=False,
         t = sp.arange(0, len(i_inj) * dt, dt)
 
     start = time.time()
-    neurons = BioNeuronFix(init_p=p, dt=dt)
+    neurons = PyBioNeuron(init_p=p, dt=dt)
     X = neurons.calculate(i_inj)
     print("Simulation time : ", time.time() - start)
     neurons.plot_output(t, i_inj, X[:, :, :-1], np.moveaxis(X[:, :, -1],1,0), suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
@@ -137,7 +135,7 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, suffix='', show=False
     else:
         t = sp.arange(0, len(i_inj) * dt, dt)
     if(neuron is None):
-        neuron = BioNeuronFix(p, dt=dt)
+        neuron = PyBioNeuron(p, dt=dt)
     print('Neuron Simulation'.center(40,'_'))
     start = time.time()
 

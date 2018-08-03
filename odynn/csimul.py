@@ -6,10 +6,9 @@
 """
 
 import numpy as np
-from .circuit import CircuitFix
-import pickle
+from .circuit import Circuit
+from .neuron import PyBioNeuron
 import time
-from .datas import DUMP_FILE
 
 
 def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], suffix='', show=False,
@@ -28,7 +27,7 @@ def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], s
         otherwise, return the measurements as a list [time, input, voltage, calcium]
     """
     if circuit is None:
-        circuit = CircuitFix(pars, dt=t[1] - t[0], synapses=synapses, gaps=gaps, labels=labels)
+        circuit = Circuit(PyBioNeuron(pars, dt=t[1] - t[0]), synapses=synapses, gaps=gaps, labels=labels)
 
     #[(batch,) time, state, neuron]
     print('Circuit Simulation'.center(40, '_'))

@@ -20,32 +20,32 @@ from . import utils, neuron
 from .optim import Optimized
 
 SYNAPSE1 = {
-    'G': 0.005,
+    'G': 0.05,
     'mdp': -30.,
     'scale': 2.,
     'E': 20.
 }
 SYNAPSE2 = {
-    'G': 0.01,
-    'mdp': 0.,
+    'G': 2.,
+    'mdp': -50.,
     'scale': 5.,
     'E': -10.
 }
 SYNAPSE = {
-    'G': 0.005,
+    'G': 0.05,
     'mdp': -25.,
     'scale': 8.,
     'E': 0.
 }
 SYNAPSE_inhib = {
-    'G': 0.002,
-    'mdp': -25.,
-    'scale': 8.,
-    'E': -70.
+    'G': 0.7,
+    'mdp': -20.,
+    'scale': 1.,
+    'E': -110.
 }
 SYNAPSE_inhib2 = {
-    'G': 0.003,
-    'mdp': -35.,
+    'G': 0.03,
+    'mdp': -40.,
     'scale': -6.,
     'E': 20.
 }
@@ -323,6 +323,29 @@ class Circuit:
                 curs_post = np.swapaxes(curs_post, -2, -1)
             return h, curs_post
 
+    def calculate(self, i_inj):
+        """
+        Simulate the circuit with a given input current.
+
+        Args:
+            i_inj(ndarray): input current
+
+        Returns:
+            ndarray, ndarray: state vector and synaptical currents
+        """
+        states = []#np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
+        curs = []#np.zeros(i_inj.shape)
+        h = self._neurons.init_state
+
+        for t in range(len(i_inj)):
+            if t == 0:
+                h, c = self.step(h, curs=i_inj[t])
+            else:
+                h, c = self.step(h, curs=i_inj[t] + curs[t - 1])
+            curs.append(c)
+            states.append(h)
+        return np.stack(states, axis=0), np.stack(curs, axis=0)
+
     def plot(self, show=True, save=False):
         """
         Plot the circuit using networkx
@@ -399,6 +422,7 @@ class Circuit:
 
         if trace:
             plt.figure()
+
             n_plots = len(self._neurons.ions) + 2
 
             if (i_syn is not None):
@@ -410,6 +434,7 @@ class Circuit:
 
             plt.subplot(n_plots, 1, 1)
             plt.plot(ts, meas[self._neurons.V_pos], linewidth=l)
+            plt.title('Circuit simulation')
             plt.ylabel('Voltage (mV)')
             leg = plt.legend(self.labels, bbox_to_anchor=(1, 0.5), handlelength=0.2)
             for legobj in leg.legendHandles:
@@ -669,38 +694,3 @@ class CircuitTf(Circuit, Optimized):
 
             if self._neurons.trainable:
                 self._neurons.plot_vars(var_dic, suffix='evolution_all', show=show, save=save)
-
-    
-
-class CircuitFix(Circuit):
-
-    def __init__(self, pars=None, dt=0.1, synapses={}, gaps={}, labels=None, sensors=set(), commands=set()):
-        Circuit.__init__(self, neurons=neuron.BioNeuronFix(init_p=pars, dt=dt), synapses=synapses, gaps=gaps,
-                         tensors=False, labels=labels, sensors=sensors, commands=commands)
-
-
-
-    def calculate(self, i_inj):
-        """
-        Simulate the circuit with a given input current.
-
-        Args:
-            i_inj(ndarray): input current
-
-        Returns:
-            ndarray, ndarray: state vector and synaptical currents
-        """
-        states = []#np.zeros((np.hstack((len(i_inj), self.neurons.init_state.shape))))
-        curs = []#np.zeros(i_inj.shape)
-        h = self._neurons.init_state
-
-        for t in range(len(i_inj)):
-            if t == 0:
-                h, c = self.step(h, curs=i_inj[t])
-            else:
-                h, c = self.step(h, curs=i_inj[t] + curs[t - 1])
-            curs.append(c)
-            states.append(h)
-        return np.stack(states, axis=0), np.stack(curs, axis=0)
-
-

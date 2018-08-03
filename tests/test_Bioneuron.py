@@ -1,12 +1,12 @@
 from unittest import TestCase
-from odin.neuron import BioNeuronTf, BioNeuronFix
-from odin import utils
-from odin.models import cfg_model
+from odynn.neuron import BioNeuronTf, PyBioNeuron
+from odynn import utils
+from odynn.models import cfg_model
 import numpy as np
 import pickle
 import tensorflow as tf
 
-p = cfg_model.NEURON_MODEL.default_params
+p = PyBioNeuron.default_params
 
 
 class TestNeuronTf(TestCase):
@@ -30,7 +30,7 @@ class TestNeuronTf(TestCase):
         self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
         self.assertEqual(hh.init_params.keys(), p.keys())
 
-        hh = BioNeuronTf(init_p=[cfg_model.NEURON_MODEL.get_random() for _ in range(13)])
+        hh = BioNeuronTf(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
@@ -107,7 +107,7 @@ class TestNeuronTf(TestCase):
         self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
         self.assertEqual(hh.init_params.keys(), p.keys())
 
-        hh = BioNeuronTf(init_p=[cfg_model.NEURON_MODEL.get_random() for _ in range(13)])
+        hh = BioNeuronTf(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         with open(self.dir + 'yeee', 'wb') as f:
             pickle.dump(hh, f)
         with open(self.dir + 'yeee', 'rb') as f:
@@ -204,7 +204,7 @@ class TestNeuronTf(TestCase):
 class TestNeuronFix(TestCase):
 
     def test_init(self):
-        hh = BioNeuronFix(init_p=[p for _ in range(10)])
+        hh = PyBioNeuron(init_p=[p for _ in range(10)])
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),hh.num))
@@ -212,7 +212,7 @@ class TestNeuronFix(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = BioNeuronFix(init_p={var: np.array([val for _ in range(10)]) for var, val in p.items()})
+        hh = PyBioNeuron(init_p={var: np.array([val for _ in range(10)]) for var, val in p.items()})
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
         self.assertEqual(hh.num, 10)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
@@ -220,7 +220,7 @@ class TestNeuronFix(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = BioNeuronFix(init_p=[cfg_model.NEURON_MODEL.get_random() for _ in range(13)])
+        hh = PyBioNeuron(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
         self.assertEqual(hh.num, 13)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
@@ -228,23 +228,23 @@ class TestNeuronFix(TestCase):
         self.assertEqual(list(hh._param.values())[0].shape, (13,))
         self.assertEqual(hh._param.keys(), p.keys())
 
-        hh = BioNeuronFix(p)
+        hh = PyBioNeuron(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),))
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(hh._param, p)
 
     def test_step(self):
-        hh = BioNeuronFix(p)
+        hh = PyBioNeuron(p)
         x = hh.step(hh.init_state, 2.)
         self.assertEqual(hh._init_state.shape, x.shape)
 
-        hh = BioNeuronFix(init_p=[cfg_model.NEURON_MODEL.get_random() for _ in range(13)])
+        hh = PyBioNeuron(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         x = hh.step(hh.init_state, 2.)
         self.assertEqual(hh._init_state.shape, x.shape)
 
     def test_calculate(self):
-        hh = BioNeuronFix(p)
+        hh = PyBioNeuron(p)
         i = [2., 3., 0.]
         x = hh.calculate(i)
         self.assertEqual(hh._init_state.shape, x[-1].shape)

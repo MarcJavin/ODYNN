@@ -6,13 +6,13 @@
 """
 import sys
 
-from odin import circuit
-from odin.circuit import CircuitTf
-from odin import datas
-from odin import utils
+from odynn import circuit
+from odynn.circuit import CircuitTf
+from odynn import datas
+from odynn import utils
 from models import cfg_model
-from odin.coptim import CircuitOpt
-import odin.csimul as sim
+from odynn.coptim import CircuitOpt
+import odynn.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random

@@ -10,25 +10,34 @@ import sys
 import numpy as np
 import scipy as sp
 
-from odin import neuron as nr
-from odin import circuit
-from odin import datas
-from odin import utils
-from models import cfg_model
-from odin.coptim import CircuitOpt, CircuitTf
-import odin.csimul as sim
+from odynn import neuron as nr
+from odynn import circuit
+from odynn import datas
+from odynn import utils
+from odynn.neuron import PyBioNeuron
+from odynn.circuit import CircuitTf
+from odynn.coptim import CircuitOpt
+import odynn.csimul as sim
 
-p = cfg_model.NEURON_MODEL.default_params
+p = PyBioNeuron.default_params
 
 def inhibit():
     inhib =circuit.SYNAPSE_inhib
     connections = {(0,1) : inhib, (1,0) : inhib}
-    t = np.array(sp.arange(0.0, 2000.,datas.DT))
+    t = np.array(sp.arange(0.0, 2500.,datas.DT))
     i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
-    i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 6.*((t>1100)&(t<1300)) + 7.5*((t>1600)&(t<1800))
+    i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 14*((t>1100)&(t<1800))+ 22*((t>1900)&(t<2000))
     i_injs = np.array([i0, i1]).transpose()
     sim.simul(t, i_injs, [p, p], connections, show=True, save=False)
 
+def dual():
+    inhib =circuit.SYNAPSE_inhib
+    connections = {(1,0) : circuit.SYNAPSE2, (0,1) : inhib}
+    t = np.array(sp.arange(0.0, 2500.,datas.DT))
+    i0 = 10.*((t>300)&(t<350)) + 20.*((t>900)&(t<950))
+    i1 = 10.*((t>500)&(t<550)) + 20.*((t>700)&(t<750)) + 14*((t>1100)&(t<1800))+ 22*((t>1900)&(t<2000))
+    i_injs = np.array([i0, i1]).transpose()
+    sim.simul(t, i_injs, [p, p], connections, show=True, save=False)
 
 def opt_neurons():
     connections = {(0, 1):circuit.SYNAPSE_inhib,
@@ -48,7 +57,7 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     dir = utils.set_dir(dir)
     print("Feed with current of shape : ", i_injs.shape)
 
-    train = sim.simul(t, i_injs, pars, conns, n_out=n_out, dump=False, show=False)
+    train = sim.simul(t, i_injs, pars, conns, n_out=n_out, show=False)
     n = nr.BioNeuronTf(init_p=pars, fixed='all', dt=t[1]-t[0])
     cr = CircuitTf(n, synapses=conns_opt)
     c = CircuitOpt(cr)
@@ -115,9 +124,9 @@ def with_LSTM():
     t, i = datas.give_train(dt=dt)
     i_1 = np.zeros(i.shape)
     i_injs = np.stack([i, i_1], axis=2)
-    train = sim.simul(t, i_injs, [p, p], conns, n_out=[0, 1], dump=False, show=False)
+    train = sim.simul(t, i_injs, [p, p], conns, n_out=[0, 1], show=False)
 
-    neurons = nr.Neurons([nr.BioNeuronTf(cfg_model.NEURON_MODEL.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
+    neurons = nr.Neurons([nr.BioNeuronTf(PyBioNeuron.get_random(), fixed=[], dt=dt), nr.BioNeuronTf(p, fixed='all', dt=dt)])
     c = CircuitTf(neurons=neurons, synapses=conns_opt)
     co = CircuitOpt(circuit=c)
     co.optimize(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95))
@@ -126,7 +135,8 @@ def with_LSTM():
 
 if __name__ == '__main__':
 
-
+    dual()
+    exit(0)
 
     xp = sys.argv[1]
     if(xp == '21exc'):

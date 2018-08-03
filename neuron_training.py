@@ -9,11 +9,11 @@ import sys
 import numpy as np
 import scipy as sp
 
-from odin import utils, datas, optim
-from odin.models import celeg, cfg_model
-from odin.neuron import NeuronLSTM, BioNeuronTf
-from odin.noptim import NeuronOpt
-from odin import nsimul as sim
+from odynn import utils, datas, optim
+from odynn.models import celeg
+from odynn.neuron import NeuronLSTM, BioNeuronTf, PyBioNeuron
+from odynn.noptim import NeuronOpt
+from odynn import nsimul as sim
 
 CA_VAR = {'e__tau', 'e__mdp', 'e__scale', 'f__tau', 'f__mdp', 'f__scale', 'h__alpha', 'h__mdp', 'h__scale', 'g_Ca',
           'E_Ca', 'rho_ca', 'decay_ca'}
@@ -23,7 +23,7 @@ K_VAR = {'p__tau', 'p__mdp', 'p__scale', 'q__tau', 'q__mdp', 'q__scale', 'n_tau'
 CA_CONST = celeg.ALL - CA_VAR
 K_CONST = celeg.ALL - K_VAR
 
-MODEL = cfg_model.NEURON_MODEL
+MODEL = PyBioNeuron
 
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
@@ -189,12 +189,6 @@ def real_data(name, suffix='', lstm=True):
     t, i, v, ca = test
     if not lstm:
         sim.simul(optim.get_best_result(dir), dt=dt, i_inj=i_inj, suffix='test', save=True, ca_true=ca)
-
-
-def comp_pars(dir, i=-1):
-    p = optim.get_vars(dir, i)
-    celeg.plot_vars(p, func=utils.bar, suffix='compared', show=False, save=True)
-    celeg.boxplot_vars(p, suffix='boxes', show=False, save=True)
 
 
 def add_plots():

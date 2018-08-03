@@ -18,9 +18,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-from odin import utils, neuron
-from odin import circuit as cr
-from odin import coptim as co
+from odynn import utils, neuron
+from odynn import circuit as cr
+from odynn import coptim as co
 
 dt = 0.1
 n_parallel = 5
@@ -343,7 +343,7 @@ def show_res(dir, j=-1):
     cur = cur[:, np.newaxis, :]
     with open('forward_target', 'rb') as f:
         res = pickle.load(f)
-    from odin import optim
+    from odynn import optim
 
     dir = utils.set_dir(dir)
     dic = optim.get_vars(dir, j, loss=False)

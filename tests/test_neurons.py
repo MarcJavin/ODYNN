@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 from unittest import TestCase
-from odin import neuron as nr
+from odynn import neuron as nr
 import numpy as np
 
 
@@ -14,11 +14,11 @@ class TestNeurons(TestCase):
 
     def test_init(self):
         dt = 0.5
-        p = nr.MODEL.get_random()
+        p = nr.PyBioNeuron.get_random()
         neurons = nr.Neurons(
             [nr.BioNeuronTf(init_p=[p for _ in range(2)], dt=dt), nr.NeuronLSTM(dt=dt)])
         self.assertEqual(neurons.num, 3)
-        self.assertEqual(neurons.init_state.all(), np.stack([nr.MODEL.default_init_state for _ in range(3)], axis=1).all())
+        self.assertEqual(neurons.init_state.all(), np.stack([nr.PyBioNeuron.default_init_state for _ in range(3)], axis=1).all())
 
         with self.assertRaises(AttributeError):
             neurons = nr.Neurons(

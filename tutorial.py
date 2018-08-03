@@ -1,11 +1,12 @@
-from odin import optim, utils
+from odynn import optim, utils
 import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
-from odin.models import cfg_model
-from odin import neuron as nr
-from odin import nsimul as ns
+from odynn.models import cfg_model
+from odynn import neuron as nr
+from odynn import nsimul as ns
+
 
 
 def corr(df):
@@ -62,6 +63,20 @@ def real_std(df):
     plt.show()
 
 if __name__ == '__main__':
+
+    plt.subplot(5,1,1)
+    plt.plot([1,2])
+    plt.subplot(5, 1, 2)
+    plt.plot([1, 2])
+    plt.show()
+
+    dir = utils.set_dir('Tuto')
+    t = np.arange(0., 1200., 0.1)
+    i = 10. * ((t > 200) & (t < 600)) + 20. * ((t > 800) & (t < 1000))
+    ns.simul(dt=0.1, i_inj=i, show=True)
+    exit(0)
+
+
     plt.plot([1, 4])
     plt.show()
     plt.close()

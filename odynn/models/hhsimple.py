@@ -6,7 +6,7 @@
 """
 
 from .model import BioNeuron
-from odin import utils
+from odynn import utils
 from pylab import plt
 import random
 import numpy as np

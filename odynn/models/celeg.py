@@ -17,8 +17,8 @@ from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 import collections
 
-from odin.utils import box
-from odin import utils
+from odynn.utils import box
+from odynn import utils
 from . import model
 from pylab import plt
 
@@ -389,7 +389,6 @@ class CElegansNeuron(model.BioNeuron):
         plt.xlabel('t (ms)')
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
         # plt.ylim(-1, 40)
-
         utils.save_show(show, save, name='Results_{}'.format(suffix), dpi=300)
 
     @staticmethod

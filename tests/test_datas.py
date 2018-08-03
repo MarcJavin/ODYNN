@@ -1,5 +1,5 @@
 from unittest import TestCase
-from odin import datas
+from odynn import datas
 
 
 class TestDatas(TestCase):

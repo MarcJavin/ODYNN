@@ -1,5 +1,5 @@
 from unittest import TestCase
-from odin.models import cfg_model
+from odynn.models import cfg_model
 import numpy as np
 
 p = cfg_model.NEURON_MODEL.default_params

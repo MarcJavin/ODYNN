@@ -20,5 +20,5 @@ setup(
     license=read('LICENSE'),
     keywords="optimization neuron network machine learning neuroscience",
     url="https://gitlab.com/MarcusJP/Odin",
-    packages=['odin']
+    packages=['odynn']
 )

@@ -6,9 +6,8 @@
 """
 import numpy as np
 import os
-import re
-import seaborn as sns
 import pylab as plt
+import seaborn as sns
 
 COLORS = np.array([ 'k', 'c', 'Gold', 'Darkred', 'b', 'Orange', 'm', 'Lime', 'Salmon', 'Indigo', 'DarkGrey', 'Crimson', 'Olive'])
 

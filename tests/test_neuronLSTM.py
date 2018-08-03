@@ -5,9 +5,9 @@
 .. moduleauthor:: Marc Javin
 """
 from unittest import TestCase
-from odin.neuron import NeuronLSTM
-from odin import utils
-from odin.models.cfg_model import NEURON_MODEL
+from odynn.neuron import NeuronLSTM
+from odynn import utils
+from odynn.models.cfg_model import NEURON_MODEL
 import tensorflow as tf
 import pickle
 import numpy as np

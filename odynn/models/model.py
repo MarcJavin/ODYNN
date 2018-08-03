@@ -9,8 +9,8 @@ import pylab as plt
 from cycler import cycler
 from abc import ABC, abstractmethod
 import numpy as np
-from odin import utils
-from odin.utils import classproperty
+from odynn import utils
+from odynn.utils import classproperty
 import tensorflow as tf
 import scipy as sp
 
@@ -190,6 +190,12 @@ class BioNeuron(Neuron):
     def _update_gate(self, rate, name, V):
         tau = self._param['%s__tau'%name]
         return ((tau * self.dt) / (tau + self.dt)) * ((rate / self.dt) + (self._inf(V, name) / tau))
+
+    def calculate(self, i_inj):
+        X = [self._init_state]
+        for i in i_inj:
+            X.append(self.step(X[-1], i))
+        return np.array(X[1:])
 
     @classmethod
     def init_names(cls):

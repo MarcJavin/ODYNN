@@ -13,8 +13,13 @@ from .models import cfg_model
 from .models.model import Neuron
 from .optim import Optimized
 
-
 MODEL = cfg_model.NEURON_MODEL
+class PyBioNeuron(MODEL):
+    """Class representing a neuron, implemented only in Python
+    This class allows simulation but not optimization"""
+
+    def __init__(self, init_p=None, dt=0.1):
+        MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
 
 
 class NeuronTf(Neuron, Optimized):
@@ -517,20 +522,5 @@ class Neurons(NeuronTf):
         [n.apply_init(session) for n in self._neurons]
 
 
-class BioNeuronFix(MODEL):
-    """Class representing a neuron, implemented only in Python
-    This class allows simulation but not optimization
 
-    Args:
 
-    Returns:
-    """
-
-    def __init__(self, init_p=MODEL.default_params, dt=0.1):
-        MODEL.__init__(self, init_p=init_p, tensors=False, dt=dt)
-
-    def calculate(self, i_inj, currents=False):
-        X = [self._init_state]
-        for i in i_inj:
-            X.append(self.step(X[-1], i))
-        return np.array(X[1:])
