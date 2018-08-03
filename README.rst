@@ -2,10 +2,10 @@
 ODYNN : Optimization for DYnamic Neural Networks
 ===============================================================
 
-.. image:: https://travis-ci.com/MarcusJP/Odin.svg?token=vE9NzRRorvxxsXbKCSRZ&branch=master
-    :target: https://travis-ci.com/MarcusJP/Odin
-.. image:: https://codecov.io/gh/MarcusJP/Odin/branch/master/graph/badge.svg?token=OdU9UHy8ZV
-    :target: https://codecov.io/gh/MarcusJP/Odin
+.. image:: https://travis-ci.com/MarcusJP/ODYNN.svg?branch=master
+    :target: https://travis-ci.com/MarcusJP/ODYNN
+.. image:: https://codecov.io/gh/MarcusJP/ODYNN/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/MarcusJP/ODYNN
 .. image:: https://readthedocs.org/projects/odynn/badge/?version=latest
     :target: https://odynn.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
