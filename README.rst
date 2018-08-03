@@ -1,5 +1,5 @@
 
-A hybrid optimization suite for biological neural networks
+ODYNN : Optimization for DYnamic Neural Networks
 ===============================================================
 
 .. image:: https://travis-ci.com/MarcusJP/Odin.svg?token=vE9NzRRorvxxsXbKCSRZ&branch=master
