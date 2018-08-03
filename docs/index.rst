@@ -12,7 +12,7 @@ Welcome to opt_HH's documentation!
    :glob:
 
    Tutorial
-   opthh
+   odynn
 
 
 
