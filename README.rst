@@ -69,6 +69,10 @@ Folders
 - tests : unit tests
 - tutorial : notebook to run with Jupyter
 
+Warnings
+----------------
+
+ODYNN is still in development and its syntax might change.
 
 TODO
 ---------------
@@ -76,7 +80,7 @@ TODO
 - documentation
 - tutorial
 - add noise target
-- target value plots
+
 0) lstm model to generate the outputs of AVA and AVB.
 1) full HH model.
 2) full LSTM model with our synapses.
