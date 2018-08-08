@@ -62,8 +62,7 @@ def real_std(df):
     # plt.yscale('log')
     plt.show()
 
-if __name__ == '__main__':
-
+def sigm():
     def plot_sigm(pts, scale, col='k'):
         plt.plot(pts, 1 / (1 + sp.exp((-30. - pts) / scale)), col, label='scale=%s'%scale)
     import scipy as sp
@@ -83,28 +82,14 @@ if __name__ == '__main__':
     plt.show()
     exit(0)
 
-    plt.subplot(5,1,1)
-    plt.plot([1,2])
-    plt.subplot(5, 1, 2)
-    plt.plot([1, 2])
-    plt.show()
-
-    dir = utils.set_dir('Tuto')
-    t = np.arange(0., 1200., 0.1)
-    i = 10. * ((t > 200) & (t < 600)) + 20. * ((t > 800) & (t < 1000))
-    ns.simul(dt=0.1, i_inj=i, show=True)
-    exit(0)
+if __name__ == '__main__':
 
 
-    plt.plot([1, 4])
-    plt.show()
-    plt.close()
-
-    dir = utils.set_dir('Integcomp_both_500rate-YAY')
+    dir = utils.set_dir('Real_data_fatdtbigtau')
     dic = optim.get_vars(dir, loss=True)
-    df = pd.DataFrame.from_dict(dic).head(4)
+    train = optim.get_train(dir)
+    df = pd.DataFrame.from_dict(dic)#.head(4)
     # df = df.dropna()
-    print(df)
 
     scatt(df)
     # dir = utils.set_dir('Integcomp_both_500-YE')
@@ -113,7 +98,17 @@ if __name__ == '__main__':
     # df.merge(df1)
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
-    # cfg_model.NEURON_MODEL.study_vars(dic, show=True, save=False)
+    gooddf = df[df['loss'] <= np.min(df['loss']) +1 ]
+    ps = gooddf.to_dict(orient='list')
+    # cfg_model.NEURON_MODEL.study_vars(ps, show=True, save=False)
+    neur = nr.PyBioNeuron(ps, dt=train[0][1]-train[0][0])
+    X = neur.calculate(train[1])
+    neur.plot_output(train[0], train[1], X, train[-1])
+    for i in range(X.shape[2]):
+
+        plt.plot(train[-1][-1])
+        plt.plot(X[:,-1,i])
+        plt.show()
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)

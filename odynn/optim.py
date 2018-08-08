@@ -21,6 +21,8 @@ import pylab as plt
 SAVE_PATH = utils.TMP_DIR + 'model.ckpt'
 FILE_LV = utils.TMP_DIR + 'dump_lossratevars'
 FILE_OBJ = utils.TMP_DIR + 'optimized'
+TRAIN_FILE = utils.TMP_DIR + 'train'
+TEST_FILE = utils.TMP_DIR + 'test'
 
 INTRA_PAR = 4
 INTER_PAR = 1
@@ -194,6 +196,10 @@ class Optimizer(ABC):
         sett = self.settings(w, train)
         with open(self.dir + OUT_SETTINGS, 'w') as f:
             f.write(sett)
+        with open(self.dir + TRAIN_FILE, 'wb') as f:
+            pickle.dump(train, f)
+        with open(self.dir + TEST_FILE, 'wb') as f:
+            pickle.dump(test, f)
 
         if self._parallel > 1:
             # add dimension to current for neurons trained in parallel
@@ -359,6 +365,11 @@ class Optimizer(ABC):
         self.optimized.study_vars(p)
         return self.optimized
 
+def get_train(dir):
+    file = dir + '/' + TRAIN_FILE
+    with open(file, 'rb') as f:
+        obj = pickle.load(f)
+    return obj
 
 def get_model(dir):
     file = dir + '/' + FILE_OBJ

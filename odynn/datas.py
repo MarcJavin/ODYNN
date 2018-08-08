@@ -24,50 +24,58 @@ df = pd.read_csv('data/AVAL1.csv').head(3100)
 def check_alpha(show=True):
     """study the hill equation
 
-    Args:
-      tinit: 
-      i: 
-      trace: 
-
-    Returns:
-
     """
-    d = df.head(100)
+    d = df.head(25000)
     t = d['timeVector']
     i = d['inputCurrent']
     trace = d['trace']
     vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
     idx=0
-    plt.subplot(211)
-    plt.plot(trace)
-    spl = splrep(t, trace, s=0.5)
-    trace = splev(t, spl)
-    plt.plot(trace)
-    plt.subplot(212)
-    plt.plot(i)
-    if (show):
-        plt.show()
+    # plt.subplot(211)
+    # plt.plot(trace)
+    # spl = splrep(t, trace, s=0.5)
+    # trace = splev(t, spl)
+    # plt.plot(trace)
+    # plt.subplot(212)
+    # plt.plot(i)
+    # if (show):
+    #     print('hola')
+    #     plt.show()
+    #     plt.close()
     for alpha in vals:
         idx += 1
         k = 189.e-6
         n = 3.8
         bas = (-k*trace) / (trace - np.full(trace.shape, alpha))
-        cac = np.power(bas, n)
+        bas[bas < 0] = 0
+        cac = np.power(bas, 1/n)
         plt.subplot(len(vals)/4, 4, idx)
         plt.plot(cac, label='alpha=%.2f'%alpha)
-        z2 = savgol_filter(cac, 9, 3)
-        plt.plot(z2, 'r', label='smooth')
+        # z2 = savgol_filter(cac, 9, 3)
+        # plt.plot(z2, 'r', label='smooth')
         plt.legend()
     if (show):
         plt.show()
+        plt.close()
 
 def get_real_data_norm(file='data/AVAL{}.csv'):
     df = pd.read_csv(file.format(1)).head(3100)
-    cac = np.array(df['trace']) * 10
+    trace = np.array(df['trace'])
+    k = 189.e-6
+    n = 3.8
+    alpha = 2.
+    bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
+    bas[bas < 0] = 0
+    cac = np.power(bas, 1 / n)
+    plt.plot(cac)
+    plt.show()
     t = np.array(df['timeVector']) * 1000
     i = np.array(df['inputCurrent']) * 10
     df2 = pd.read_csv(file.format(2)).head(3100)
-    cac2 = np.array(df2['trace']) * 10
+    trace = np.array(df2['trace']) * 10
+    bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
+    bas[bas < 0] = 0
+    cac2 = np.power(bas, 1 / n)
     t2 = np.array(df2['timeVector']) * 1000
     i2 = np.array(df2['inputCurrent']) * 10
     train = [t, i[:, np.newaxis], [None, cac[:, np.newaxis]]]

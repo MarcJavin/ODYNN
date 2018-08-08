@@ -50,6 +50,8 @@ class TestNeuronOpt(TestCase):
         n = opt.optimize(dir, w=w, train=train, epochs=1, plot=plot)
         optim.get_model(dir)
         optim.get_vars_all(dir)
+        t = optim.get_train(dir)
+        self.assertEqual(t.all(), train.all())
 
 
         print('One neuron'.center(40, '#'))
