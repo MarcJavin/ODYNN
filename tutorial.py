@@ -64,6 +64,25 @@ def real_std(df):
 
 if __name__ == '__main__':
 
+    def plot_sigm(pts, scale, col='k'):
+        plt.plot(pts, 1 / (1 + sp.exp((-30. - pts) / scale)), col, label='scale=%s'%scale)
+    import scipy as sp
+    pts = sp.arange(-12000, 20, 0.5)
+    # plot_sigm(pts, -1, col='#000000')
+    # plot_sigm(pts, -3, col='#440000')
+    # plot_sigm(pts, -10, col='#880000')
+    # plot_sigm(pts, -30, col='#bb0000')
+    # plot_sigm(pts, -100, col='#ff0000')
+    plot_sigm(pts, 1, col='#000000')
+    plot_sigm(pts, 3, col='#004400')
+    plot_sigm(pts, 10, col='#008800')
+    plot_sigm(pts, 30, col='#00bb00')
+    plot_sigm(pts, 1000, col='#00ff00')
+    plt.legend()
+    plt.title('Influence of $V_{scale}$ on the rate dynamics')
+    plt.show()
+    exit(0)
+
     plt.subplot(5,1,1)
     plt.plot([1,2])
     plt.subplot(5, 1, 2)

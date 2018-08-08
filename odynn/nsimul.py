@@ -105,7 +105,7 @@ def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=F
         for i, t in enumerate(trace):
             if t is not None:
                 t *= np.max(X[:,i]) / np.max(t)
-    ts = sp.arange(0, len(i_inj)*neuron.dt, neuron.dt)
+    ts = sp.arange(0., len(i_inj)*neuron.dt, neuron.dt)
     neuron.plot_output(ts, i_inj, X, trace, show=show, save=save)
 
 

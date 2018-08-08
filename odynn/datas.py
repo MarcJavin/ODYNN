@@ -18,9 +18,10 @@ from random import random as rd
 DUMP_FILE= 'data'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
-df = pd.read_csv('data/AVAL1.csv')
+df = pd.read_csv('data/AVAL1.csv').head(3100)
 
-def check_alpha():
+
+def check_alpha(show=True):
     """study the hill equation
 
     Args:
@@ -44,7 +45,8 @@ def check_alpha():
     plt.plot(trace)
     plt.subplot(212)
     plt.plot(i)
-    plt.show()
+    if (show):
+        plt.show()
     for alpha in vals:
         idx += 1
         k = 189.e-6
@@ -56,9 +58,24 @@ def check_alpha():
         z2 = savgol_filter(cac, 9, 3)
         plt.plot(z2, 'r', label='smooth')
         plt.legend()
-    plt.show()
+    if (show):
+        plt.show()
 
-def get_real_data(delta=500, final_time=4000., dt=0.2):
+def get_real_data_norm(file='data/AVAL{}.csv'):
+    df = pd.read_csv(file.format(1)).head(3100)
+    cac = np.array(df['trace']) * 10
+    t = np.array(df['timeVector']) * 1000
+    i = np.array(df['inputCurrent']) * 10
+    df2 = pd.read_csv(file.format(2)).head(3100)
+    cac2 = np.array(df2['trace']) * 10
+    t2 = np.array(df2['timeVector']) * 1000
+    i2 = np.array(df2['inputCurrent']) * 10
+    train = [t, i[:, np.newaxis], [None, cac[:, np.newaxis]]]
+    test = [t, i2[:, np.newaxis], [None, cac2[:, np.newaxis]]]
+    return train, test
+
+
+def get_real_data(delta=500, final_time=4000., dt=0.2, show=False):
     """dump real data into our format
 
     Args:
@@ -90,7 +107,8 @@ def get_real_data(delta=500, final_time=4000., dt=0.2):
         plt.plot(t, s_ca)
         curs[:,j] = s_i
         cas[:,j] = s_ca
-    plt.show()
+    if(show):
+        plt.show()
     plt.close()
     train = [t, curs, [None, cas]]
     t_all = sp.arange(0., len(trace)*unit_time, dt)
@@ -101,7 +119,8 @@ def get_real_data(delta=500, final_time=4000., dt=0.2):
     s_i_all = splev(t_all, spli)
     plt.plot(td_all, trace)
     plt.plot(t_all, s_ca_all)
-    plt.show()
+    if (show):
+        plt.show()
     plt.close()
     test = [t_all, s_i_all, [None, s_ca_all]]
     return train, test
@@ -235,7 +254,9 @@ i_test = 10. * ((t_test > 100) & (t_test < 300)) + 20. * ((t_test > 400) & (t_te
         (t_test > 800) & (t_test < 950)) + \
          (t_test - 1200) * (50. / 500) * ((t_test > 1200) & (t_test < 1700))
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+
+    check_alpha()
 
     # give_train2(0.5)
     # exit(0)

@@ -104,7 +104,7 @@ CONSTRAINTS = {
     'e__scale': [MIN_SCALE, np.infty],
     'e__tau': [MIN_TAU, np.infty],
     'f__scale': [-np.infty, -MIN_SCALE],
-    'f__tau': [MIN_TAU, MAX_TAU],
+    'f__tau': [MIN_TAU, np.infty],
     'g_Ca': [1e-5, MAX_G],
     'g_Kf': [1e-5, MAX_G],
     'g_Ks': [1e-5, MAX_G],
@@ -112,11 +112,11 @@ CONSTRAINTS = {
     'h__alpha': [0, 1],
     'h__scale': [-np.infty, -MIN_SCALE],
     'n__scale': [MIN_SCALE, np.infty],
-    'n__tau': [MIN_TAU, MAX_TAU],
+    'n__tau': [MIN_TAU, np.infty],
     'p__scale': [MIN_SCALE, np.infty],
-    'p__tau': [MIN_TAU, MAX_TAU],
+    'p__tau': [MIN_TAU, np.infty],
     'q__scale': [-np.infty, -MIN_SCALE],
-    'q__tau': [MIN_TAU, MAX_TAU]
+    'q__tau': [MIN_TAU, np.infty]
 }
 CONSTRAINTS = collections.OrderedDict(sorted(CONSTRAINTS.items(), key=lambda t: t[0]))
 
@@ -284,7 +284,71 @@ class CElegansNeuron(model.BioNeuron):
         """Membrane leak current (in uA/cm^2)"""
         return self._param['g_L'] * (V - self._param['E_L'])
 
+    def g_Ks(self, n):
+        return self._param['g_Ks'] * n
+
+    def g_Kf(self, p, q):
+        return self._param['g_Kf'] * p ** 4 * q
+
+    def g_Ca(self, e, f, h):
+        return self._param['g_Ca'] * e ** 2 * f * h
+
     def step(self, X, i_inj):
+        V = X[self.V_pos]
+        p = X[1]
+        q = X[2]
+        n = X[3]
+        e = X[4]
+        f = X[5]
+        cac = X[-1]
+
+        if self._tensors:
+            i_inj.set_shape(V.get_shape())
+        h = self._h(cac)
+        V = (V*(self._param['C_m']/self.dt) + (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L'])) / \
+            ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
+
+        cac = (self._param['decay_ca'] / (self._param['decay_ca']+self.dt)) * (cac - self._i_ca(V, e, f, h)*self._param['rho_ca'])
+        p = self._update_gate(p, 'p', V)
+        q = self._update_gate(q, 'q', V)
+        n = self._update_gate(n, 'n', V)
+        e = self._update_gate(e, 'e', V)
+        f = self._update_gate(f, 'f', V)
+
+        if self._tensors:
+            return tf.stack([V, p, q, n, e, f, cac], 0)
+        else:
+            return np.array([V, p, q, n, e, f, cac])
+
+    def calculate_exc(self, i_inj):
+        X = [self._init_state]
+        for i in i_inj:
+            X.append(self.step_exc(X[-1], i))
+        return np.array(X[1:])
+
+    def comp(toto, curs):
+        import time
+        st = time.time()
+        v = toto.calculate_exc(curs)[:, 0]
+        print('explicit', time.time() - st)
+        plt.subplot(2, 1, 1)
+        plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'r')
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Voltage (mV)')
+        plt.title('Explicit solver, dt=%sms' % toto.dt)
+        st = time.time()
+        v = toto.calculate(curs)[:, 0]
+        print('implicit', time.time() - st)
+        plt.subplot(2, 1, 2)
+        plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'g')
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Voltage (mV)')
+        plt.title('Implicit-explicit solver, dt=%sms' % toto.dt)
+        plt.tight_layout()
+        plt.savefig('/home/marcus/Pictures/thesisreport/solversdt%s' % toto.dt, dpi=250)
+        plt.close()
+
+    def step_exc(self, X, i_inj):
         """Integrate and update voltage after one time step
 
         Args:
@@ -301,8 +365,6 @@ class CElegansNeuron(model.BioNeuron):
         cac = X[-1]
 
         h = self._h(cac)
-        # V = V * (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L']) / \
-        #     ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
         V = V + ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) / self._param[
             'C_m']) * self.dt
 

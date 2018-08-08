@@ -5,7 +5,7 @@ from odynn import datas
 class TestDatas(TestCase):
 
     def test_check_alpha(self):
-        datas.check_alpha()
+        datas.check_alpha(show=False)
 
     def test_get_real_data(self):
         dt=0.3

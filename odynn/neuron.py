@@ -184,7 +184,7 @@ class BioNeuronTf(MODEL, NeuronTf):
         else:
             MODEL.parallelize(self, n)
 
-    def build_graph(self, batch=1):
+    def build_graph(self, batch=None):
         """
         Build a tensorflow graph for running the neuron(s) on a series of input
         Args:
@@ -197,7 +197,7 @@ class BioNeuronTf(MODEL, NeuronTf):
         self.reset()
         xshape = [None]
         initializer = self._init_state
-        if batch > 1:
+        if batch is not None:
             xshape.append(None)
             initializer = np.stack([initializer for _ in range(batch)], axis=1)
         if self._num > 1:

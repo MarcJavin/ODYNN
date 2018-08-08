@@ -11,7 +11,7 @@ def read(fname):
 
 
 setup(
-    name="optimHodgHux",
+    name="ODYNN",
     version="0.0.1",
     author="Marc Javin",
     author_email="javin.marc@gmail.com",
@@ -19,6 +19,6 @@ setup(
     long_description=read('README.rst'),
     license=read('LICENSE'),
     keywords="optimization neuron network machine learning neuroscience",
-    url="https://gitlab.com/MarcusJP/Odin",
-    packages=['odynn']
+    url="https://gitlab.com/MarcusJP/ODYNN",
+    packages=['odynn', 'odynn.models']
 )

@@ -171,8 +171,11 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     test_xp(dir, default=default)
 
 
-def real_data(name, suffix='', lstm=True):
+def real_data(name, suffix='', lstm=False):
     dir = 'Real_data_%s' % name
+    dir = utils.set_dir(dir)
+    train, test = datas.get_real_data_norm()
+    dt = train[0][1] - train[0][0]
     if (lstm):
         dir += '_lstm'
         neur = NeuronLSTM(dt=dt)
@@ -182,11 +185,8 @@ def real_data(name, suffix='', lstm=True):
         neur = BioNeuronTf(pars, dt=dt)
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(neur)
-    dir = utils.set_dir(dir)
-    train, test = datas.get_real_data(dt=dt)
-    n = opt.optimize(dir, w=[0, 1], train = train, suffix=suffix, l_rate=l_rate)
-    comp_pars(dir, n)
-    t, i, v, ca = test
+    n = opt.optimize(dir, w=[0, 1], train = train, test=test, suffix=suffix, l_rate=l_rate)
+    t, i, [v, ca] = test
     if not lstm:
         sim.simul(optim.get_best_result(dir), dt=dt, i_inj=i_inj, suffix='test', save=True, ca_true=ca)
 
