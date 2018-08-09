@@ -5,10 +5,15 @@
 .. moduleauthor:: Marc Javin
 """
 
+
+
+
+from odynn import utils, neuron
+from odynn import circuit as cr
+from odynn import coptim as co
+
 import matplotlib as mpl
 import socket
-if (socket.gethostname()=='1080' or socket.gethostname()=='pixi'):
-    mpl.use("Agg")
 import numpy as np
 import pickle
 import pylab as plt
@@ -16,11 +21,6 @@ import pandas as pd
 import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
-
-
-from odynn import utils, neuron
-from odynn import circuit as cr
-from odynn import coptim as co
 
 dt = 0.1
 n_parallel = 5

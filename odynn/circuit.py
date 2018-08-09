@@ -20,36 +20,36 @@ from . import utils, neuron
 from .optim import Optimized
 
 SYNAPSE1 = {
-    'G': 0.05,
+    'G': 0.2,
     'mdp': -30.,
     'scale': 2.,
     'E': 20.
 }
 SYNAPSE2 = {
-    'G': 2.,
+    'G': 1.,
     'mdp': -50.,
     'scale': 5.,
     'E': -10.
 }
 SYNAPSE = {
-    'G': 0.05,
-    'mdp': -25.,
-    'scale': 8.,
-    'E': 0.
+    'G': 0.5,
+    'mdp': -20.,
+    'scale': 5.,
+    'E': 10.
 }
 SYNAPSE_inhib = {
-    'G': 0.7,
-    'mdp': -20.,
-    'scale': 1.,
-    'E': -110.
+    'G': 0.5,
+    'mdp': 0.,
+    'scale': 10.,
+    'E': -70.
 }
 SYNAPSE_inhib2 = {
-    'G': 0.03,
-    'mdp': -40.,
+    'G': 0.2,
+    'mdp': -20.,
     'scale': -6.,
-    'E': 20.
+    'E': -80.
 }
-GAP = {'G_gap': 0.001}
+GAP = {'G_gap': 0.2}
 
 SYN_VARS = list(SYNAPSE.keys())
 GAP_VARs = list(GAP.keys())
@@ -59,7 +59,7 @@ MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 0.05
+MAX_G = 2.
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}

@@ -13,38 +13,39 @@ from odynn import utils
 from models import cfg_model
 from odynn.coptim import CircuitOpt
 import odynn.csimul as sim
+import seaborn as sns
+import pylab as plt
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random
-
+dt = 0.5
+n_parallel = 50
 
 if __name__=='__main__':
 
     name = sys.argv[1]
-
-    n_parallel = 50
     syns = {(0, 1): circuit.SYNAPSE_inhib,
             (0, 2): circuit.SYNAPSE_inhib,
-            (0, 4): circuit.SYNAPSE_inhib,
+            (0, 4): circuit.SYNAPSE_inhib2,
             (1, 3): circuit.SYNAPSE_inhib,
-            (1, 4): circuit.SYNAPSE_inhib,
+            (1, 4): circuit.SYNAPSE_inhib2,
             (1, 6): circuit.SYNAPSE_inhib,
-            (2, 0): circuit.SYNAPSE,
-            (2, 4): circuit.SYNAPSE,
-            (2, 5): circuit.SYNAPSE,
+            (2, 0): circuit.SYNAPSE2,
+            (2, 4): circuit.SYNAPSE2,
+            (2, 5): circuit.SYNAPSE1,
             (3, 2): circuit.SYNAPSE_inhib,
-            (3, 4): circuit.SYNAPSE_inhib,
+            (3, 4): circuit.SYNAPSE_inhib2,
             (3, 5): circuit.SYNAPSE_inhib,
             (4, 2): circuit.SYNAPSE_inhib,
             (4, 5): circuit.SYNAPSE_inhib,
-            (4, 6): circuit.SYNAPSE_inhib,
+            (4, 6): circuit.SYNAPSE_inhib2,
             (5, 4): circuit.SYNAPSE_inhib,
-            (5, 6): circuit.SYNAPSE_inhib,
-            (6, 4): circuit.SYNAPSE,
-            (6, 5): circuit.SYNAPSE,
+            (5, 6): circuit.SYNAPSE_inhib2,
+            (6, 4): circuit.SYNAPSE1,
+            (6, 5): circuit.SYNAPSE2,
             (7, 2): circuit.SYNAPSE_inhib,
             (7, 5): circuit.SYNAPSE_inhib,
-            (8, 2): circuit.SYNAPSE_inhib,
+            (8, 2): circuit.SYNAPSE_inhib2,
             (8, 6): circuit.SYNAPSE_inhib,
             }
     syns_opt = [{(0, 1): circuit.get_syn_rand(False),
@@ -99,7 +100,6 @@ if __name__=='__main__':
     # c = circuit.CircuitFix([p for _ in range(9)], synapses=syns, gaps=gaps, labels=labels)
     # c.plot()
 
-    dt = 0.1
     t, i = datas.full4(dt=dt, nb_neuron_zero=5)
     i[:, :, :] = i[:, :, [0, 1, 4, 5, 6, 7, 8, 2, 3]]
     _, itest = datas.full4_test(dt=dt, nb_neuron_zero=5)
@@ -107,11 +107,15 @@ if __name__=='__main__':
 
 
     dir = utils.set_dir('Tapwith_' + name)
-    train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
-    test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=[4, 5], labels=labels)
+    n_out = [4,5]
+    train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=n_out, labels=labels)
+    test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=n_out, labels=labels)
     # n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
     # n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
-    ctf = CircuitTf.create_random(n_neuron=9, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
+
+
+
+    ctf = CircuitTf.create_random(n_neuron=9, dt=dt, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
                     sensors={0, 1, 7, 8}, n_rand=n_parallel)
     copt = CircuitOpt(circuit=ctf)
-    copt.optimize(subdir=dir, train=train, n_out=[4, 5])
+    copt.optimize(subdir=dir, train=train, test=test, n_out=[4, 5])

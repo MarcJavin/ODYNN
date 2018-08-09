@@ -51,7 +51,11 @@ class TestNeuronOpt(TestCase):
         optim.get_model(dir)
         optim.get_vars_all(dir)
         t = optim.get_train(dir)
-        self.assertEqual(t.all(), train.all())
+        self.assertEqual(t[0].all(), train[0].all())
+        self.assertEqual(t[1].all(), train[1].all())
+        for i, tt in enumerate(t[-1]):
+            if tt is not None:
+                self.assertEqual(tt.all(), train[-1][i].all())
 
 
         print('One neuron'.center(40, '#'))

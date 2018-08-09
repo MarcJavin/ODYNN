@@ -57,9 +57,11 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     dir = utils.set_dir(dir)
     print("Feed with current of shape : ", i_injs.shape)
 
-    train = sim.simul(t, i_injs, pars, conns, n_out=n_out, show=False)
+    # train = sim.simul(t, i_injs, pars, conns, n_out=n_out, show=False)
     n = nr.BioNeuronTf(init_p=pars, fixed='all', dt=t[1]-t[0])
     cr = CircuitTf(n, synapses=conns_opt)
+    cr.plot(True, True)
+    exit(0)
     c = CircuitOpt(cr)
     c.optimize(dir, n_out=n_out, train=train)
 
@@ -135,9 +137,6 @@ def with_LSTM():
 
 if __name__ == '__main__':
 
-    dual()
-    exit(0)
-
     xp = sys.argv[1]
     if(xp == '21exc'):
         n_neuron = 2
@@ -170,6 +169,10 @@ if __name__ == '__main__':
         conns_opt = {(0, 1):circuit.get_syn_rand(False),
                      (1, 0):circuit.get_syn_rand(False)}
         dir = '2n-2inh-test'
+    elif xp == '41':
+        full4to1()
+    elif xp=='441':
+        full441()
     t, i =datas.give_train(dt=0.5)
     i_1 = np.zeros(i.shape)
     i_injs = np.stack([i, i_1], axis=2)

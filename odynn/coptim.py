@@ -9,7 +9,9 @@ import tensorflow as tf
 import numpy as np
 
 from .optim import Optimizer
-from .noptim import NeuronOpt
+from . import utils
+import seaborn as sns
+import pylab as plt
 
 
 class CircuitOpt(Optimizer):
@@ -85,8 +87,25 @@ class CircuitOpt(Optimizer):
 
         """
         self.circuit.plot(show=False, save=True)
+        plot_heatmap(train[1], 'Input Current', 'Train', self.circuit.labels)
+        plot_heatmap(train[-1][0], 'Membrane Potential', 'Train', self.circuit.labels, n_out)
+        if test is not None:
+            plot_heatmap(test[1], 'Input Current', 'Test', self.circuit.labels)
+            plot_heatmap(test[-1][0], 'Membrane Potential', 'Test', self.circuit.labels, n_out)
         self.w_n = w_n
         self.n_out = n_out
         yshape = [None, None, len(n_out)]
         print('yshape', yshape)
         Optimizer.optimize(self, subdir, train, test, w, epochs, l_rate, suffix, yshape=yshape, evol_var=evol_var, plot=plot)
+
+
+def plot_heatmap(m, name, suffix, labels, n_out=None):
+    labs = list(labels.values())
+    if n_out is not None:
+        labs = [labs[n] for n in n_out]
+    for batch in range(m.shape[1]):
+        sns.heatmap(m[:,batch].transpose(), yticklabels=labs, cmap='jet')
+        plt.title(name)
+        plt.xlabel('Time (ms)')
+        plt.ylabel('Neuron')
+        utils.save_show(False, True, '%s_%s_%s'%(name, suffix, batch), dpi=300)
