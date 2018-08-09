@@ -25,23 +25,14 @@ def check_alpha(show=True):
     """study the hill equation
 
     """
-    d = df.head(25000)
+    d = df.head(1000)
     t = d['timeVector']
     i = d['inputCurrent']
     trace = d['trace']
-    vals = np.logspace(math.log10(0.1), math.log10(100.), num=20)
-    idx=0
-    # plt.subplot(211)
-    # plt.plot(trace)
-    # spl = splrep(t, trace, s=0.5)
-    # trace = splev(t, spl)
-    # plt.plot(trace)
-    # plt.subplot(212)
-    # plt.plot(i)
-    # if (show):
-    #     print('hola')
-    #     plt.show()
-    #     plt.close()
+    vals = np.logspace(math.log10(1.2), math.log10(20.), num=5)
+    idx=1
+    plt.subplot(6,1,1)
+    plt.plot(trace, 'r')
     for alpha in vals:
         idx += 1
         k = 189.e-6
@@ -49,8 +40,8 @@ def check_alpha(show=True):
         bas = (-k*trace) / (trace - np.full(trace.shape, alpha))
         bas[bas < 0] = 0
         cac = np.power(bas, 1/n)
-        plt.subplot(len(vals)/4, 4, idx)
-        plt.plot(cac, label='alpha=%.2f'%alpha)
+        plt.subplot(6, 1, idx)
+        plt.plot(cac, label='$\\alpha$=%.2f'%alpha)
         # z2 = savgol_filter(cac, 9, 3)
         # plt.plot(z2, 'r', label='smooth')
         plt.legend()
@@ -60,17 +51,25 @@ def check_alpha(show=True):
 
 def get_real_data_norm(file='data/AVAL{}.csv'):
     df = pd.read_csv(file.format(1)).head(3100)
+    t = np.array(df['timeVector']) * 1000
     trace = np.array(df['trace'])
+    i = np.array(df['inputCurrent']) * 10
     k = 189.e-6
     n = 3.8
     alpha = 2.
     bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
-    bas[bas < 0] = 0
+    # bas[bas < 0] = 0
+    plt.subplot(3,1,1)
+    plt.plot(t, trace)
+    plt.title('Calcium imaging data')
     cac = np.power(bas, 1 / n)
-    plt.plot(cac)
+    plt.subplot(3,1,2)
+    plt.plot(t, cac)
+    plt.title('Calcium concentration')
+    plt.subplot(3,1,3)
+    plt.plot(t, i)
+    plt.title('Input current')
     plt.show()
-    t = np.array(df['timeVector']) * 1000
-    i = np.array(df['inputCurrent']) * 10
     df2 = pd.read_csv(file.format(2)).head(3100)
     trace = np.array(df2['trace']) * 10
     bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
@@ -263,7 +262,7 @@ i_test = 10. * ((t_test > 100) & (t_test < 300)) + 20. * ((t_test > 400) & (t_te
          (t_test - 1200) * (50. / 500) * ((t_test > 1200) & (t_test < 1700))
 
 if __name__ == '__main__':
-
+    # get_real_data_norm()
     check_alpha()
 
     # give_train2(0.5)

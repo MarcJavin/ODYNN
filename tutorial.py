@@ -6,6 +6,7 @@ import numpy as np
 from odynn.models import cfg_model
 from odynn import neuron as nr
 from odynn import nsimul as ns
+from sklearn.decomposition import PCA
 
 
 
@@ -48,6 +49,9 @@ def get_df(dir):
     return pd.DataFrame.from_dict(dic)
 
 def real_std(df):
+    df = df.copy()
+    mdps = [col for col in df.columns if 'mdp' in col or 'E' in col]
+    df = df.drop(columns=mdps)
     variation = df.std() / df.mean()
     d = {'Variation': abs(variation.values),
          'Parameter': df.columns.values}
@@ -82,33 +86,81 @@ def sigm():
     plt.show()
     exit(0)
 
+def table():
+    import re
+    neur = cfg_model.NEURON_MODEL
+    from odynn.models import celeg
+    for k, v in neur.default_params.items():
+        v = neur._constraints_dic.get(k, ['-inf', 'inf'])
+        u = ''
+        if 'tau' in k:
+            u = 'ms'
+        elif 'scale' in k or 'mdp' in k or 'E' in k:
+            u = 'mV'
+        elif 'g' in k:
+            u = 'mS/cm$^2$'
+        elif k == 'C_m':
+            u = '$\mu$F/cm$^2$'
+        else:
+            u = 'none'
+        tp = '%s &&& %s & %s&%s \\\\\n \\hline' % (k, v[0], v[1], u)
+        tp = re.sub('(.)__(.*) (&.*&.*&.*&.*&)', '\g<2>_\g<1> \g<3>', tp)
+        tp = tp.replace('inf', '$\\infty$')
+
+        tp = re.sub('scale_(.)', '$V_{scale}^\g<1>$', tp)
+        tp = re.sub('mdp_(.)', '$V_{mdp}^\g<1>$', tp)
+        tp = re.sub('tau_(.)', '$\\ tau^\g<1>$', tp)
+        tp = re.sub('E_(..?)', '$E_{\g<1>}$', tp)
+        tp = tp.replace('\\ tau', '\\tau')
+        tp = re.sub('g_([^ ]*) +', '$g_{\g<1>}$ ', tp)
+        tp = tp.replace('rho_ca', '$\\rho_{Ca}$')
+        tp = tp.replace('decay_ca', '$\\tau_{Ca}$')
+        tp = tp.replace('C_m', '$C_m$')
+        tp = tp.replace('alpha_h', '$\\alpha^h$')
+
+        tp = re.sub('(.*tau.*)&&&', '\g<1>&%s&%s&' % (celeg.MIN_TAU, celeg.MAX_TAU), tp)
+        tp = re.sub('(.*scale.*)&&&', '\g<1>&%s&%s&' % (celeg.MIN_SCALE, celeg.MAX_SCALE), tp)
+        print(tp)
+    exit(0)
+
+
+
 if __name__ == '__main__':
+
 
 
     dir = utils.set_dir('Real_data_fatdtbigtau')
     dic = optim.get_vars(dir, loss=True)
+
     train = optim.get_train(dir)
     df = pd.DataFrame.from_dict(dic)#.head(4)
+    df = df.sort_values('loss').reset_index(drop=True)
     # df = df.dropna()
+    sns.barplot(x=df.index, y='loss', data=df)
+    # df.plot.bar(y='loss')
+    plt.show()
+    df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
+    dfdisp = (df - df.mean()) / df.std()
+    plt.plot(dfdisp.transpose())
+    plt.show()
+    corr(df)
+    # real_std(df)
 
-    scatt(df)
-    # dir = utils.set_dir('Integcomp_both_500-YE')
-    # dic2 = optim.get_vars(dir)
-    # df = pd.DataFrame.from_dict(dic2)
-    # df.merge(df1)
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
-    gooddf = df[df['loss'] <= np.min(df['loss']) +1 ]
-    ps = gooddf.to_dict(orient='list')
+    ps = df.to_dict(orient='list')
     # cfg_model.NEURON_MODEL.study_vars(ps, show=True, save=False)
     neur = nr.PyBioNeuron(ps, dt=train[0][1]-train[0][0])
     X = neur.calculate(train[1])
-    neur.plot_output(train[0], train[1], X, train[-1])
+    neur.plot_output(train[0], train[1], X, train[-1], show=True)
+
+
     for i in range(X.shape[2]):
 
-        plt.plot(train[-1][-1])
+        plt.plot(train[-1][-1], label='target model')
         plt.plot(X[:,-1,i])
-        plt.show()
+        plt.legend()
+        utils.save_show(True,True,'best_result%s'%i, dpi=250)
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)

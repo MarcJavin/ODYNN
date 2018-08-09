@@ -3,9 +3,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Use on my server
 import matplotlib as mpl
-mpl.use("Agg")
+if "SSH_CONNECTION" in os.environ:
+    mpl.use("Agg")
 from .utils import COLORS
-mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
+# mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=COLORS)
 # Tune the plots appearance
 import pylab as plt
 SMALL_SIZE = 8
