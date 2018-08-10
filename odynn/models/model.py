@@ -142,6 +142,10 @@ class BioNeuron(Neuron):
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
     """
 
+    def __new__(cls, *args, **kwargs):
+        obj = Neuron.__new__(cls)
+        obj.init_names()
+        return obj
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         """
@@ -155,15 +159,17 @@ class BioNeuron(Neuron):
 
         """
         Neuron.__init__(self, dt=dt)
-        self.init_names()
         if(init_p is None):
             init_p = self.default_params
         elif(init_p == 'random'):
             init_p = self.get_random()
         elif isinstance(init_p, list):
             self._num = len(init_p)
-            init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
+            if self._num == 1:
+                init_p = init_p[0]
+            else:
+                init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
+                self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
 
 
         elif hasattr(init_p[self.parameter_names[0]], '__len__'):

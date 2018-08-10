@@ -10,11 +10,9 @@ from odynn import circuit
 from odynn.circuit import CircuitTf
 from odynn import datas
 from odynn import utils
-from models import cfg_model
+from odynn.models import cfg_model
 from odynn.coptim import CircuitOpt
 import odynn.csimul as sim
-import seaborn as sns
-import pylab as plt
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random

@@ -18,8 +18,10 @@ from random import random as rd
 DUMP_FILE= 'data'
 plt.rc('ytick', labelsize=8)    # fontsize of the tick labels
 
-df = pd.read_csv('data/AVAL1.csv').head(3100)
-
+try:
+    df = pd.read_csv('data/AVAL1.csv').head(3100)
+except:
+    df = pd.read_csv('../data/AVAL1.csv').head(3100)
 
 def check_alpha(show=True):
     """study the hill equation

@@ -25,8 +25,10 @@ class TestNeuronOpt(TestCase):
     def test_loss(self):
         co = NeuronOpt(nr)
         res = tf.zeros((len(t), len(PyBioNeuron.default_init_state), 3))
-        ys_ = [tf.placeholder(shape=(len(t), 3), dtype=tf.float32, name="test") for _ in PyBioNeuron.ions.items()]
-        w = [1 for _ in PyBioNeuron.ions.items()]
+        ys_ = [tf.placeholder(shape=(len(t), 3), dtype=tf.float32, name="test")] + [
+            tf.placeholder(shape=(len(t), 3), dtype=tf.float32, name="test") for _ in
+            PyBioNeuron.ions.items()]
+        w = [1] + [1 for _ in PyBioNeuron.ions.items()]
         co._build_loss(res, ys_, w)
 
     def test_settings(self):

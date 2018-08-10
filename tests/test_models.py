@@ -25,6 +25,7 @@ class TestModels(TestCase):
             self.assertEqual(list(hh._init_p.values())[0].shape, (10,))
             self.assertEqual(hh._init_p.keys(), p.keys())
             self.assertEqual(hh._init_p, hh._param)
+            self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
     
             hh = mod(init_p=[mod.get_random() for _ in range(13)])
             self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -34,6 +35,7 @@ class TestModels(TestCase):
             self.assertEqual(list(hh._init_p.values())[0].shape, (13,))
             self.assertEqual(hh._init_p.keys(), p.keys())
             self.assertEqual(hh._init_p, hh._param)
+            self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
     
             hh = mod(p)
             self.assertEqual(hh.num, 1)
@@ -41,6 +43,7 @@ class TestModels(TestCase):
             self.assertIsInstance(hh._init_p, dict)
             self.assertEqual(hh._init_p, p)
             self.assertEqual(hh._init_p, hh._param)
+            self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
 
     def test_plot_results(self):

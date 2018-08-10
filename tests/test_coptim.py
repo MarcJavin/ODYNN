@@ -39,8 +39,8 @@ class TestCircuitOpt(TestCase):
                      (1, 0): odynn.circuit.get_syn_rand(False)}
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         res = tf.zeros((len(t), len(nr.PyBioNeuron.default_init_state), 3, n_neuron))
-        ys_ = [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test") for _ in nr.PyBioNeuron.ions.items()]
-        w = [1 for _ in nr.PyBioNeuron.ions.items()]
+        ys_ = [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test")] + [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test") for _ in nr.PyBioNeuron.ions.items()]
+        w = [1] + [1 for _ in nr.PyBioNeuron.ions.items()]
         co.n_out = list(range(n_neuron))
         co._build_loss(res, ys_, w)
 

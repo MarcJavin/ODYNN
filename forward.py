@@ -22,7 +22,7 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.1
+dt = 0.5
 n_parallel = 5
 
 labels = {0: 'AVBL',
@@ -275,7 +275,7 @@ def get_data():
     with open('data/c302_C2_FW.dat', 'r') as f:
         res = []
         for i, line in enumerate(f):
-            if i % 20 == 0:
+            if i % (dt / 0.005) == 0:
                 state = line.split()
                 state = np.array([float(st) for st in state])
                 res.append(state)
@@ -291,13 +291,13 @@ def get_data():
 
     with open('forward_target', 'wb') as f:
         pickle.dump(res, f)
-
     print(res.shape)
+    return res
 
 def get_curr():
     tree = ET.parse('c302_C2_FW.net.xml')
     root = tree.getroot()
-    curs = np.zeros((50001, 39))
+    curs = np.zeros((int(5000/dt) +1, 39))
     for el in root:
         if el.tag == '{http://www.neuroml.org/schema/neuroml2}pulseGenerator':
             name = el.attrib['id'].split('_')[1]
@@ -316,8 +316,8 @@ def get_curr():
                 pass
     with open('forward_input', 'wb') as f:
         pickle.dump(curs, f)
-
     print(curs.shape)
+    return curs
 
 
 def get_conns():
@@ -347,13 +347,17 @@ def show_res(dir, j=-1):
 
     dir = utils.set_dir(dir)
     dic = optim.get_vars(dir, j, loss=False)
+    [print(k) for k in dic.keys()]
     # print(dic)
     dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
-    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
-                                     labels=labels, commands=commands, n_rand=dic['C_m'].shape[-1])
-    # ctf = optim.get_model(dir)
+    # ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
+    #                                  labels=labels, commands=commands, n_rand=5, fixed='all')
+    ctf = optim.get_model(dir)
+    # print(ctf._neurons.parameter_names)
+    dic.update(ctf._neurons.init_params)
+    # ctf._neurons.init_names()
     ctf.init_params = dic
-    states = ctf.calculate(np.stack([cur for _ in range(dic['C_m'].shape[-1])], axis=-1))
+    states = ctf.calculate(np.stack([cur for _ in range(5)], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
         ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
@@ -373,6 +377,11 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
+
+    # show_res('Forward_leakydt0.5')
+
+    get_data()
+    get_curr()
 
     with open('forward_input', 'rb') as f:
         cur = pickle.load(f)
@@ -394,14 +403,14 @@ if __name__=='__main__':
     print(res.shape)
 
     for i in range(4, len(labels)):
-        res[:, i+1] = np.roll(res[:, i], 800, axis=0)
-    for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
-        res[:7000, i+1] = -35.
-    for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
-        res[:3000, i+1] = -35.
-    for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
-        res[:2000, i+1] = -35.
-    res[:,1:] = np.array([r + 1.5*np.random.randn(len(r)) for r in res[:,1:]])
+        res[:, i+1] = np.roll(res[:, i], int(80/dt), axis=0)
+    # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
+    #     res[:7000, i+1] = -35.
+    # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
+    #     res[:3000, i+1] = -35.
+    # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
+    #     res[:2000, i+1] = -35.
+    res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
@@ -416,9 +425,9 @@ if __name__=='__main__':
 
 
     fixed = ()
-    neurons = neuron.BioNeuronTf([neuron.BioNeuronTf.default_params for _ in range(39)], fixed='all')
-    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k, groups=groups,
-                                  labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed, neurons=neurons)
+    # neurons = neuron.BioNeuronTf([neuron.BioNeuronTf.default_params for _ in range(39)])
+    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
+                                  labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
 
 
 

@@ -530,6 +530,7 @@ class CircuitTf(Circuit, Optimized):
                 raise ValueError('The shape of the parameters doesn\'t match the object structure')
             if k in GAP_VARs and len(v) != 2 * len(self.gaps):
                 raise ValueError('The shape of the parameters doesn\'t match the object structure')
+        # print('params', self._neurons.parameter_names)
         self._neurons.init_params = value
 
     @property
@@ -550,6 +551,7 @@ class CircuitTf(Circuit, Optimized):
                 con = self.constraints_dic[var]
                 self._constraints.append(tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
         self._neurons.reset()
+        print('neur params', self._neurons._param)
         self._init_state = self._neurons.init_state
 
     def build_graph(self, batch=1):

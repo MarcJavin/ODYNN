@@ -21,6 +21,7 @@ class TestNeuronTf(TestCase):
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
         self.assertEqual(hh.init_params.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = BioNeuronTf(init_p={var: [val for _ in range(10)] for var, val in p.items()})
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -29,6 +30,7 @@ class TestNeuronTf(TestCase):
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
         self.assertEqual(hh.init_params.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = BioNeuronTf(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -37,12 +39,14 @@ class TestNeuronTf(TestCase):
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (13,))
         self.assertEqual(hh.init_params.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = BioNeuronTf(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),))
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(hh.init_params, p)
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = BioNeuronTf(n_rand=15)
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -50,6 +54,7 @@ class TestNeuronTf(TestCase):
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state), hh.num))
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (15,))
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
     def test_init_groups(self):
         hh = BioNeuronTf(n_rand=15, groups=np.zeros(15, dtype=np.int32))
@@ -62,6 +67,7 @@ class TestNeuronTf(TestCase):
 
         hh = BioNeuronTf(n_rand=6, groups=[1,0,0,0,2,2])
         hh = BioNeuronTf(n_rand=3, groups=[1, 0, 0, 0, 2, 2])
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
         hh.reset()
         loss = tf.square(hh._param['C_m'] - [1.,20.,80.,-10.,-7.,90.])
         train = tf.train.AdamOptimizer(0.1).minimize(loss)
@@ -83,9 +89,9 @@ class TestNeuronTf(TestCase):
 
 
     def test_pickle(self):
-        hh = BioNeuronTf(init_p=[p for _ in range(10)])
+        hh1 = BioNeuronTf(init_p=[p for _ in range(10)])
         with open(self.dir + 'yeee', 'wb') as f:
-            pickle.dump(hh, f)
+            pickle.dump(hh1, f)
         with open(self.dir + 'yeee', 'rb') as f:
             hh = pickle.load(f)
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -94,6 +100,7 @@ class TestNeuronTf(TestCase):
         self.assertIsInstance(hh.init_params, dict)
         self.assertEqual(list(hh.init_params.values())[0].shape, (10,))
         self.assertEqual(hh.init_params.keys(), p.keys())
+        self.assertEqual(hh1.parameter_names, hh.parameter_names)
 
         hh = BioNeuronTf(init_p={var: [val for _ in range(10)] for var, val in p.items()})
         with open(self.dir + 'yeee', 'wb') as f:
@@ -215,6 +222,7 @@ class TestNeuronFix(TestCase):
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = PyBioNeuron(init_p={var: np.array([val for _ in range(10)]) for var, val in p.items()})
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -223,6 +231,7 @@ class TestNeuronFix(TestCase):
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(list(hh._param.values())[0].shape, (10,))
         self.assertEqual(hh._param.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = PyBioNeuron(init_p=[PyBioNeuron.get_random() for _ in range(13)])
         self.assertEqual(len(hh._init_state), len(hh.default_init_state))
@@ -231,12 +240,14 @@ class TestNeuronFix(TestCase):
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(list(hh._param.values())[0].shape, (13,))
         self.assertEqual(hh._param.keys(), p.keys())
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
         hh = PyBioNeuron(p)
         self.assertEqual(hh.num, 1)
         self.assertEqual(hh._init_state.shape, (len(hh.default_init_state),))
         self.assertIsInstance(hh._param, dict)
         self.assertEqual(hh._param, p)
+        self.assertEqual(hh.parameter_names, list(hh.default_params.keys()))
 
     def test_step(self):
         hh = PyBioNeuron(p)

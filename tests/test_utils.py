@@ -14,9 +14,8 @@ import numpy as np
 class TestOptim(TestCase):
 
     def test_set_dir(self):
-        utils.set_dir('')
         dir = 'unittest'
-        pre = utils._current_dir
+        pre = utils.RES_DIR + '/'
         utils.set_dir(dir)
         post = utils._current_dir
         self.assertTrue(os.path.exists(post))

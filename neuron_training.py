@@ -28,7 +28,7 @@ MODEL = PyBioNeuron
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt = 0.2
+dt = 1.
 t, iinj = datas.give_train(dt)
 i_inj = iinj
 tt, it = datas.give_test(dt)
@@ -144,6 +144,30 @@ def alternate(name='', suffix='', lstm=True):
     test_xp(dir)
 
 
+def checktime(default=MODEL.default_params):
+    import time
+    import pickle
+    import pylab as plt
+    dir = utils.set_dir('time')
+    train = sim.simul(p=default, dt=dt, i_inj=i_inj, show=False, suffix='train')
+    n_model = np.arange(1, 120, 5)
+    times = np.zeros(len(n_model))
+    with open('times', 'wb') as f:
+        pickle.dump([n_model, times], f)
+    for i, n in enumerate(n_model):
+        neur = BioNeuronTf([MODEL.get_random() for i in range(n)], dt=dt)
+        opt = NeuronOpt(neur)
+        start = time.time()
+        opt.optimize(dir, train=train, epochs=20, evol_var=False, plot=False)
+        times[i] = time.time() - start
+    with open('times', 'wb') as f:
+        pickle.dump([n_model, times], f)
+    plt.plot(n_model, times)
+    plt.show()
+    exit(0)
+
+
+
 def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     if (wv == 0):
         dir = 'Integcomp_calc_%s' % name
@@ -215,6 +239,15 @@ def test_lstm():
     exit(0)
 
 if __name__ == '__main__':
+
+    with open('times', 'rb') as f:
+        import pickle
+        import pylab as plt
+        n,t = pickle.load(f)
+    plt.plot(n,t)
+    plt.ylim(0, 100)
+    plt.show()
+    exit(0)
 
     xp = sys.argv[1]
     if len(sys.argv)>3:

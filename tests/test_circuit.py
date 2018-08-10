@@ -80,6 +80,7 @@ class TestCircuit(TestCase):
         self.assertEqual(circ._neurons.init_state.all(), c._neurons.init_state.all())
         self.assertEqual(c.n_gap, circ.n_gap)
         self.assertEqual(c.n_synapse, circ.n_synapse)
+        self.assertEqual(c._neurons.parameter_names, circ._neurons.parameter_names)
         for k in c.gaps.keys():
             self.assertEqual(c.gaps[k].all(), circ.gaps[k].all())
         for k in c.init_params.keys():
