@@ -129,10 +129,10 @@ if __name__ == '__main__':
 
 
 
-    dir = utils.set_dir('Real_data_fatdtbigtau')
+    dir = utils.set_dir('REAL_DATA/Real_data_fatdtbigtau')
     dic = optim.get_vars(dir, loss=True)
 
-    train = optim.get_train(dir)
+    train, test = optim.get_data(dir)
     df = pd.DataFrame.from_dict(dic)#.head(4)
     df = df.sort_values('loss').reset_index(drop=True)
     # df = df.dropna()
@@ -152,15 +152,21 @@ if __name__ == '__main__':
     # cfg_model.NEURON_MODEL.study_vars(ps, show=True, save=False)
     neur = nr.PyBioNeuron(ps, dt=train[0][1]-train[0][0])
     X = neur.calculate(train[1])
+    Xt = neur.calculate(test[1])
     neur.plot_output(train[0], train[1], X, train[-1], show=True)
 
 
-    for i in range(X.shape[2]):
-
-        plt.plot(train[-1][-1], label='target model')
-        plt.plot(X[:,-1,i])
-        plt.legend()
-        utils.save_show(True,True,'best_result%s'%i, dpi=250)
+    # for i in range(X.shape[2]):
+    #     plt.subplot(2, 1, 1)
+    #     plt.plot(train[-1][-1], 'r', label='train data')
+    #     plt.plot(X[:, -1, i])
+    #     plt.legend()
+    #     plt.subplot(2, 1, 2)
+    #     plt.plot(test[-1][-1], 'r', label='test data')
+    #     plt.plot(Xt[:, -1, i])
+    #     plt.legend()
+    #     plt.show()
+    #     utils.save_show(True,True,'best_result%s'%i, dpi=250)
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)

@@ -256,7 +256,7 @@ class NeuronLSTM(NeuronTf):
     _scale_v = 100.
     _scale_ca = 500.
 
-    def __init__(self, nb_layer=3, layer_size=50, extra_ca=1, dt=0.1, vars_init=None):
+    def __init__(self, nb_layer=1, layer_size=50, extra_ca=0, dt=0.1, vars_init=None):
         self.vars_init = None
         self._hidden_layer_nb = nb_layer
         self._hidden_layer_size = layer_size
@@ -311,18 +311,21 @@ class NeuronLSTM(NeuronTf):
             cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units1]
             self._volt_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
-        num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
-        num_units2.append(1)
-        with tf.variable_scope(self.id+'Calc'):
-            cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
-            self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
+        if self._extra_ca > 0:
+            num_units2 = [self._hidden_layer_size for _ in range(self._extra_ca)]
+            num_units2.append(1)
+            with tf.variable_scope(self.id+'Calc'):
+                cells = [tf.nn.rnn_cell.LSTMCell(n, use_peepholes=True, state_is_tuple=True) for n in num_units2]
+                self._ca_net = tf.nn.rnn_cell.MultiRNNCell(cells)
 
     def init(self, batch):
         with tf.variable_scope(self.id+'Volt'):
             init_vstate = self._volt_net.zero_state(batch, dtype=tf.float32)
-        with tf.variable_scope(self.id+'Calc'):
-            init_castate = self._ca_net.zero_state(batch, dtype=tf.float32)
-        self._hidden_init_state = (init_vstate, init_castate)
+            self._hidden_init_state = (init_vstate, init_vstate)
+        if self._ca_net:
+            with tf.variable_scope(self.id+'Calc'):
+                init_castate = self._ca_net.zero_state(batch, dtype=tf.float32)
+            self._hidden_init_state = (init_vstate, init_castate)
 
     def build_graph(self, batch=1):
         tf.reset_default_graph()
@@ -337,9 +340,12 @@ class NeuronLSTM(NeuronTf):
             initializer = self._volt_net.zero_state(batch, dtype=tf.float32)
             v_outputs, _ = tf.nn.dynamic_rnn(self._volt_net, inputs=input, initial_state=initializer, time_major=True)
 
-        with tf.variable_scope(self.id+'Calc'):
-            initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
-            ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
+        if self._ca_net:
+            with tf.variable_scope(self.id+'Calc'):
+                initializer = self._ca_net.zero_state(batch, dtype=tf.float32)
+                ca_outputs, _ = tf.nn.dynamic_rnn(self._ca_net, inputs=v_outputs, initial_state=initializer, time_major=True)
+        else:
+            ca_outputs = v_outputs
 
         with tf.name_scope('Scale'):
             V = v_outputs[:, :, self.V_pos] * self._scale_v + self._rest_v
@@ -365,9 +371,13 @@ class NeuronLSTM(NeuronTf):
             v, vstate = self._volt_net(i_inj/self._max_cur, hprev[0])
             v = v * self._scale_v + self._rest_v
 
-        with tf.variable_scope(self.id+'Calc'):
-            ca, castate = self._ca_net(v, hprev[1])
-            ca = ca * self._scale_ca
+        if self._ca_net:
+            with tf.variable_scope(self.id+'Calc'):
+                ca, castate = self._ca_net(v, hprev[1])
+                ca = ca * self._scale_ca
+        else:
+            ca = v
+            castate = vstate
 
         # Fill with void to mimic classical state
         out = [v]
@@ -416,7 +426,10 @@ class NeuronLSTM(NeuronTf):
           sess: tf.Session
         """
         if self.vars_init is not None:
-            sess.run([tf.assign(v, self.vars_init[v.name[1:]]) for v in self._ca_net.trainable_variables+self._volt_net.trainable_variables])
+            train_vars = self._volt_net.trainable_variables
+            if self._ca_net:
+                train_vars += self._ca_net.trainable_variables
+            sess.run([tf.assign(v, self.vars_init[v.name]) for v in train_vars])
 
 
 class Neurons(NeuronTf):

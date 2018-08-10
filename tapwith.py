@@ -10,14 +10,15 @@ from odynn import circuit
 from odynn.circuit import CircuitTf
 from odynn import datas
 from odynn import utils
+from odynn import neuron as nr
 from odynn.models import cfg_model
 from odynn.coptim import CircuitOpt
 import odynn.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random
-dt = 0.5
-n_parallel = 50
+dt = 0.3
+n_parallel = 1
 
 if __name__=='__main__':
 
@@ -109,11 +110,12 @@ if __name__=='__main__':
     train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=n_out, labels=labels)
     test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=n_out, labels=labels)
     # n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
-    # n = nr.Neurons([nr.NeuronLSTM(dt=dt) for _ in range(9)])
+    n = nr.Neurons([nr.NeuronLSTM(dt=dt), nr.NeuronLSTM(dt=dt), nr.BioNeuronTf([p for _ in range(5)], dt=dt), nr.NeuronLSTM(dt=dt), nr.NeuronLSTM(dt=dt)])
+    ctf = CircuitTf(n, synapses=syns_opt[0], gaps=gaps_opt[0], labels=labels, commands={4, 5}, sensors={0, 1, 7, 8})
 
 
 
-    ctf = CircuitTf.create_random(n_neuron=9, dt=dt, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
-                    sensors={0, 1, 7, 8}, n_rand=n_parallel)
+    # ctf = CircuitTf.create_random(neurons = n, n_neuron=9, dt=dt, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
+    #                 sensors={0, 1, 7, 8}, n_rand=n_parallel)
     copt = CircuitOpt(circuit=ctf)
-    copt.optimize(subdir=dir, train=train, test=test, n_out=[4, 5])
+    copt.optimize(subdir=dir, train=train, test=test, n_out=[4, 5], l_rate=(0.1, 9, 0.95))

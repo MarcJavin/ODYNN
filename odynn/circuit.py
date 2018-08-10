@@ -59,7 +59,7 @@ MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 2.
+MAX_G = 1.
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}

@@ -303,10 +303,11 @@ class Optimizer(ABC):
             else:
                 vars = {var: np.vstack((val, np.zeros([1] + list(val.shape)[1:]))) for var, val in vars.items()}
 
+            feed_d = {ys_[i]: m for i, m in enumerate(train[-1]) if m is not None}
+            feed_d[xs_] = train[1]
             for j in tqdm(range(epochs)):
                 i = len_prev + j
-                feed_d = {ys_[i]: m for i,m in enumerate(train[-1]) if m is not None}
-                feed_d[xs_] = train[1]
+
                 summ, results, _, train_loss = sess.run([self.summary, res, self.train_op, self._loss], feed_dict=feed_d)
 
                 self.tdb.add_summary(summ, i)
@@ -365,11 +366,17 @@ class Optimizer(ABC):
         self.optimized.study_vars(p)
         return self.optimized
 
-def get_train(dir):
+def get_data(dir):
     file = dir + '/' + TRAIN_FILE
     with open(file, 'rb') as f:
-        obj = pickle.load(f)
-    return obj
+        train = pickle.load(f)
+    try:
+        file = dir + '/' + TEST_FILE
+        with open(file, 'rb') as f:
+           test = pickle.load(f)
+        return train, test
+    except:
+        return train, None
 
 def get_model(dir):
     file = dir + '/' + FILE_OBJ

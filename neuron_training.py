@@ -168,7 +168,7 @@ def checktime(default=MODEL.default_params):
 
 
 
-def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
+def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     if (wv == 0):
         dir = 'Integcomp_calc_%s' % name
     elif (wca == 0):
@@ -198,9 +198,8 @@ def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=False):
     test_xp(dir, default=default)
 
 
-def real_data(name, suffix='', lstm=False):
+def real_data(name, suffix='', lstm=True):
     dir = 'Real_data_%s' % name
-    dir = utils.set_dir(dir)
     train, test = datas.get_real_data_norm()
     dt = train[0][1] - train[0][0]
     if (lstm):
@@ -212,6 +211,7 @@ def real_data(name, suffix='', lstm=False):
         neur = BioNeuronTf(pars, dt=dt)
         l_rate = [1., 9, 0.92]
         opt = NeuronOpt(neur)
+    dir = utils.set_dir(dir)
     n = opt.optimize(dir, w=[0, 1], train = train, test=test, suffix=suffix, l_rate=l_rate)
     t, i, [v, ca] = test
     if not lstm:
@@ -228,26 +228,37 @@ def add_plots():
         except:
             print(dir)
 
-def test_lstm():
-    import pickle
-    with open('data/optimized4', 'rb') as f:
-        load = pickle.load(f)
-    n = NeuronLSTM(load=load)
-    trace, test = datas.get_real_data(dt=n.dt)
-    trace = np.array(test[2:])
-    sim.comp_neuron_trace(n, trace, i_inj=test[1], scale=True)
+def test_lstm(dir):
+    import pylab as plt
+    dir = utils.set_dir(dir)
+    n = optim.get_model(dir)
+    train, test = datas.get_real_data_norm()
+    trace = np.array(train[-1])
+    X = n.calculate(train[1])
+    Xt = n.calculate(test[1])
+    plt.subplot(2,1,1)
+    plt.plot(train[-1][-1], 'r', label='train data')
+    plt.plot(X[:,-1])
+    plt.legend()
+    plt.subplot(2,1,2)
+    plt.plot(test[-1][-1], 'r', label='test data')
+    plt.plot(Xt[:, -1])
+    plt.legend()
+    plt.show()
     exit(0)
 
 if __name__ == '__main__':
 
-    with open('times', 'rb') as f:
-        import pickle
-        import pylab as plt
-        n,t = pickle.load(f)
-    plt.plot(n,t)
-    plt.ylim(0, 100)
-    plt.show()
-    exit(0)
+    test_lstm('Real_data_1_lstm-YAYYY')
+
+    # with open('times', 'rb') as f:
+    #     import pickle
+    #     import pylab as plt
+    #     n,t = pickle.load(f)
+    # plt.plot(n,t)
+    # plt.ylim(0, 100)
+    # plt.show()
+    # exit(0)
 
     xp = sys.argv[1]
     if len(sys.argv)>3:
@@ -260,7 +271,7 @@ if __name__ == '__main__':
     elif (xp == 'cac'):
         name = sys.argv[2]
         classic(name, wv=0, wca=1, suffix=suf)
-    elif (xp == 'v'):
+    elif (xp == 'volt'):
         name = sys.argv[2]
         classic(name, wv=1, wca=0, suffix=suf)
     elif (xp == 'both'):

@@ -255,7 +255,7 @@ class CElegansNeuron(model.BioNeuron):
     _ions = {'$Ca^{2+}$': -1}
     default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
-    default_params = DEFAULT
+    default_params = DEFAULT_3
     """default parameters as a dictionnary"""
     _constraints_dic = CONSTRAINTS
     """constraints to be applied when optimizing"""

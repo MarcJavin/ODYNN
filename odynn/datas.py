@@ -54,33 +54,33 @@ def check_alpha(show=True):
 def get_real_data_norm(file='data/AVAL{}.csv'):
     df = pd.read_csv(file.format(1)).head(3100)
     t = np.array(df['timeVector']) * 1000
-    trace = np.array(df['trace'])
+    trace = np.array(df['trace']) * 10
     i = np.array(df['inputCurrent']) * 10
     k = 189.e-6
     n = 3.8
     alpha = 2.
     bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
     # bas[bas < 0] = 0
-    plt.subplot(3,1,1)
-    plt.plot(t, trace)
-    plt.title('Calcium imaging data')
-    cac = np.power(bas, 1 / n)
-    plt.subplot(3,1,2)
-    plt.plot(t, cac)
-    plt.title('Calcium concentration')
-    plt.subplot(3,1,3)
-    plt.plot(t, i)
-    plt.title('Input current')
-    plt.show()
+    # plt.subplot(3,1,1)
+    # plt.plot(t, trace)
+    # plt.title('Calcium imaging data')
+    # cac = np.power(bas, 1 / n)
+    # plt.subplot(3,1,2)
+    # plt.plot(t, cac)
+    # plt.title('Calcium concentration')
+    # plt.subplot(3,1,3)
+    # plt.plot(t, i)
+    # plt.title('Input current')
+    # plt.show()
     df2 = pd.read_csv(file.format(2)).head(3100)
-    trace = np.array(df2['trace']) * 10
-    bas = (-k * trace) / (trace - np.full(trace.shape, alpha))
+    trace2 = np.array(df2['trace']) * 10
+    bas = (-k * trace2) / (trace2 - np.full(trace2.shape, alpha))
     bas[bas < 0] = 0
     cac2 = np.power(bas, 1 / n)
     t2 = np.array(df2['timeVector']) * 1000
     i2 = np.array(df2['inputCurrent']) * 10
-    train = [t, i[:, np.newaxis], [None, cac[:, np.newaxis]]]
-    test = [t, i2[:, np.newaxis], [None, cac2[:, np.newaxis]]]
+    train = [t, i[:, np.newaxis], [None, trace[:, np.newaxis]]]
+    test = [t, i2[:, np.newaxis], [None, trace2[:, np.newaxis]]]
     return train, test
 
 

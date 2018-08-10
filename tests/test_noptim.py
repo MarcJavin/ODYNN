@@ -52,7 +52,7 @@ class TestNeuronOpt(TestCase):
         n = opt.optimize(dir, w=w, train=train, epochs=1, plot=plot)
         optim.get_model(dir)
         optim.get_vars_all(dir)
-        t = optim.get_train(dir)
+        t, tt = optim.get_data(dir)
         self.assertEqual(t[0].all(), train[0].all())
         self.assertEqual(t[1].all(), train[1].all())
         for i, tt in enumerate(t[-1]):
