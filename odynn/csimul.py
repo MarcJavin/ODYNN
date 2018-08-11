@@ -32,12 +32,20 @@ def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], s
     #[(batch,) time, state, neuron]
     print('Circuit Simulation'.center(40, '_'))
     start = time.time()
-    states, curs = circuit.calculate(i_injs)
+    curs = None
+    try:
+        states, curs = circuit.calculate(i_injs)
+    except:
+        states = circuit.calculate(i_injs)
     print('Simulation time : {}'.format(time.time() - start))
 
     if states.ndim > 3:
         for i in range(i_injs.shape[1]):
-            circuit.plots_output_mult(t, i_injs[:,i], states[:,:,i], i_syn=curs[:,i], show=show, save=save,
+            if curs is not None:
+                c = curs[:, i]
+            else:
+                c = curs
+            circuit.plots_output_mult(t, i_injs[:,i], states[:,:,i], i_syn=c, show=show, save=save,
                                       suffix='TARGET_%s%s'%(suffix,i))
         # [t, state, (batch,) neuron]
     else:

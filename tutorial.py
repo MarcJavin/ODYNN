@@ -90,6 +90,8 @@ def table():
     import re
     neur = cfg_model.NEURON_MODEL
     from odynn.models import celeg
+    dir = utils.set_dir('Integcomp_both_mod1noise')
+    best = optim.get_best_result(dir)
     for k, v in neur.default_params.items():
         v = neur._constraints_dic.get(k, ['-inf', 'inf'])
         u = ''
@@ -103,7 +105,7 @@ def table():
             u = '$\mu$F/cm$^2$'
         else:
             u = 'none'
-        tp = '%s &&& %s & %s&%s \\\\\n \\hline' % (k, v[0], v[1], u)
+        tp = '%s &&& %s & %s&%s&%s&%s \\\\\n \\hline' % (k, v[0], v[1], u, cfg_model.NEURON_MODEL.default_params[k], best[k])
         tp = re.sub('(.)__(.*) (&.*&.*&.*&.*&)', '\g<2>_\g<1> \g<3>', tp)
         tp = tp.replace('inf', '$\\infty$')
 
@@ -127,9 +129,9 @@ def table():
 
 if __name__ == '__main__':
 
+    table()
 
-
-    dir = utils.set_dir('REAL_DATA/Real_data_fatdtbigtau')
+    dir = utils.set_dir('Integcomp_both_mod1noise')
     dic = optim.get_vars(dir, loss=True)
 
     train, test = optim.get_data(dir)
@@ -139,7 +141,7 @@ if __name__ == '__main__':
     sns.barplot(x=df.index, y='loss', data=df)
     # df.plot.bar(y='loss')
     plt.show()
-    df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
+    # df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
     dfdisp = (df - df.mean()) / df.std()
     plt.plot(dfdisp.transpose())
     plt.show()
@@ -148,12 +150,11 @@ if __name__ == '__main__':
 
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
-    ps = df.to_dict(orient='list')
-    # cfg_model.NEURON_MODEL.study_vars(ps, show=True, save=False)
-    neur = nr.PyBioNeuron(ps, dt=train[0][1]-train[0][0])
-    X = neur.calculate(train[1])
-    Xt = neur.calculate(test[1])
-    neur.plot_output(train[0], train[1], X, train[-1], show=True)
+    p = optim.get_best_result(dir)
+    for i in range(train[1].shape[-1]):
+        ns.comp_pars_targ(p, cfg_model.NEURON_MODEL.default_params, dt=train[0][1] - train[0][0], i_inj=train[1][:,i], suffix='virtrain%s'%i, show=True, save=True)
+    for i in range(test[1].shape[-1]):
+        ns.comp_pars_targ(p, cfg_model.NEURON_MODEL.default_params, dt=test[0][1] - test[0][0], i_inj=test[1][:,i], suffix='virtest%s'%i, show=True, save=True)
 
 
     # for i in range(X.shape[2]):

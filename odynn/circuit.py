@@ -455,7 +455,7 @@ class Circuit:
 
             utils.save_show(show, save, 'Output_%s' % suffix, dpi=250)
 
-        sns.heatmap(meas[self._neurons.V_pos].transpose(), yticklabels=self.labels.values(), cmap='RdYlBu_r', xticklabels=False)
+        sns.heatmap(meas[self._neurons.V_pos].transpose(), yticklabels=self.labels.values(), cmap='jet', xticklabels=False)
         plt.title('Membrane potentials (mV)')
         plt.xlabel('Time (ms)')
         plt.ylabel('Neuron')
@@ -525,6 +525,11 @@ class CircuitTf(Circuit, Optimized):
     @init_params.setter
     def init_params(self, value):
         self._init_p = {v: value[v] for v in self.parameter_names}
+        # TODO : test
+        if self._init_p[self.parameter_names[0]].ndim == 1:
+            self._num = 1
+        else:
+            self._num = self._init_p[self.parameter_names[0]].shape[-1]
         for k, v in self._init_p.items():
             if k in SYN_VARS and len(v) != len(self.synapses):
                 raise ValueError('The shape of the parameters doesn\'t match the object structure')

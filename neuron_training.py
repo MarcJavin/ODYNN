@@ -28,11 +28,11 @@ MODEL = PyBioNeuron
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt = 1.
+dt = 0.1
 t, iinj = datas.give_train(dt)
-i_inj = iinj#[:,3][:,np.newaxis]
+i_inj = iinj[:,3][:,np.newaxis]
 tt, it = datas.give_test(dt)
-#it = it[:,1][:,np.newaxis]
+it = it[:,1][:,np.newaxis]
 """Single optimisation"""
 
 

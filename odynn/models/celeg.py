@@ -25,10 +25,11 @@ from pylab import plt
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
                'n' : '#cc00ff',
-               'e' : '#b30000',
-               'f' : '#ff9900',
-               'h' : '#ff1a1a'
+               'e' : '#ff6600',
+               'f' : '#ffbb00',
+               'h' : '#fe9100'
                 }
+RATE_COLORS = collections.OrderedDict(sorted(RATE_COLORS.items(), key=lambda t: t[0]))
 GATES = ['e', 'f', 'n', 'p', 'q']
 CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
 MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
@@ -469,6 +470,7 @@ class CElegansNeuron(model.BioNeuron):
         plt.subplot(122)
         cols = ['b', RATE_COLORS['n'], RATE_COLORS['f'], 'k']
         box(df, cols, MEMB)
+        # plt.plot([DEFAULT[m] for m in MEMB], 'r', marker='*', linestyle='', markersize=10)
         plt.title('Membrane')
         utils.save_show(show, save, name='{}MEmbrane_{}'.format(utils.NEUR_DIR, suffix).format(suffix), dpi=300)
 
@@ -586,7 +588,7 @@ class CElegansNeuron(model.BioNeuron):
             fig.add_subplot(ax)
 
     @classmethod
-    def study_vars(cls, p, suffix='', show=False, save=True):
+    def study_vars(cls, p, suffix='', target=None, show=False, save=True):
         cls.plot_vars(p, func=utils.bar, suffix='compared_%s'%suffix, show=show, save=save)
         cls.boxplot_vars(p, suffix='boxes_%s'%suffix, show=show, save=save)
 

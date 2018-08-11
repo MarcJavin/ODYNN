@@ -168,17 +168,14 @@ class BioNeuron(Neuron):
             if self._num == 1:
                 init_p = init_p[0]
             else:
-                init_p = dict([(var, np.array([p[var] for p in init_p], dtype=np.float32)) for var in init_p[0].keys()])
-                self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
-
-
+                init_p = {var: np.array([p[var] for p in init_p], dtype=np.float32) for var in init_p[0].keys()}
         elif hasattr(init_p[self.parameter_names[0]], '__len__'):
-            self._num = len(init_p[self.parameter_names[0]])
-            if isinstance(init_p[self.parameter_names[0]], list):
-                init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
-            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
+            self._num = init_p[self.parameter_names[0]].size
+            init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
         else:
             self._num = 1
+        if self._num > 1:
+            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
         self._tensors = tensors
         self._init_p = init_p
         self._param = self._init_p.copy()
@@ -227,5 +224,5 @@ class BioNeuron(Neuron):
                 self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
         elif not hasattr(list(self._init_p.values())[0], '__len__'):
                 self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
-        self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
+        self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
         self._param = self._init_p.copy()

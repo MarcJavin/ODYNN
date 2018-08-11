@@ -305,6 +305,9 @@ class Optimizer(ABC):
 
             feed_d = {ys_[i]: m for i, m in enumerate(train[-1]) if m is not None}
             feed_d[xs_] = train[1]
+            if test is not None:
+                feed_d_test = {ys_[i]: m for i, m in enumerate(test[-1]) if m is not None}
+                feed_d_test[xs_] = test[1]
             for j in tqdm(range(epochs)):
                 i = len_prev + j
 
@@ -334,9 +337,7 @@ class Optimizer(ABC):
                 if i % self.freq_test == 0 or j == epochs - 1:
                     res_test = None
                     if test is not None:
-                        feed_d = {ys_[i]: m for i,m in enumerate(test[-1]) if m is not None}
-                        feed_d[xs_] = test[1]
-                        test_loss, res_test = sess.run([self._loss, res], feed_dict=feed_d)
+                        test_loss, res_test = sess.run([self._loss, res], feed_dict=feed_d_test)
                         self._test_losses.append(test_loss)
 
                     with (open(self.dir + FILE_LV + self.suffix, 'wb')) as f:
@@ -440,11 +441,11 @@ def get_best_result(dir, i=-1, loss=False):
         ndim = list(dic.values())[0].ndim
         if l.shape[1] > 1:
             if ndim > 2:
-                dic = dict([(var, val[i, :, idx]) for var, val in dic.items()])
+                dic = dict([(var, np.array(val[i, :, idx], dtype=np.float32)) for var, val in dic.items()])
             else:
-                dic = dict([(var, val[i,idx]) for var, val in dic.items()])
+                dic = dict([(var, np.array(val[i,idx], dtype=np.float32)) for var, val in dic.items()])
         else:
-            dic = dict([(var, val[i]) for var, val in dic.items()])
+            dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
         if (loss):
             dic['loss'] = l[i, idx]
     return dic

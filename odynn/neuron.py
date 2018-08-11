@@ -118,6 +118,16 @@ class BioNeuronTf(MODEL, NeuronTf):
     @init_params.setter
     def init_params(self, value):
         self._init_p = {v: value[v] for v in self.parameter_names}
+        # TODO : test
+        if len(self._init_p[self.parameter_names[0]]) == 1:
+            self._num = 1
+            self._init_state = self.default_init_state
+        else:
+            self._num = len(self._init_p[self.parameter_names[0]])
+            self._init_state = np.stack([self.default_init_state for _ in range(self._num)], axis=-1)
+            if self._init_p[self.parameter_names[0]].ndim == 2:
+                n = self._init_p[self.parameter_names[0]].shape[-1]
+                self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
         for v in self._init_p.values():
             if len(v) != self._num:
                 raise ValueError('The shape of the parameters don\'t match the object structure')
@@ -180,7 +190,7 @@ class BioNeuronTf(MODEL, NeuronTf):
                 keys = self._init_p.keys()
                 l = [self._init_p] + [self.get_random() for _ in range(n - 1)]
                 self._init_p = {var: np.array([l[i][var] for i in range(n)], dtype=np.float32) for var in keys}
-            self._init_state = np.stack([self._init_state for _ in range(n)], axis=self._init_state.ndim)
+            self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
         else:
             MODEL.parallelize(self, n)
 
