@@ -71,6 +71,37 @@ groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in ran
 commands = [labels.values()]
 commands = set(commands[2:])
 
+DEFAULT_F = {
+    'decay_ca': 13.8,
+    'rho_ca': 0.23,
+    'p__tau': 100.,  # ms
+    'p__scale': 7.43,  # mV
+    'p__mdp': -8.05,  # mV
+    'q__tau': 100.,
+    'q__scale': -9.97,
+    'q__mdp': -15.6,
+    'n__tau': 1050.,
+    'n__scale': 20.,
+    'n__mdp': 2.,
+    'f__tau': 301.,
+    'f__scale': -20.03,
+    'f__mdp': 5.2,
+    'e__tau': 20.,
+    'e__scale': 15.,
+    'e__mdp': -6.,
+    'h__alpha': 0.282,  # None
+    'h__scale': -1.,  # mol per m3
+    'h__mdp': 302.,
+    'C_m': 5.0,
+    'g_Ca': 1.81,
+    'g_Ks': 0.46,
+    'g_Kf': 0.042,
+    'g_L': 0.002,
+    'E_Ca': 10.0,
+    'E_K': -60.0,
+    'E_L': -60.0
+}
+
 gaps_k = [
     (rev_labels['AVBL'], rev_labels['AVBR']),
     (rev_labels['AVBL'], rev_labels['DB2']),
