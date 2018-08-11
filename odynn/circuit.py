@@ -556,7 +556,6 @@ class CircuitTf(Circuit, Optimized):
                 con = self.constraints_dic[var]
                 self._constraints.append(tf.assign(self._param[var], tf.clip_by_value(self._param[var], con[0], con[1])))
         self._neurons.reset()
-        print('neur params', self._neurons._param)
         self._init_state = self._neurons.init_state
 
     def build_graph(self, batch=1):

@@ -11,6 +11,7 @@ from pylab import plt
 import random
 import numpy as np
 import tensorflow as tf
+import collections
 
 MIN_TAU = 1.
 MAX_TAU = 1000.
@@ -30,6 +31,7 @@ class HodgHuxSimple(BioNeuron):
                       'b__scale': -3.,
                       'b__tau': 30.,
                       }
+    default_params = collections.OrderedDict(sorted(default_params.items(), key=lambda t: t[0]))
     # Initial value for the voltage
     default_init_state = np.array([-60., 0., 1.])
     _constraints_dic = {'C_m': [0.5, 40.],

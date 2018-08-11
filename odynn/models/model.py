@@ -170,7 +170,7 @@ class BioNeuron(Neuron):
             else:
                 init_p = {var: np.array([p[var] for p in init_p], dtype=np.float32) for var in init_p[0].keys()}
         elif hasattr(init_p[self.parameter_names[0]], '__len__'):
-            self._num = init_p[self.parameter_names[0]].size
+            self._num = len(init_p[self.parameter_names[0]])
             init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
         else:
             self._num = 1

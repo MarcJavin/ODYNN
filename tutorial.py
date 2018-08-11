@@ -90,7 +90,7 @@ def table():
     import re
     neur = cfg_model.NEURON_MODEL
     from odynn.models import celeg
-    dir = utils.set_dir('Integcomp_both_mod1noise')
+    dir = utils.set_dir('Integcomp_volt_hhsimpnoise')
     best = optim.get_best_result(dir)
     for k, v in neur.default_params.items():
         v = neur._constraints_dic.get(k, ['-inf', 'inf'])
@@ -125,13 +125,26 @@ def table():
         print(tp)
     exit(0)
 
-
+def hhsimp_box(df):
+    utils.box(df, ['b', 'g', 'm', 'g', 'm'], ['C_m', 'g_L', 'g_K', 'E_L', 'E_K'])
+    plt.title('Membrane')
+    utils.save_show(True, True, 'boxmemb', dpi=300)
+    plt.subplot(3, 1, 1)
+    utils.box(df, ['m', '#610395'], ['a__mdp', 'b__mdp'])
+    plt.title('Midpoint')
+    plt.subplot(3, 1, 2)
+    utils.box(df, ['m', '#610395'], ['a__scale', 'b__scale'])
+    plt.title('Scale')
+    plt.subplot(3, 1, 3)
+    utils.box(df, ['m', '#610395'], ['a__tau', 'b__tau'])
+    plt.yscale('log')
+    plt.title('Time constant')
+    plt.tight_layout()
+    utils.save_show(True, True, 'boxrates', dpi=300)
 
 if __name__ == '__main__':
 
-    table()
-
-    dir = utils.set_dir('Integcomp_both_mod1noise')
+    dir = utils.set_dir('Integcomp_both_mod1noiNtau')
     dic = optim.get_vars(dir, loss=True)
 
     train, test = optim.get_data(dir)
@@ -140,13 +153,14 @@ if __name__ == '__main__':
     # df = df.dropna()
     sns.barplot(x=df.index, y='loss', data=df)
     # df.plot.bar(y='loss')
-    plt.show()
+    utils.save_show(True, True, 'lossfin_virt', dpi=300)
     # df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
     dfdisp = (df - df.mean()) / df.std()
     plt.plot(dfdisp.transpose())
-    plt.show()
+    utils.save_show(True, True, 'disp', dpi=300)
     corr(df)
-    # real_std(df)
+
+    cfg_model.NEURON_MODEL.boxplot_vars(dic, show=True, save=True)
 
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
