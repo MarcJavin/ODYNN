@@ -30,8 +30,9 @@ pars = [MODEL.get_random() for i in range(100)]
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
 dt = 1.
 t, iinj = datas.give_train(dt)
-i_inj = iinj
+i_inj = iinj#[:,3][:,np.newaxis]
 tt, it = datas.give_test(dt)
+#it = it[:,1][:,np.newaxis]
 """Single optimisation"""
 
 
@@ -170,14 +171,17 @@ def checktime(default=MODEL.default_params):
 
 def classic(name, wv, wca, default=MODEL.default_params, suffix='', lstm=True):
     if (wv == 0):
+        extra_ca = 0
         dir = 'Integcomp_calc_%s' % name
     elif (wca == 0):
+        extra_ca = 0
         dir = 'Integcomp_volt_%s' % name
     else:
+        extra_ca = 1
         dir = 'Integcomp_both_%s' % name
     if (lstm):
         dir += '_lstm'
-        neur = NeuronLSTM(dt=dt)
+        neur = NeuronLSTM(dt=dt, extra_ca=extra_ca)
         l_rate = [0.01, 9, 0.95]
         opt = NeuronOpt(neur)
     else:
@@ -249,7 +253,7 @@ def test_lstm(dir):
 
 if __name__ == '__main__':
 
-    test_lstm('Real_data_1_lstm-YAYYY')
+    #test_lstm('Real_data_1_lstm-YAYYY')
 
     # with open('times', 'rb') as f:
     #     import pickle
@@ -265,18 +269,22 @@ if __name__ == '__main__':
         suf = sys.argv[3]
     else:
         suf = ''
+    if 'lstm' in sys.argv[2]:
+        lstm = True
+    else:
+        lstm = False
     if (xp == 'alt'):
         name = sys.argv[2]
-        alternate(name, suffix=suf)
+        alternate(name, suffix=suf, lstm=lstm)
     elif (xp == 'cac'):
         name = sys.argv[2]
-        classic(name, wv=0, wca=1, suffix=suf)
+        classic(name, wv=0, wca=1, suffix=suf, lstm=lstm)
     elif (xp == 'volt'):
         name = sys.argv[2]
-        classic(name, wv=1, wca=0, suffix=suf)
+        classic(name, wv=1, wca=0, suffix=suf, lstm=lstm)
     elif (xp == 'both'):
         name = sys.argv[2]
-        classic(name, wv=1, wca=1, suffix=suf)
+        classic(name, wv=1, wca=1, suffix=suf, lstm=lstm)
     elif (xp == 'real'):
         name = sys.argv[2]
         real_data(name, suffix=suf)
