@@ -1,26 +1,26 @@
 from unittest import TestCase
 from context import odynn
-import odynn.circuit as cr
-import odynn.datas
-from odynn import utils
+import odin.circuit as cr
+import odin.datas
+from odin import utils
 import numpy as np
-from odynn import optim
-from odynn.coptim import CircuitOpt
-import odynn.csimul as csim
-import odynn.neuron as nr
+from odin import optim
+from odin.coptim import CircuitOpt
+import odin.csimul as csim
+import odin.neuron as nr
 import tensorflow as tf
 
 n_neuron = 2
-conns = {(0, 1): odynn.circuit.SYNAPSE_inhib,
-         (1, 0): odynn.circuit.SYNAPSE_inhib}
-conns_opt = {(0, 1): odynn.circuit.get_syn_rand(False),
-             (1, 0): odynn.circuit.get_syn_rand(False)}
+conns = {(0, 1): odin.circuit.SYNAPSE_inhib,
+         (1, 0): odin.circuit.SYNAPSE_inhib}
+conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+             (1, 0): odin.circuit.get_syn_rand(False)}
 conns_opt_parallel = [conns_opt for _ in range(10)]
 dir = 'unittest/'
 dir = utils.set_dir(dir)
 
 dt = 0.5
-t, i = odynn.datas.give_train(dt=dt, max_t=5.)
+t, i = odin.datas.give_train(dt=dt, max_t=5.)
 length = int(5./0.5)
 i_1 = np.zeros(i.shape)
 i_injs = np.stack([i, i_1], axis=2)
@@ -35,8 +35,8 @@ class TestCircuitOpt(TestCase):
 
     def test_loss(self):
         pars = [p for _ in range(n_neuron)]
-        conns_opt = {(0, 1): odynn.circuit.get_syn_rand(False),
-                     (1, 0): odynn.circuit.get_syn_rand(False)}
+        conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+                     (1, 0): odin.circuit.get_syn_rand(False)}
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         res = tf.zeros((len(t), len(nr.PyBioNeuron.default_init_state), 3, n_neuron))
         ys_ = [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test")] + [tf.placeholder(shape=(len(t), 3, n_neuron), dtype=tf.float32, name="test") for _ in nr.PyBioNeuron.ions.items()]
@@ -46,8 +46,8 @@ class TestCircuitOpt(TestCase):
 
     def test_settings(self):
         pars = [p for _ in range(n_neuron)]
-        conns_opt = {(0, 1): odynn.circuit.get_syn_rand(False),
-                     (1, 0): odynn.circuit.get_syn_rand(False)}
+        conns_opt = {(0, 1): odin.circuit.get_syn_rand(False),
+                     (1, 0): odin.circuit.get_syn_rand(False)}
         co = CircuitOpt(cr.CircuitTf(nr.BioNeuronTf(pars, dt=dt), synapses=conns_opt))
         train = [np.zeros(2), np.zeros(2), [None, None, np.zeros(4)]]
         co.l_rate = (0.1,0.1,0.1)
@@ -97,7 +97,7 @@ class TestCircuitOpt(TestCase):
         co = CircuitOpt(circuit=c)
         co.optimize(dir, train=train, n_out=[0, 1], l_rate=(0.01, 9, 0.95), epochs=1, plot=plot, evol_var=evol_var)
 
-        conns_opt[(0, 2)] = odynn.circuit.get_syn_rand()
+        conns_opt[(0, 2)] = odin.circuit.get_syn_rand()
         with self.assertRaises(AttributeError):
             c = cr.CircuitTf(neurons=neurons, synapses=conns_opt)
             co = CircuitOpt(circuit=c)

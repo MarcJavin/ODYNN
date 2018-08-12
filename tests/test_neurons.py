@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 from unittest import TestCase
-from odynn import neuron as nr
+from odin import neuron as nr
 import numpy as np
 
 

@@ -1,11 +1,11 @@
-from odynn import optim, utils
+from odin import optim, utils
 import pandas as pd
 import seaborn as sns
 import pylab as plt
 import numpy as np
-from odynn.models import cfg_model
-from odynn import neuron as nr
-from odynn import nsimul as ns
+from odin.models import cfg_model
+from odin import neuron as nr
+from odin import nsimul as ns
 from sklearn.decomposition import PCA
 
 
@@ -89,8 +89,8 @@ def sigm():
 def table():
     import re
     neur = cfg_model.NEURON_MODEL
-    from odynn.models import celeg
-    dir = utils.set_dir('Integcomp_both_mod1noiNtau')
+    from odin.models import celeg
+    dir = utils.set_dir('Integcomp_volt_mod3dt0.1-YES')
     best = optim.get_best_result(dir)
     for k, v in neur.default_params.items():
         v = neur._constraints_dic.get(k, ['-inf', 'inf'])
@@ -145,7 +145,8 @@ def hhsimp_box(df):
 if __name__ == '__main__':
 
 
-    dir = utils.set_dir('Integcomp_volt_hhsimpnoise')
+
+    dir = utils.set_dir('Integcomp_volt_mod3dt0.1-YES')
 
     # dic = optim.get_vars(dir, loss=False)
     # df = pd.DataFrame.from_dict(dic)
@@ -155,11 +156,12 @@ if __name__ == '__main__':
 
 
     dic = optim.get_vars(dir, loss=True)
+    from odin import datas
 
-    train, test = optim.get_data(dir)
+    train = datas.give_train(0.1)
+    test = datas.give_test(0.1)
+    # train, test = optim.get_data(dir)
     df = pd.DataFrame.from_dict(dic)#.head(4)
-    corr(df)
-    exit(0)
     df = df.sort_values('loss').reset_index(drop=True)
     # df = df.dropna()
     sns.barplot(x=df.index, y='loss', data=df)

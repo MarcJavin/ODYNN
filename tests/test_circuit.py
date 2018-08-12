@@ -1,10 +1,10 @@
 from unittest import TestCase
 from context import odynn
-import odynn.circuit
-from odynn.circuit import CircuitTf, Circuit
+import odin.circuit
+from odin.circuit import CircuitTf, Circuit
 import numpy as np
-from odynn.neuron import BioNeuronTf, PyBioNeuron
-from odynn import utils
+from odin.neuron import BioNeuronTf, PyBioNeuron
+from odin import utils
 import pickle
 
 
@@ -14,17 +14,17 @@ class TestCircuit(TestCase):
 
     dir = utils.set_dir('unittest')
     neuron = BioNeuronTf([PyBioNeuron.default_params for _ in range(5)])
-    conns = {(0, 4): odynn.circuit.SYNAPSE,
-             (1, 4): odynn.circuit.SYNAPSE,
-             (2, 4): odynn.circuit.SYNAPSE,
-             (3, 2): odynn.circuit.SYNAPSE,
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              }
     circ = Circuit(neuron, conns)
 
-    conns2 = [{(0, 4): odynn.circuit.SYNAPSE,
-             (1, 4): odynn.circuit.SYNAPSE,
-             (2, 4): odynn.circuit.SYNAPSE,
-             (3, 2): odynn.circuit.SYNAPSE,
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              } for _ in range(7)]
     circ2 = Circuit(neuron, conns2)
 
@@ -57,16 +57,16 @@ class TestCircuit(TestCase):
         with self.assertRaises(AttributeError):
             cbad = Circuit(neuron_bad, self.conns2, gaps={'G_gap':7})
         with self.assertRaises(AttributeError):
-            cbad = Circuit(neuron_bad, gaps=[{'G_gap':7} for _ in range(2)], synapses={(0, 4): odynn.circuit.SYNAPSE})
+            cbad = Circuit(neuron_bad, gaps=[{'G_gap':7} for _ in range(2)], synapses={(0, 4): odin.circuit.SYNAPSE})
 
         Circuit(neurons=self.neuron, gaps={k: {'G_gap':0.5} for k in self.conns.keys()})
 
     def test_pickle(self):
         neuron = BioNeuronTf([PyBioNeuron.default_params for _ in range(5)])
-        conns = {(0, 4): odynn.circuit.SYNAPSE,
-                 (1, 4): odynn.circuit.SYNAPSE,
-                 (2, 4): odynn.circuit.SYNAPSE,
-                 (3, 2): odynn.circuit.SYNAPSE,
+        conns = {(0, 4): odin.circuit.SYNAPSE,
+                 (1, 4): odin.circuit.SYNAPSE,
+                 (2, 4): odin.circuit.SYNAPSE,
+                 (3, 2): odin.circuit.SYNAPSE,
                  }
         c = CircuitTf(neuron, conns)
         with open(self.dir + 'yeee', 'wb') as f:
@@ -96,11 +96,11 @@ class TestCircuit(TestCase):
 
     def test_gap(self):
 
-        circ = Circuit(self.neuron, self.conns, gaps={(0, 1): odynn.circuit.GAP})
+        circ = Circuit(self.neuron, self.conns, gaps={(0, 1): odin.circuit.GAP})
         self.assertEqual(circ.n_gap, 1)
         self.assertEqual(circ.n_synapse, 4)
         circ = Circuit(self.neuron, {},
-                       gaps={(0, 1): odynn.circuit.GAP, (2, 3): odynn.circuit.GAP, (0, 4): odynn.circuit.GAP})
+                       gaps={(0, 1): odin.circuit.GAP, (2, 3): odin.circuit.GAP, (0, 4): odin.circuit.GAP})
         self.assertEqual(circ.n_gap, 3)
         self.assertEqual(circ.n_synapse, 0)
 
@@ -132,19 +132,19 @@ class TestCircuit(TestCase):
         pass
 
 class TestCircuitTf(TestCase):
-    conns = {(0, 4): odynn.circuit.SYNAPSE,
-             (1, 4): odynn.circuit.SYNAPSE,
-             (2, 4): odynn.circuit.SYNAPSE,
-             (3, 2): odynn.circuit.SYNAPSE,
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              }
-    gaps = {(0, 3): odynn.circuit.GAP}
+    gaps = {(0, 3): odin.circuit.GAP}
 
-    conns2 = [{(0, 4): odynn.circuit.SYNAPSE,
-               (1, 4): odynn.circuit.SYNAPSE,
-               (2, 4): odynn.circuit.SYNAPSE,
-               (3, 2): odynn.circuit.SYNAPSE,
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+               (1, 4): odin.circuit.SYNAPSE,
+               (2, 4): odin.circuit.SYNAPSE,
+               (3, 2): odin.circuit.SYNAPSE,
                } for _ in range(4)]
-    gaps2 = [{(0, 3): odynn.circuit.GAP} for _ in range(4)]
+    gaps2 = [{(0, 3): odin.circuit.GAP} for _ in range(4)]
     neuron = BioNeuronTf([PyBioNeuron.default_params for _ in range(5)])
 
     def test_calculate(self):
@@ -172,19 +172,19 @@ class TestCircuitTf(TestCase):
 class TestCircuitFix(TestCase):
 
     dir = utils.set_dir('unittest')
-    conns = {(0, 4): odynn.circuit.SYNAPSE,
-             (1, 4): odynn.circuit.SYNAPSE,
-             (2, 4): odynn.circuit.SYNAPSE,
-             (3, 2): odynn.circuit.SYNAPSE,
+    conns = {(0, 4): odin.circuit.SYNAPSE,
+             (1, 4): odin.circuit.SYNAPSE,
+             (2, 4): odin.circuit.SYNAPSE,
+             (3, 2): odin.circuit.SYNAPSE,
              }
-    gaps = {(0,3): odynn.circuit.GAP}
+    gaps = {(0,3): odin.circuit.GAP}
 
-    conns2 = [{(0, 4): odynn.circuit.SYNAPSE,
-               (1, 4): odynn.circuit.SYNAPSE,
-               (2, 4): odynn.circuit.SYNAPSE,
-               (3, 2): odynn.circuit.SYNAPSE,
+    conns2 = [{(0, 4): odin.circuit.SYNAPSE,
+               (1, 4): odin.circuit.SYNAPSE,
+               (2, 4): odin.circuit.SYNAPSE,
+               (3, 2): odin.circuit.SYNAPSE,
                } for _ in range(4)]
-    gaps2 = [{(0,3): odynn.circuit.GAP} for _ in range(4)]
+    gaps2 = [{(0,3): odin.circuit.GAP} for _ in range(4)]
 
     def test_calculate(self):
         print('#1 batch')

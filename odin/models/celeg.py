@@ -17,8 +17,8 @@ from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 import collections
 
-from odynn.utils import box
-from odynn import utils
+from odin.utils import box
+from odin import utils
 from . import model
 from pylab import plt
 

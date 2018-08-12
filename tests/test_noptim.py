@@ -1,9 +1,9 @@
 from unittest import TestCase
-from odynn import utils, datas
-from odynn.neuron import NeuronLSTM, BioNeuronTf, PyBioNeuron
-from odynn.noptim import NeuronOpt
-from odynn.nsimul import simul
-from odynn import optim
+from odin import utils, datas
+from odin.neuron import NeuronLSTM, BioNeuronTf, PyBioNeuron
+from odin.noptim import NeuronOpt
+from odin.nsimul import simul
+from odin import optim
 import tensorflow as tf
 import numpy as np
 

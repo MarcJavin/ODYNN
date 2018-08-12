@@ -10,14 +10,14 @@ import sys
 import numpy as np
 import scipy as sp
 
-from odynn import neuron as nr
-from odynn import circuit
-from odynn import datas
-from odynn import utils
-from odynn.neuron import PyBioNeuron
-from odynn.circuit import CircuitTf
-from odynn.coptim import CircuitOpt
-import odynn.csimul as sim
+from odin import neuron as nr
+from odin import circuit
+from odin import datas
+from odin import utils
+from odin.neuron import PyBioNeuron
+from odin.circuit import CircuitTf
+from odin.coptim import CircuitOpt
+import odin.csimul as sim
 
 p = PyBioNeuron.default_params
 

@@ -1,7 +1,7 @@
 from unittest import TestCase
-from odynn.neuron import BioNeuronTf, PyBioNeuron
-from odynn import utils
-from odynn.models import cfg_model
+from odin.neuron import BioNeuronTf, PyBioNeuron
+from odin import utils
+from odin.models import cfg_model
 import numpy as np
 import pickle
 import tensorflow as tf

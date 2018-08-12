@@ -6,7 +6,7 @@
 """
 
 from unittest import TestCase
-from odynn import circuit, csimul, neuron
+from odin import circuit, csimul, neuron
 import numpy as np
 
 

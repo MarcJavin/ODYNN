@@ -76,7 +76,7 @@ def box(df, cols, labels):
     lighter = [colorscale(c, 0.6) for c in cols]
     sns.boxplot(data=df[labels], palette = lighter)
     sns.swarmplot(data=df[labels], palette=cols, size=2)
-    from odynn.models.cfg_model import NEURON_MODEL
+    from odin.models.cfg_model import NEURON_MODEL
     import pandas as pd
     dd = pd.DataFrame(NEURON_MODEL.default_params, index=[0])
     sns.swarmplot(data=dd[labels], color='r', edgecolor='#ffffff', marker='*', linewidth=1, size=20)

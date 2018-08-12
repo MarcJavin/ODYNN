@@ -6,7 +6,7 @@
 """
 
 from unittest import TestCase
-from odynn import utils
+from odin import utils
 import os
 import numpy as np
 

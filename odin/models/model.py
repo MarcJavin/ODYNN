@@ -9,8 +9,8 @@ import pylab as plt
 from cycler import cycler
 from abc import ABC, abstractmethod
 import numpy as np
-from odynn import utils
-from odynn.utils import classproperty
+from odin import utils
+from odin.utils import classproperty
 import tensorflow as tf
 import scipy as sp
 

@@ -6,14 +6,14 @@
 """
 import sys
 
-from odynn import circuit
-from odynn.circuit import CircuitTf
-from odynn import datas
-from odynn import utils
-from odynn import neuron as nr
-from odynn.models import cfg_model
-from odynn.coptim import CircuitOpt
-import odynn.csimul as sim
+from odin import circuit
+from odin.circuit import CircuitTf
+from odin import datas
+from odin import utils
+from odin import neuron as nr
+from odin.models import cfg_model
+from odin.coptim import CircuitOpt
+import odin.csimul as sim
 
 p = cfg_model.NEURON_MODEL.default_params
 rand = cfg_model.NEURON_MODEL.get_random
@@ -124,7 +124,7 @@ def run():
     copt.optimize(subdir=dir, train=train, test=test, n_out=[4, 5], l_rate=(0.1, 9, 0.95))
 
 def analyse(dir):
-    from odynn import optim
+    from odin import optim
     import pandas as pd
     import seaborn as sns
     import pylab as plt

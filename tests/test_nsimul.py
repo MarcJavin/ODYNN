@@ -1,8 +1,8 @@
 from unittest import TestCase
-import odynn.nsimul as sim
-from odynn import datas
-from odynn.models import cfg_model
-from odynn.neuron import PyBioNeuron
+import odin.nsimul as sim
+from odin import datas
+from odin.models import cfg_model
+from odin.neuron import PyBioNeuron
 import numpy as np
 
 
