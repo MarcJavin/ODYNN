@@ -28,11 +28,11 @@ MODEL = PyBioNeuron
 pars = [MODEL.get_random() for i in range(100)]
 # pars = data.get_vars('Init_settings_100_2', 0)
 # pars = [dict([(ki, v[n]) for k, v in pars.items()]) for n in range(len(pars['C_m']))]
-dt = 0.1
+dt = 1.
 t, iinj = datas.give_train(dt)
-i_inj = iinj[:,3][:,np.newaxis]
+i_inj = iinj#[:,3][:,np.newaxis]
 tt, it = datas.give_test(dt)
-it = it[:,1][:,np.newaxis]
+# it = it[:,1][:,np.newaxis]
 """Single optimisation"""
 
 
@@ -236,24 +236,26 @@ def test_lstm(dir):
     import pylab as plt
     dir = utils.set_dir(dir)
     n = optim.get_model(dir)
-    train, test = datas.get_real_data_norm()
+    train, test = optim.get_data(dir)
     trace = np.array(train[-1])
-    X = n.calculate(train[1])
-    Xt = n.calculate(test[1])
-    plt.subplot(2,1,1)
-    plt.plot(train[-1][-1], 'r', label='train data')
-    plt.plot(X[:,-1])
-    plt.legend()
-    plt.subplot(2,1,2)
-    plt.plot(test[-1][-1], 'r', label='test data')
-    plt.plot(Xt[:, -1])
-    plt.legend()
-    plt.show()
+    # X = n.calculate(train[1])
+    # Xt = n.calculate(test[1])
+
+    for i in range(train[1].shape[-1]):
+        sim.comp_neuron_trace(n, [train[-1][0][:,i], train[-1][-1][:,i]], i_inj=train[1][:,i], suffix='train%s'%i, save=True)
+        # plt.plot(train[-1][-1][:,i], 'r', label='target model')
+        # plt.plot(X[:,-1,i])
+        # utils.save_show(True, True, 'lstmvirtrain%s'%i, dpi=300)
+    for i in range(test[1].shape[-1]):
+        sim.comp_neuron_trace(n, [test[-1][0][:, i], test[-1][-1][:, i]], i_inj=test[1][:, i], suffix='test%s'%i, save=True)
+        # plt.plot(train[-1][-1][:,i], 'r', label='target model')
+        # plt.plot(X[:,-1,i])
+        # utils.save_show(True, True, 'lstmvirtest%s' % i, dpi=300)
     exit(0)
 
 if __name__ == '__main__':
 
-    #test_lstm('Real_data_1_lstm-YAYYY')
+    test_lstm('Integcomp_both_11noiselstm2_lstm-YAYYY')
 
     # with open('times', 'rb') as f:
     #     import pickle

@@ -161,8 +161,10 @@ class BioNeuron(Neuron):
         Neuron.__init__(self, dt=dt)
         if(init_p is None):
             init_p = self.default_params
+            self._num = 1
         elif(init_p == 'random'):
             init_p = self.get_random()
+            self._num = 1
         elif isinstance(init_p, list):
             self._num = len(init_p)
             if self._num == 1:

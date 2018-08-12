@@ -16,7 +16,7 @@ t = np.array(sp.arange(0.0, t_len, DT))
 i_inj = 10. * ((t > 100) & (t < 750)) + 20. * ((t > 1500) & (t < 2500)) + 40. * ((t > 3000) & (t < 4000))
 
 
-def comp_pars(ps, t=None, dt=DT, i_inj=i_inj, show=True, save=False):
+def comp_pars(ps, t=None, dt=DT, i_inj=i_inj, suffix='', show=True, save=False):
     """Compare different parameter sets on the same experiment
 
     Args:
@@ -35,7 +35,7 @@ def comp_pars(ps, t=None, dt=DT, i_inj=i_inj, show=True, save=False):
     neurons = PyBioNeuron(init_p=ps, dt=dt)
     X = neurons.calculate(i_inj)
     print("Simulation time : ", time.time() - start)
-    neurons.plot_output(t, i_inj, X, show=show, save=save)
+    neurons.plot_output(t, i_inj, X, suffix=suffix, show=show, save=save)
 
 def comp_pars_targ(p, p_targ, t=None, dt=DT, i_inj=i_inj, suffix='', save=False, show=True):
     """Compare parameter sets with a target
@@ -65,7 +65,7 @@ def comp_pars_targ(p, p_targ, t=None, dt=DT, i_inj=i_inj, suffix='', save=False,
     print("Simulation time : ", time.time() - start)
     neurons.plot_output(t, i_inj, X[:, :, :-1], np.moveaxis(X[:, :, -1],1,0), suffix=suffix, save=save, show=show, l=2, lt=2, targstyle='-.')
 
-def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
+def comp_neurons(neurons, i_inj=i_inj, suffix='', show=True, save=False):
     """Compare different neurons on the same experiment
 
     Args:
@@ -85,7 +85,7 @@ def comp_neurons(neurons, i_inj=i_inj, show=True, save=False):
     t = sp.arange(0, len(i_inj)*neurons[0].dt, neurons[0].dt)
     neurons[0].plot_output(t, i_inj, X, show=show, save=save)
 
-def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=False):
+def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, suffix='', show=True, save=False):
     """Compare a neuron with a given measured trace after scaling
 
     Args:
@@ -106,7 +106,7 @@ def comp_neuron_trace(neuron, trace, i_inj=i_inj, scale=False, show=True, save=F
             if t is not None:
                 t *= np.max(X[:,i]) / np.max(t)
     ts = sp.arange(0., len(i_inj)*neuron.dt, neuron.dt)
-    neuron.plot_output(ts, i_inj, X, trace, show=show, save=save)
+    neuron.plot_output(ts, i_inj, X, trace, suffix=suffix, show=show, save=save)
 
 
 """Runs and plot the neuron"""

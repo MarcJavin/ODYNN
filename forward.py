@@ -74,31 +74,31 @@ commands = set(commands[2:])
 DEFAULT_F = {
     'decay_ca': 13.8,
     'rho_ca': 0.23,
-    'p__tau': 100.,  # ms
+    'p__tau': 2.25,  # ms
     'p__scale': 7.43,  # mV
     'p__mdp': -8.05,  # mV
-    'q__tau': 100.,
+    'q__tau': 150.,
     'q__scale': -9.97,
     'q__mdp': -15.6,
-    'n__tau': 1050.,
-    'n__scale': 20.,
-    'n__mdp': 2.,
-    'f__tau': 301.,
-    'f__scale': -20.03,
-    'f__mdp': 5.2,
-    'e__tau': 20.,
-    'e__scale': 15.,
-    'e__mdp': -6.,
+    'n__tau': 25.,
+    'n__scale': 15.85,
+    'n__mdp': 19.9,
+    'f__tau': 151.,
+    'f__scale': -5.,
+    'f__mdp': 25.2,
+    'e__tau': 0.1,
+    'e__scale': 6.75,
+    'e__mdp': -3.36,
     'h__alpha': 0.282,  # None
     'h__scale': -1.,  # mol per m3
-    'h__mdp': 302.,
+    'h__mdp': 6.4,
     'C_m': 5.0,
     'g_Ca': 1.81,
     'g_Ks': 0.46,
     'g_Kf': 0.042,
     'g_L': 0.002,
     'E_Ca': 10.0,
-    'E_K': -60.0,
+    'E_K': -70.0,
     'E_L': -60.0
 }
 
@@ -456,8 +456,8 @@ if __name__=='__main__':
 
 
     fixed = ()
-    # neurons = neuron.BioNeuronTf([neuron.BioNeuronTf.default_params for _ in range(39)])
-    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
+    neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all')
+    ctf = cr.CircuitTf.create_random(n_neuron=39, neurons=neurons, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
 
 

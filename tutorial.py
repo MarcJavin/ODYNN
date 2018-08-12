@@ -90,7 +90,7 @@ def table():
     import re
     neur = cfg_model.NEURON_MODEL
     from odynn.models import celeg
-    dir = utils.set_dir('Integcomp_volt_hhsimpnoise')
+    dir = utils.set_dir('Integcomp_both_mod1noiNtau')
     best = optim.get_best_result(dir)
     for k, v in neur.default_params.items():
         v = neur._constraints_dic.get(k, ['-inf', 'inf'])
@@ -144,6 +144,8 @@ def hhsimp_box(df):
 
 if __name__ == '__main__':
 
+    table()
+
     dir = utils.set_dir('Integcomp_both_mod1noiNtau')
     dic = optim.get_vars(dir, loss=True)
 
@@ -165,6 +167,7 @@ if __name__ == '__main__':
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
     p = optim.get_best_result(dir)
+
     for i in range(train[1].shape[-1]):
         ns.comp_pars_targ(p, cfg_model.NEURON_MODEL.default_params, dt=train[0][1] - train[0][0], i_inj=train[1][:,i], suffix='virtrain%s'%i, show=True, save=True)
     for i in range(test[1].shape[-1]):
