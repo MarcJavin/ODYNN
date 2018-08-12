@@ -144,24 +144,30 @@ def hhsimp_box(df):
 
 if __name__ == '__main__':
 
-    table()
 
-    dir = utils.set_dir('Integcomp_both_mod1noiNtau')
+    dir = utils.set_dir('Integcomp_volt_hhsimpnoise')
+
+    # dic = optim.get_vars(dir, loss=False)
+    # df = pd.DataFrame.from_dict(dic)
+    # dfdisp = (df - df.mean()) / df.std()
+    # plt.plot(dfdisp.transpose())
+    # utils.save_show(True, True, 'disp', dpi=300)
+
+
     dic = optim.get_vars(dir, loss=True)
 
     train, test = optim.get_data(dir)
     df = pd.DataFrame.from_dict(dic)#.head(4)
+    corr(df)
+    exit(0)
     df = df.sort_values('loss').reset_index(drop=True)
     # df = df.dropna()
     sns.barplot(x=df.index, y='loss', data=df)
     # df.plot.bar(y='loss')
     utils.save_show(True, True, 'lossfin_virt', dpi=300)
     # df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
-    dfdisp = (df - df.mean()) / df.std()
-    plt.plot(dfdisp.transpose())
-    utils.save_show(True, True, 'disp', dpi=300)
-    corr(df)
 
+    corr(df)
     cfg_model.NEURON_MODEL.boxplot_vars(dic, show=True, save=True)
 
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))

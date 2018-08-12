@@ -32,7 +32,7 @@ dt = 1.
 t, iinj = datas.give_train(dt)
 i_inj = iinj#[:,3][:,np.newaxis]
 tt, it = datas.give_test(dt)
-# it = it[:,1][:,np.newaxis]
+#it = it[:,1][:,np.newaxis]
 """Single optimisation"""
 
 
@@ -238,24 +238,25 @@ def test_lstm(dir):
     n = optim.get_model(dir)
     train, test = optim.get_data(dir)
     trace = np.array(train[-1])
-    # X = n.calculate(train[1])
-    # Xt = n.calculate(test[1])
+    X = n.calculate(train[1])
+    Xt = n.calculate(test[1])
 
     for i in range(train[1].shape[-1]):
-        sim.comp_neuron_trace(n, [train[-1][0][:,i], train[-1][-1][:,i]], i_inj=train[1][:,i], suffix='train%s'%i, save=True)
+        # sim.comp_neuron_trace(n, [train[-1][0][:,i], train[-1][-1][:,i]], i_inj=train[1][:,i], suffix='train%s'%i, save=True)
         # plt.plot(train[-1][-1][:,i], 'r', label='target model')
-        # plt.plot(X[:,-1,i])
-        # utils.save_show(True, True, 'lstmvirtrain%s'%i, dpi=300)
+        plt.plot(X[:,0,i])
+        plt.title('Membrane potential (mV)')
+        utils.save_show(True, True, 'lstmvirtrain%s'%i, dpi=300)
     for i in range(test[1].shape[-1]):
-        sim.comp_neuron_trace(n, [test[-1][0][:, i], test[-1][-1][:, i]], i_inj=test[1][:, i], suffix='test%s'%i, save=True)
+        # sim.comp_neuron_trace(n, [test[-1][0][:, i], test[-1][-1][:, i]], i_inj=test[1][:, i], suffix='test%s'%i, save=True)
         # plt.plot(train[-1][-1][:,i], 'r', label='target model')
-        # plt.plot(X[:,-1,i])
-        # utils.save_show(True, True, 'lstmvirtest%s' % i, dpi=300)
+        plt.plot(X[:,0,i])
+        utils.save_show(True, True, 'lstmvirtest%s' % i, dpi=300)
     exit(0)
 
 if __name__ == '__main__':
 
-    test_lstm('Integcomp_both_11noiselstm2_lstm-YAYYY')
+    # test_lstm('Real_data_11_lstm-YAYYY')
 
     # with open('times', 'rb') as f:
     #     import pickle

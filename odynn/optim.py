@@ -352,7 +352,7 @@ class Optimizer(ABC):
                             self.optimized.plot_vars(dict([(name, val[:i + 2]) for name, val in vars.items()]),
                                                  suffix=self.suffix + "evolution", show=False, save=True)
                     if res_test is not None and plot:
-                        self.plot_out(X, res_test, res_targ_test, suffix, step, 'test', i)
+                        self.plot_out(X_test, res_test, res_targ_test, suffix, step, 'test', i)
 
                     with open(self.dir + FILE_OBJ, 'wb') as f:
                         self.optimized.predump(sess)

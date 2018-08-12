@@ -25,10 +25,10 @@ from pylab import plt
 RATE_COLORS = {'p' : '#00ccff',
                'q' : '#0000ff',
                'n' : '#cc00ff',
-               'e' : '#ff6600',
-               'f' : '#ffbb00',
-               'h' : '#fe9100'
-                }
+               'e' : '#b30000',
+               'f' : '#ff9900',
+               'h' : '#ff1a1a'
+}
 RATE_COLORS = collections.OrderedDict(sorted(RATE_COLORS.items(), key=lambda t: t[0]))
 GATES = ['e', 'f', 'n', 'p', 'q']
 CONDS = ['g_Ks', 'g_Kf', 'g_Ca', 'g_L']
