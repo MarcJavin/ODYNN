@@ -413,7 +413,7 @@ class CElegansNeuron(model.BioNeuron):
         plt.figure()
 
         plt.subplot(5, 1, 1)
-        plt.title('Hodgkin-Huxley Neuron')
+        plt.title('C.elegans Hodgkin-Huxley Neuron')
         if (V.ndim == 1):
             plt.plot(ts, V, 'k')
         else:
