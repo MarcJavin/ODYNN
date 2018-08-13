@@ -77,16 +77,5 @@ ODYNN is still in development and its syntax might change.
 TODO
 ---------------
 
-- documentation
-- tutorial
-- add noise target
-
-0) lstm model to generate the outputs of AVA and AVB.
-1) full HH model.
-2) full LSTM model with our synapses.
-3) change only AVA with LSTM and all others with HH
-4) change both AVA and AVB with LSTM and the rest with HH
-5) change all sensory neurons with LSTM
-6) change all interneurons with HH.
-7) make all with LSTM cells except sensors.
-8) make all with LSTM cells except the AVA and AVB
+- more documentation
+- more tutorials
