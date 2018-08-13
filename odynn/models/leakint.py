@@ -33,6 +33,7 @@ class LeakyIntegrate(BioNeuron):
         V = X[0]
         V = (V * (self._param['C_m'] / self.dt) + (i_inj + self._param['g_L'] * self._param['E_L'])) /\
             ((self._param['C_m'] / self.dt) + self._param['g_L'])
+        # V = V + self.dt*(i_inj + self._i_L(V))/self._param['C_m']
         if self._tensors:
             return tf.stack([V])
         else:

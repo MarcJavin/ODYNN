@@ -22,7 +22,7 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.5
+dt = 0.1
 n_parallel = 5
 
 labels = {0: 'AVBL',
@@ -385,7 +385,7 @@ def show_res(dir, j=-1):
     #                                  labels=labels, commands=commands, n_rand=5, fixed='all')
     ctf = optim.get_model(dir)
     # print(ctf._neurons.parameter_names)
-    dic.update(ctf._neurons.init_params)
+    # dic.update(ctf._neurons.init_params)
     # ctf._neurons.init_names()
     ctf.init_params = dic
     states = ctf.calculate(np.stack([cur for _ in range(5)], axis=-1))
@@ -408,8 +408,9 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-
-    # show_res('Forward_leakydt0.5')
+    get_data()
+    get_curr()
+    show_res('FORWARD/Forward_leakinput-YAYYY')
 
     get_data()
     get_curr()
