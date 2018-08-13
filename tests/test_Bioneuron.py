@@ -271,9 +271,3 @@ class TestNeuronFix(TestCase):
         self.assertEqual(x.shape[0], i.shape[0]) #same time
         self.assertEqual(x.shape[1], hh._init_state.shape[0])
         self.assertEqual(x.shape[2], i.shape[1]) #same nb of batch
-
-
-
-
-if __name__ == '__main__':
-    TestCase.main()

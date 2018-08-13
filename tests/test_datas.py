@@ -7,6 +7,10 @@ class TestDatas(TestCase):
     def test_check_alpha(self):
         datas.check_alpha(show=False)
 
+    def test_get_real_data_norm(self):
+        train, test = datas.get_real_data_norm()
+        self.assertEqual(train[0][1] - train[0][0], test[0][1] - test[0][0])
+
     def test_get_real_data(self):
         dt=0.3
         ft = 2000.

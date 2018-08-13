@@ -4,13 +4,7 @@ import numpy as np
 
 p = cfg_model.NEURON_MODEL.default_params
 
-models2 = []
-for m in cfg_model.models:
-    class toto(m):
-    
-        def calculate(self, i):
-            pass
-    models2.append(toto)
+models2 = cfg_model.models
 
 class TestModels(TestCase):
 
@@ -73,8 +67,3 @@ class TestModels(TestCase):
             X = np.stack([mod.default_init_state for _ in range(7)], axis=1)
             X2 = hh.step(X, i)
             self.assertEqual(X.shape, X2.shape)
-
-
-
-if __name__ == '__main__':
-    TestCase.main()

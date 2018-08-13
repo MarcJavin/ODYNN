@@ -327,61 +327,6 @@ class CElegansNeuron(model.BioNeuron):
             X.append(self.step_exc(X[-1], i))
         return np.array(X[1:])
 
-    def comp(toto, curs):
-        import time
-        st = time.time()
-        v = toto.calculate_exc(curs)[:, 0]
-        print('explicit', time.time() - st)
-        plt.subplot(2, 1, 1)
-        plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'r')
-        plt.xlabel('Time (ms)')
-        plt.ylabel('Voltage (mV)')
-        plt.title('Explicit solver, dt=%sms' % toto.dt)
-        st = time.time()
-        v = toto.calculate(curs)[:, 0]
-        print('implicit', time.time() - st)
-        plt.subplot(2, 1, 2)
-        plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'g')
-        plt.xlabel('Time (ms)')
-        plt.ylabel('Voltage (mV)')
-        plt.title('Implicit-explicit solver, dt=%sms' % toto.dt)
-        plt.tight_layout()
-        plt.savefig('/home/marcus/Pictures/thesisreport/solversdt%s' % toto.dt, dpi=250)
-        plt.close()
-
-    def step_exc(self, X, i_inj):
-        """Integrate and update voltage after one time step
-
-        Args:
-          X(np.array or tensor): state vector
-          i_inj(np.array or tensor): input current
-        
-        """
-        V = X[self.V_pos]
-        p = X[1]
-        q = X[2]
-        n = X[3]
-        e = X[4]
-        f = X[5]
-        cac = X[-1]
-
-        h = self._h(cac)
-        V = V + ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) / self._param[
-            'C_m']) * self.dt
-
-        cac = cac + (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
-                    (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
-        p = self._update_gate(p, 'p', V)
-        q = self._update_gate(q, 'q', V)
-        n = self._update_gate(n, 'n', V)
-        e = self._update_gate(e, 'e', V)
-        f = self._update_gate(f, 'f', V)
-
-        if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
-        else:
-            return np.array([V, p, q, n, e, f, cac])
-
     def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
         """plot all dynamics
 
@@ -601,6 +546,62 @@ class CElegansNeuron(model.BioNeuron):
             sns.heatmap(corr, cmap=cmap, center=0,
                         square=True, linewidths=.5, cbar_kws={"shrink": .5})
             utils.save_show(show=show, save=save, name='{}Correlation_{}'.format(utils.NEUR_DIR, suffix))
+
+    # def comp(toto, curs):
+    #     import time
+    #     st = time.time()
+    #     v = toto.calculate_exc(curs)[:, 0]
+    #     print('explicit', time.time() - st)
+    #     plt.subplot(2, 1, 1)
+    #     plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'r')
+    #     plt.xlabel('Time (ms)')
+    #     plt.ylabel('Voltage (mV)')
+    #     plt.title('Explicit solver, dt=%sms' % toto.dt)
+    #     st = time.time()
+    #     v = toto.calculate(curs)[:, 0]
+    #     print('implicit', time.time() - st)
+    #     plt.subplot(2, 1, 2)
+    #     plt.plot(np.arange(0, len(v) * toto.dt, toto.dt), v, 'g')
+    #     plt.xlabel('Time (ms)')
+    #     plt.ylabel('Voltage (mV)')
+    #     plt.title('Implicit-explicit solver, dt=%sms' % toto.dt)
+    #     plt.tight_layout()
+    #     plt.savefig('/home/marcus/Pictures/thesisreport/solversdt%s' % toto.dt, dpi=250)
+    #     plt.close()
+    #
+    # def step_exc(self, X, i_inj):
+    #     """Integrate and update voltage after one time step
+    #
+    #     Args:
+    #       X(np.array or tensor): state vector
+    #       i_inj(np.array or tensor): input current
+    #
+    #     """
+    #     V = X[self.V_pos]
+    #     p = X[1]
+    #     q = X[2]
+    #     n = X[3]
+    #     e = X[4]
+    #     f = X[5]
+    #     cac = X[-1]
+    #
+    #     h = self._h(cac)
+    #     V = V + ((i_inj - self._i_ca(V, e, f, h) - self._i_ks(V, n) - self._i_kf(V, p, q) - self._i_leak(V)) /
+    #              self._param[
+    #                  'C_m']) * self.dt
+    #
+    #     cac = cac + (-self._i_ca(V, e, f, h) * self._param['rho_ca'] - (
+    #             (cac - self.REST_CA) / self._param['decay_ca'])) * self.dt
+    #     p = self._update_gate(p, 'p', V)
+    #     q = self._update_gate(q, 'q', V)
+    #     n = self._update_gate(n, 'n', V)
+    #     e = self._update_gate(e, 'e', V)
+    #     f = self._update_gate(f, 'f', V)
+    #
+    #     if self._tensors:
+    #         return tf.stack([V, p, q, n, e, f, cac], 0)
+    #     else:
+    #         return np.array([V, p, q, n, e, f, cac])
 
 #     @staticmethod
 #     def ica_from_v(X, v_fix, self):
