@@ -21,7 +21,7 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.2
+dt = 0.1
 n_parallel = 5
 fake = True
 eq_cost = True
@@ -370,14 +370,14 @@ def get_conns():
 
 
 def show_res(dir, j=-1):
-    with open('forward_input', 'rb') as f:
-        cur = pickle.load(f)
-    cur = cur[:, np.newaxis, :]
-    with open('forward_target', 'rb') as f:
-        res = pickle.load(f)
+    # with open('forward_input', 'rb') as f:
+    #     cur = pickle.load(f)
+    # cur = cur[:, np.newaxis, :]
     from odynn import optim
 
     dir = utils.set_dir(dir)
+    train, __ = optim.get_data(dir)
+    cur = train[1]
     dic = optim.get_vars(dir, j, loss=False)
     [print(k) for k in dic.keys()]
     # print(dic)
@@ -386,13 +386,17 @@ def show_res(dir, j=-1):
     #                                  labels=labels, commands=commands, n_rand=5, fixed='all')
     ctf = optim.get_model(dir)
     # print(ctf._neurons.parameter_names)
-    # dic.update(ctf._neurons.init_params)
+    dic.update(ctf._neurons.init_params)
+    dic['tau'] = dic['tau'] * 100
     # ctf._neurons.init_names()
     ctf.init_params = dic
-    states = ctf.calculate(np.stack([cur for _ in range(5)], axis=-1))
+    states = ctf.calculate(np.stack([cur for _ in range(ctf.num)], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
-        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
+        try:
+            ctf.plots_output_mult(train[0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
+        except:
+            print('Fail')
     exit(0)
 
 def count_in_out():
@@ -409,6 +413,7 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
+    show_res('Forward_celegtestfakeeqcost0.5', 300)
 
     get_data()
     get_curr()
@@ -441,10 +446,10 @@ if __name__=='__main__':
 
     dir = utils.set_dir(name)
 
-    with open('settings_fw', 'w') as f:
-        f.write('eq_cost : %d'%eq_cost + '\n' +
-                'fake : %d'%fake + '\n' +
-                'model %d'%cfg_model.NEURON_MODEL)
+    with open(dir+'settings_fw', 'w') as f:
+        f.write('eq_cost : %s'%eq_cost + '\n' +
+                'fake : %s'%fake + '\n' +
+                'model %s'%cfg_model.NEURON_MODEL)
 
     with open('forward_target', 'rb') as f:
         res = pickle.load(f)

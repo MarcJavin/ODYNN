@@ -64,7 +64,7 @@ MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 1.
+MAX_G = 0.2
 MIN_TAU = 1.
 MAX_TAU = 200.
 
