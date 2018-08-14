@@ -12,8 +12,7 @@ from odynn import utils, neuron
 from odynn import circuit as cr
 from odynn import coptim as co
 
-import matplotlib as mpl
-import socket
+from odynn.models import cfg_model
 import numpy as np
 import pickle
 import pylab as plt
@@ -22,8 +21,10 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.1
+dt = 0.2
 n_parallel = 5
+fake = True
+eq_cost = True
 
 labels = {0: 'AVBL',
               1: 'AVBR',
@@ -408,9 +409,6 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-    get_data()
-    get_curr()
-    show_res('FORWARD/Forward_leakinput-YAYYY')
 
     get_data()
     get_curr()
@@ -425,8 +423,28 @@ if __name__=='__main__':
     plt.ylabel('Neuron')
     utils.save_show(False, False, 'Input Current', dpi=300)
 
-    name = 'Forward_{}'.format(sys.argv[1])
+    suffix = sys.argv[1]
+    for i,m in enumerate(cfg_model.models):
+        if cfg_model.NEURON_MODEL == m:
+            suffix = cfg_model.models_name[i] + suffix
+            break
+    if fake:
+        suffix = suffix + 'fake'
+    else:
+        suffix = suffix + 'real'
+    if eq_cost:
+        suffix = suffix + 'eqcost'
+    else:
+        suffix = suffix + 'difcost'
+    suffix = suffix + str(dt)
+    name = 'Forward_{}'.format(suffix)
+
     dir = utils.set_dir(name)
+
+    with open('settings_fw', 'w') as f:
+        f.write('eq_cost : %d'%eq_cost + '\n' +
+                'fake : %d'%fake + '\n' +
+                'model %d'%cfg_model.NEURON_MODEL)
 
     with open('forward_target', 'rb') as f:
         res = pickle.load(f)
@@ -434,15 +452,16 @@ if __name__=='__main__':
     print(cur.shape)
     print(res.shape)
 
-    for i in range(4, len(labels)):
-        res[:, i+1] = np.roll(res[:, i], int(80/dt), axis=0)
-    # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
-    #     res[:7000, i+1] = -35.
-    # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
-    #     res[:3000, i+1] = -35.
-    # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
-    #     res[:2000, i+1] = -35.
-    res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
+    if(fake):
+        for i in range(4, len(labels)):
+            res[:, i+1] = np.roll(res[:, i], int(80/dt), axis=0)
+        # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
+        #     res[:7000, i+1] = -35.
+        # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
+        #     res[:3000, i+1] = -35.
+        # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
+        #     res[:2000, i+1] = -35.
+        res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
@@ -457,7 +476,7 @@ if __name__=='__main__':
 
 
     fixed = ()
-    neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all')
+    neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all', dt=dt)
     ctf = cr.CircuitTf.create_random(n_neuron=39, neurons=neurons, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
 
@@ -465,5 +484,9 @@ if __name__=='__main__':
 
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
+    if eq_cost:
+        w_n = None
+    else:
+        w_n = count_in_out()
     copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], w_n=count_in_out(), n_out=list(np.arange(39)), l_rate=(0.4, 9, 0.92))
 
