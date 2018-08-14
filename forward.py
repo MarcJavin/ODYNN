@@ -21,8 +21,8 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.1
-n_parallel = 5
+dt = 0.5
+n_parallel = 10
 fake = True
 eq_cost = True
 
@@ -67,7 +67,8 @@ labels = {0: 'AVBL',
               38: 'VD13'
               }
 rev_labels = {v: k for k,v in labels.items()}
-groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in range(11)] + [4 for _ in range(13)]
+# groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in range(11)] + [4 for _ in range(13)]
+groups = None
 
 commands = [labels.values()]
 commands = set(commands[2:])
@@ -379,17 +380,24 @@ def show_res(dir, j=-1):
     train, __ = optim.get_data(dir)
     cur = train[1]
     dic = optim.get_vars(dir, j, loss=False)
-    [print(k) for k in dic.keys()]
+    taus = dic['tau']
+    with open('toto', 'rb') as f:
+        dic = pickle.load(f)
+    dic['tau'] = np.full(dic['G'].shape, 1., dtype=np.float32)
+    dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
+
+    [print(k, dic[k].shape) for k in dic.keys()]
     # print(dic)
-    dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
+    # dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     # ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
     #                                  labels=labels, commands=commands, n_rand=5, fixed='all')
     ctf = optim.get_model(dir)
     # print(ctf._neurons.parameter_names)
-    dic.update(ctf._neurons.init_params)
-    dic['tau'] = dic['tau'] * 100
+
+    # dic['tau'] = dic['tau'] * 100
     # ctf._neurons.init_names()
     ctf.init_params = dic
+    print(ctf.num)
     states = ctf.calculate(np.stack([cur for _ in range(ctf.num)], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
@@ -413,7 +421,7 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-    show_res('Forward_celegtestfakeeqcost0.5', 300)
+    # show_res('Forward_celegtestfakeeqcost0.5', 300)
 
     get_data()
     get_curr()
@@ -481,12 +489,16 @@ if __name__=='__main__':
 
 
     fixed = ()
-    neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all', dt=dt)
-    ctf = cr.CircuitTf.create_random(n_neuron=39, neurons=neurons, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
+    # neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all', dt=dt)
+    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
 
 
-
+    with open('toto', 'rb') as f:
+        dic = pickle.load(f)
+    dic['tau'] = np.full(dic['G'].shape, 1., dtype=np.float32)
+    dic = {k: np.stack([v[:,1] for _ in range(n_parallel)], axis=-1) for k,v in dic.items()}
+    ctf.init_params = dic
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
     if eq_cost:

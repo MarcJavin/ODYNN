@@ -126,6 +126,9 @@ class BioNeuronTf(MODEL, NeuronTf):
             self._num = len(self._init_p[self.parameter_names[0]])
             self._init_state = np.stack([self.default_init_state for _ in range(self._num)], axis=-1)
             if self._init_p[self.parameter_names[0]].ndim == 2:
+                print(self._init_p[self.parameter_names[0]].shape)
+                print(value[self.parameter_names[0]].shape)
+                print('holaaaaaaaaaa')
                 n = self._init_p[self.parameter_names[0]].shape[-1]
                 self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
         for v in self._init_p.values():

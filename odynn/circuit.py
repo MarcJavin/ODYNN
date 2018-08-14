@@ -529,10 +529,7 @@ class CircuitTf(Circuit, Optimized):
         self.__dict__.update(state)
         self._param = {}
         self._constraints = {}
-        if self._num > 1:
-            self._states = np.zeros((self.n_synapse, self._num))
-        else:
-            self._states = np.zeros(self.n_synapse)
+        self._states = {}
         self._neurons.__setstate__(state['neurons'])
 
     @property
@@ -567,6 +564,10 @@ class CircuitTf(Circuit, Optimized):
 
     def reset(self):
         """prepare the variables as tensors, prepare the constraints, call reset for self._neurons"""
+        if self._num > 1:
+            self._states = np.zeros((self.n_synapse, self._num))
+        else:
+            self._states = np.zeros(self.n_synapse)
         self._param = {}
         self._constraints = []
         for var, val in self._init_p.items():
@@ -622,6 +623,7 @@ class CircuitTf(Circuit, Optimized):
         Returns:
             ndarray: state vectors concatenated [i.shape[0], len(self.init_state)(, i.shape[1]), self.num]
         """
+        print('Input current shape', i.shape)
         if i.ndim > 1 and self._num == 1 or i.ndim > 2 and self._num > 1:
             input_cur, res_ = self.build_graph(batch=i.shape[1])
         else:
