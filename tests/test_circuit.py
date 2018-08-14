@@ -104,8 +104,6 @@ class TestCircuit(TestCase):
         self.assertEqual(circ.n_gap, 3)
         self.assertEqual(circ.n_synapse, 0)
 
-
-
     def test_syn_curr(self):
         vp = [0,3,0,1.1,4]
         vpo = [1., 2., 0, 0, 4]

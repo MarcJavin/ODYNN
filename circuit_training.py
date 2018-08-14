@@ -135,6 +135,9 @@ def with_LSTM():
 
 if __name__ == '__main__':
 
+    inhibit()
+    exit(0)
+
     xp = sys.argv[1]
     if(xp == '21exc'):
         n_neuron = 2

@@ -23,31 +23,36 @@ SYNAPSE1 = {
     'G': 0.2,
     'mdp': -30.,
     'scale': 2.,
-    'E': 20.
+    'E': 20.,
+    'tau': 10.
 }
 SYNAPSE2 = {
     'G': 1.,
     'mdp': -50.,
     'scale': 5.,
-    'E': -10.
+    'E': -10.,
+    'tau': 1.
 }
 SYNAPSE = {
     'G': 0.5,
     'mdp': -20.,
     'scale': 5.,
-    'E': 10.
+    'E': 10.,
+    'tau': 10.
 }
 SYNAPSE_inhib = {
     'G': 0.5,
     'mdp': 0.,
     'scale': 10.,
-    'E': -70.
+    'E': -70.,
+    'tau': 100.
 }
 SYNAPSE_inhib2 = {
     'G': 0.2,
     'mdp': -20.,
     'scale': -6.,
-    'E': -80.
+    'E': -80.,
+    'tau': 10.
 }
 GAP = {'G_gap': 0.2}
 
@@ -60,6 +65,8 @@ MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
 MAX_G = 1.
+MIN_TAU = 1.
+MAX_TAU = 200.
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}
@@ -79,7 +86,8 @@ def give_constraints_syn(conns):
     E_con = np.array([const_E(p['E'] > -60) for p in conns.values()]).transpose()
     return {'G': np.array([MIN_G, MAX_G]),
             'scale': np.array([MIN_SCALE, np.infty]),
-            'E' : E_con}
+            'E' : E_con,
+    '       tau': np.array([MIN_TAU, np.infty])}
 
 
 def const_E(exc=True):
@@ -107,7 +115,8 @@ def get_syn_rand(exc=True):
         'G': random.uniform(MIN_G, MAX_G),
         'mdp': random.uniform(MIN_MDP, MAX_MDP),
         'scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'E': E
+        'E': E,
+        'tau': random.uniform(MIN_TAU, MAX_TAU)
     }
 
 def get_gap_rand():
@@ -153,7 +162,7 @@ class Circuit:
                 init_p.update(init_gap)
                 inits_p.append(init_p)
             # merge them all in a new dimension
-            self._init_p = {var: np.stack([mod[var] for mod in inits_p], axis=1) for var in vars}
+            self._init_p = {var: np.stack([mod[var] for mod in inits_p], axis=-1) for var in vars}
             neurons.parallelize(self._num)
             self.synapses = synapses[0]
             self.gaps = gaps[0]
@@ -179,6 +188,10 @@ class Circuit:
         self.n_synapse = len(syns[0])
         self.n_gap = len(gaps_c[0])
         self._param = self._init_p.copy()
+        if self._num > 1:
+            self._states = np.zeros((self.n_synapse, self._num))
+        else:
+            self._states = np.zeros(self.n_synapse)
 
         nb_neurons = len(np.unique(np.hstack((self._pres,self._posts))))
         if nb_neurons != self._neurons.num:
@@ -217,11 +230,13 @@ class Circuit:
         G = self._param['G']
         mdp = self._param['mdp']
         scale = self._param['scale']
+        tau = self._param['tau']
         if self._tensors:
-            g = G * tf.sigmoid((vprev - mdp) / scale)
+            inf = tf.sigmoid((vprev - mdp) / scale)
         else:
-            g = G / (1 + sp.exp((mdp - vprev) / scale))
-        return g * (self._param['E'] - vpost)
+            inf = 1 / (1 + sp.exp((mdp - vprev) / scale))
+        self._states = (self._states + self.dt*inf/tau) / (1 + self.dt/tau)
+        return self._states * G * (self._param['E'] - vpost)
 
     def inter_curr(self, vprev, vpost):
         if(self.n_synapse == 0):
@@ -507,12 +522,17 @@ class CircuitTf(Circuit, Optimized):
         state['neurons'] = self._neurons.__getstate__().copy()
         del state['_param']
         del state['_constraints']
+        del state['_states']
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._param = {}
         self._constraints = {}
+        if self._num > 1:
+            self._states = np.zeros((self.n_synapse, self._num))
+        else:
+            self._states = np.zeros(self.n_synapse)
         self._neurons.__setstate__(state['neurons'])
 
     @property
