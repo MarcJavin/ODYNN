@@ -383,8 +383,15 @@ def show_res(dir, j=-1):
     taus = dic['tau']
     with open('toto', 'rb') as f:
         dic = pickle.load(f)
-    dic['tau'] = np.full(dic['G'].shape, 1., dtype=np.float32)
-    dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
+    dic['tau'] = np.full(dic['G'].shape, 0.5, dtype=np.float32)
+
+    plt.plot(cur[:,:,rev_labels['VB1']])
+    plt.plot(train[-1][0][:,:,rev_labels['VB1']])
+    res = get_data()
+    plt.plot(res[:,rev_labels['VB1']:rev_labels['VB1']+2])
+    plt.show()
+    exit()
+    # dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
 
     [print(k, dic[k].shape) for k in dic.keys()]
     # print(dic)
@@ -421,7 +428,7 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-    # show_res('Forward_celegtestfakeeqcost0.5', 300)
+    show_res('Forward_celegtestfakeeqcost0.5', 300)
 
     get_data()
     get_curr()
