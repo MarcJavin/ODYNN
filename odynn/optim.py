@@ -1,6 +1,6 @@
 """
 .. module:: optimize
-    :synopsis: Module containing classes for optimization with Tensorflow
+    :synopsis: Module containing abstract classes for optimization with Tensorflow, together with utilities functions
 
 .. moduleauthor:: Marc Javin
 """
@@ -35,6 +35,11 @@ class Optimized(ABC):
     _num = None
 
     def __init__(self, dt):
+        """
+        Abstract initializer
+        Args:
+            dt(float): time step
+        """
         self.dt = dt
         self._init_p = {}
         self._param = {}
@@ -42,6 +47,10 @@ class Optimized(ABC):
 
     @property
     def num(self):
+        """
+        Returns:
+            int : number of model to be trained in parallel
+        """
         return self._num
 
     @abstractmethod
@@ -63,10 +72,10 @@ class Optimized(ABC):
         """A function to plot the variables of the optimized object
 
         Args:
-          var_dic: 
-          suffix: 
-          show: 
-          save:
+          var_dic(dict): optimized parameters
+          suffix(str): string to add at the end of the saved file names
+          show(bool): if True, show the plots
+          save(bool): if True, save the plots
 
         """
         pass
@@ -76,7 +85,7 @@ class Optimized(ABC):
         Apply necessary constraints to the optimized variables
 
         Args:
-          session(tf.Session):
+          session(tf.Session): tensorflow session
 
         """
         pass
@@ -86,6 +95,10 @@ class Optimized(ABC):
 
     @property
     def init_params(self):
+        """
+        Returns:
+            dict: initial parameters of the model
+        """
         return self._init_p
 
     @init_params.setter
@@ -109,9 +122,8 @@ class Optimizer(ABC):
         """
 
         Args:
-            optimized(Optimized):
-            epochs:
-            frequency:
+            optimized(Optimized): model to be optimized
+            frequency(float): frequency of tests and saving for variables
         """
         self.start_time = time.time()
         self.optimized = optimized
@@ -135,7 +147,6 @@ class Optimizer(ABC):
         return global_step
 
     def _build_train(self):
-        """learning rate and optimization"""
         global_step = self._init_l_rate()
         # self.learning_rate = 0.1
         opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
@@ -161,21 +172,6 @@ class Optimizer(ABC):
         self.saver = tf.train.Saver()
 
     def _init(self, dir, suffix, train, test, l_rate, w, yshape):
-        """Initialize directory and the object to be optimized, get the dataset, write settings in the directory
-        and initialize placeholders for target output and results.
-
-        Args:
-          dir(str): path to the directory          suffix:
-          train: 
-          test: 
-          l_rate: 
-          w: 
-          yshape:
-
-        Raises:
-            ValueError: if the timestep of the optimized object is different than the one in train or test
-
-        """
         self.dir = dir
         self.suffix = suffix
         tf.reset_default_graph()
@@ -222,6 +218,7 @@ class Optimizer(ABC):
 
         Args:
           w(tuple): weights for the loss of voltage and ions concentrations
+          train(list): list with structure [time, currents, [measurements]]
 
         Returns:
             str: settings
@@ -242,7 +239,18 @@ class Optimizer(ABC):
                 "Number of models : {}".format(self._parallel) + '\n' +
                 self.optimized.settings())
 
-    def plot_out(self, *args, **kwargs):
+    def plot_out(self, X, results, res_targ, suffix, step, name, i):
+        """
+        Plot a comparison of results and res_targ with input current X, and save it in a file
+        Args:
+            X(ndarray): current of shape [time, batch, neuron(, circuit)]
+            results(ndarray): results from the model, shape [time, state, batch, neuron(, circuit)]
+            res_targ(list of ndarray): target results, [measurements], each measurement has the shape [time, batch, neuron(, circuit)]
+            suffix(str): suffix for the file name
+            step(int): step in the optimization
+            name(str): file name
+            i(int): iteration index
+        """
         pass
 
     @abstractmethod
@@ -251,6 +259,26 @@ class Optimizer(ABC):
 
     def optimize(self, dir, train_=None, test_=None, w=None, epochs=700, l_rate=(0.1, 9, 0.92), suffix='', step='',
                  reload=False, reload_dir=None, yshape=None, evol_var=True, plot=True):
+        """
+
+        Args:
+            dir(str): directory where to save the files
+            train_(ndarray): train data
+            test_:
+            w:
+            epochs:
+            l_rate:
+            suffix:
+            step:
+            reload:
+            reload_dir:
+            yshape:
+            evol_var:
+            plot:
+
+        Returns:
+
+        """
 
         print('Optimization'.center(40,'_'))
 

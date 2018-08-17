@@ -23,7 +23,7 @@ import xml.etree.ElementTree as ET
 
 dt = 0.5
 n_parallel = 10
-fake = True
+fake = False
 eq_cost = True
 
 labels = {0: 'AVBL',
@@ -385,10 +385,12 @@ def show_res(dir, j=-1):
         dic = pickle.load(f)
     dic['tau'] = np.full(dic['G'].shape, 0.5, dtype=np.float32)
 
-    plt.plot(cur[:,:,rev_labels['VB1']])
-    plt.plot(train[-1][0][:,:,rev_labels['VB1']])
+    plt.plot(cur[:,:,rev_labels['VB1']], label='input current for VB1')
+    # plt.plot(train[-1][0][:,:,rev_labels['VB1']], label='target voltage for VB1...')
     res = get_data()
-    plt.plot(res[:,rev_labels['VB1']:rev_labels['VB1']+2])
+    plt.plot(res[:,rev_labels['VB1']+1], label='target voltage for VB1')
+    plt.legend()
+    plt.plot()
     plt.show()
     exit()
     # dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
@@ -428,7 +430,6 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-    show_res('Forward_celegtestfakeeqcost0.5', 300)
 
     get_data()
     get_curr()
@@ -472,9 +473,9 @@ if __name__=='__main__':
     print(cur.shape)
     print(res.shape)
 
-    if(fake):
+    if fake :
         for i in range(4, len(labels)):
-            res[:, i+1] = np.roll(res[:, i], int(80/dt), axis=0)
+            res[:, i+1] = np.roll(res[:, i], int(64/dt), axis=0)
         # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
         #     res[:7000, i+1] = -35.
         # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
@@ -482,6 +483,16 @@ if __name__=='__main__':
         # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
         #     res[:2000, i+1] = -35.
         res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
+
+    cur[:, rev_labels['VB1']] = np.roll(cur[:, rev_labels['VB1']], -int(400/dt), axis=0)
+
+    plt.plot(cur[:, rev_labels['VB1']]*-100, label='input current for VB1')
+    # plt.plot(train[-1][0][:,:,rev_labels['VB1']], label='target voltage for VB1...')
+    plt.plot(res[:, rev_labels['VB1'] + 1], label='target voltage for VB1')
+    plt.legend()
+    plt.plot()
+    plt.show()
+    exit(0)
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
