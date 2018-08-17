@@ -12,8 +12,7 @@ from odynn import utils, neuron
 from odynn import circuit as cr
 from odynn import coptim as co
 
-import matplotlib as mpl
-import socket
+from odynn.models import cfg_model
 import numpy as np
 import pickle
 import pylab as plt
@@ -22,8 +21,10 @@ import seaborn as sns
 import sys
 import xml.etree.ElementTree as ET
 
-dt = 0.1
-n_parallel = 5
+dt = 0.2
+n_parallel = 10
+fake = False
+eq_cost = True
 
 labels = {0: 'AVBL',
               1: 'AVBR',
@@ -66,7 +67,8 @@ labels = {0: 'AVBL',
               38: 'VD13'
               }
 rev_labels = {v: k for k,v in labels.items()}
-groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in range(11)] + [4 for _ in range(13)]
+# groups = [0,0] + [1 for _ in range(7)] + [2 for _ in range(6)] + [3 for _ in range(11)] + [4 for _ in range(13)]
+groups = None
 
 commands = [labels.values()]
 commands = set(commands[2:])
@@ -369,29 +371,49 @@ def get_conns():
 
 
 def show_res(dir, j=-1):
-    with open('forward_input', 'rb') as f:
-        cur = pickle.load(f)
-    cur = cur[:, np.newaxis, :]
-    with open('forward_target', 'rb') as f:
-        res = pickle.load(f)
+    # with open('forward_input', 'rb') as f:
+    #     cur = pickle.load(f)
+    # cur = cur[:, np.newaxis, :]
     from odynn import optim
 
     dir = utils.set_dir(dir)
+    train, __ = optim.get_data(dir)
+    cur = train[1]
     dic = optim.get_vars(dir, j, loss=False)
-    [print(k) for k in dic.keys()]
+    taus = dic['tau']
+    with open('toto', 'rb') as f:
+        dic = pickle.load(f)
+    dic['tau'] = np.full(dic['G'].shape, 0.5, dtype=np.float32)
+
+    plt.plot(cur[:,:,rev_labels['VB1']], label='input current for VB1')
+    # plt.plot(train[-1][0][:,:,rev_labels['VB1']], label='target voltage for VB1...')
+    res = get_data()
+    plt.plot(res[:,rev_labels['VB1']+1], label='target voltage for VB1')
+    plt.legend()
+    plt.plot()
+    plt.show()
+    exit()
+    # dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
+
+    [print(k, dic[k].shape) for k in dic.keys()]
     # print(dic)
-    dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
+    # dic = {v: np.array(val, dtype=np.float32) for v,val in dic.items()}
     # ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, gap_keys=gaps_k,
     #                                  labels=labels, commands=commands, n_rand=5, fixed='all')
     ctf = optim.get_model(dir)
     # print(ctf._neurons.parameter_names)
-    # dic.update(ctf._neurons.init_params)
+
+    # dic['tau'] = dic['tau'] * 100
     # ctf._neurons.init_names()
     ctf.init_params = dic
-    states = ctf.calculate(np.stack([cur for _ in range(5)], axis=-1))
+    print(ctf.num)
+    states = ctf.calculate(np.stack([cur for _ in range(ctf.num)], axis=-1))
     print(states.shape)
     for i in range(ctf.num):
-        ctf.plots_output_mult(res[...,0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
+        try:
+            ctf.plots_output_mult(train[0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
+        except:
+            print('Fail')
     exit(0)
 
 def count_in_out():
@@ -408,9 +430,6 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
-    get_data()
-    get_curr()
-    show_res('FORWARD/Forward_leakinput-YAYYY')
 
     get_data()
     get_curr()
@@ -425,8 +444,28 @@ if __name__=='__main__':
     plt.ylabel('Neuron')
     utils.save_show(False, False, 'Input Current', dpi=300)
 
-    name = 'Forward_{}'.format(sys.argv[1])
+    suffix = sys.argv[1]
+    for i,m in enumerate(cfg_model.models):
+        if cfg_model.NEURON_MODEL == m:
+            suffix = cfg_model.models_name[i] + suffix
+            break
+    if fake:
+        suffix = suffix + 'fake'
+    else:
+        suffix = suffix + 'real'
+    if eq_cost:
+        suffix = suffix + 'eqcost'
+    else:
+        suffix = suffix + 'difcost'
+    suffix = suffix + str(dt)
+    name = 'Forward_{}'.format(suffix)
+
     dir = utils.set_dir(name)
+
+    with open(dir+'settings_fw', 'w') as f:
+        f.write('eq_cost : %s'%eq_cost + '\n' +
+                'fake : %s'%fake + '\n' +
+                'model %s'%cfg_model.NEURON_MODEL)
 
     with open('forward_target', 'rb') as f:
         res = pickle.load(f)
@@ -434,15 +473,26 @@ if __name__=='__main__':
     print(cur.shape)
     print(res.shape)
 
-    for i in range(4, len(labels)):
-        res[:, i+1] = np.roll(res[:, i], int(80/dt), axis=0)
-    # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
-    #     res[:7000, i+1] = -35.
-    # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
-    #     res[:3000, i+1] = -35.
-    # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
-    #     res[:2000, i+1] = -35.
-    res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
+    if fake :
+        for i in range(4, len(labels)):
+            res[:, i+1] = np.roll(res[:, i], int(64/dt), axis=0)
+        # for i in range(rev_labels['DD1'], rev_labels['VB11']+1):
+        #     res[:7000, i+1] = -35.
+        # for i in range(rev_labels['VD1'], rev_labels['VD5']+1):
+        #     res[:3000, i+1] = -35.
+        # for i in range(rev_labels['VD6'], rev_labels['VD13']+1):
+        #     res[:2000, i+1] = -35.
+        res[:,1:] = np.array([r + 1.*np.random.randn(len(r)) for r in res[:,1:]])
+
+    cur[:, rev_labels['VB1']] = np.roll(cur[:, rev_labels['VB1']], -int(400/dt), axis=0)
+
+    # plt.plot(cur[:, rev_labels['VB1']]*-100, label='input current for VB1')
+    # # plt.plot(train[-1][0][:,:,rev_labels['VB1']], label='target voltage for VB1...')
+    # plt.plot(res[:, rev_labels['VB1'] + 1], label='target voltage for VB1')
+    # plt.legend()
+    # plt.plot()
+    # plt.show()
+    # exit(0)
 
     df = pd.DataFrame(res[:,1:].transpose(), index=labels.values(), columns=res[:,0])
     sns.heatmap(df, cmap='RdYlBu_r')
@@ -457,13 +507,21 @@ if __name__=='__main__':
 
 
     fixed = ()
-    neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all')
-    ctf = cr.CircuitTf.create_random(n_neuron=39, neurons=neurons, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
+    # neurons = neuron.BioNeuronTf([DEFAULT_F for _ in range(39)], fixed='all', dt=dt)
+    ctf = cr.CircuitTf.create_random(n_neuron=39, syn_keys=syns_k, dt=dt, gap_keys=gaps_k, groups=groups,
                                   labels=labels, commands=commands, n_rand=n_parallel, fixed=fixed)
 
 
-
+    with open('toto', 'rb') as f:
+        dic = pickle.load(f)
+    dic['tau'] = np.full(dic['G'].shape, 1., dtype=np.float32)
+    dic = {k: np.stack([v[:,1] for _ in range(n_parallel)], axis=-1) for k,v in dic.items()}
+    ctf.init_params = dic
     copt = co.CircuitOpt(circuit=ctf)
     print(res[...,1:].shape, cur.shape)
+    if eq_cost:
+        w_n = None
+    else:
+        w_n = count_in_out()
     copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], w_n=count_in_out(), n_out=list(np.arange(39)), l_rate=(0.4, 9, 0.92))
 

@@ -10,5 +10,6 @@ from .leakint import LeakyIntegrate
 from .hhsimple import HodgHuxSimple
 
 models = [CElegansNeuron, LeakyIntegrate, HodgHuxSimple]
+models_name = ['celeg', 'leaky', 'hhsimp']
 NEURON_MODEL = CElegansNeuron
 """Class used for biological neuron models"""
