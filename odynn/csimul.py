@@ -13,18 +13,24 @@ import time
 
 def simul(t, i_injs, pars=None, synapses={}, gaps={}, circuit=None, n_out=[0], suffix='', show=False,
           save=True, labels=None):
-    """runs the entire simulation
+    """
+    Simulate a circuit with input current `i_injs` and return the outputs of neurons contained in `n_out`
 
     Args:
-      n_out(list): neurons to register
-      dump(bool): If True, dump the measurement (Default value = False)
-      suffix(str): suffix for the figure files (Default value = '')
-      show(bool): If True, show the figure (Default value = False)
-      save(bool): If True, save the figure (Default value = True)
+        t(ndarray): time
+        i_injs(ndarray): input currents of shape [time, batch, neuron]
+        pars(dict or list): parameters for the neurons
+        synapses(dict or list): parameters of the chemical synapses
+        gaps(dict or list): parameters of the gap junctions
+        circuit(:obj: Circuit): if not None, ignore the 3 previous arguments
+        n_out(list): neurons which output have to be saved
+        suffix(str): suffix for the plots
+        show(bool): If True, show the plot
+        save(bool): If True, save the plot
+        labels: labels for the circuit's neurons
 
     Returns:
-        str or list: If dump, return the file name,
-        otherwise, return the measurements as a list [time, input, voltage, calcium]
+        list : measurements as a list [time, input currents, [voltage(, calcium)]]
     """
     if circuit is None:
         circuit = Circuit(PyBioNeuron(pars, dt=t[1] - t[0]), synapses=synapses, gaps=gaps, labels=labels)

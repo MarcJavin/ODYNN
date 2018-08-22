@@ -117,16 +117,14 @@ def simul(p=None, neuron=None, t=None, dt=DT, i_inj=i_inj, suffix='', show=False
         p(dict): parameters of the neuron to simulate
         neuron(NeuronModel object): neuron to simulate
         dt(float): time step
-      i_inj(ndarray): input currents
-      dump:  (Default value = False)
+      i_inj(ndarray): input currents of shape [time, batch]
       suffix:  (Default value = '')
       show(bool): If True, show the figure (Default value = False)
-      save:  (Default value = True)
+      save: If True, save the figure (Default value = True)
       ca_true:  (Default value = None)
 
     Returns:
-        ndarray: records if dump is False
-        str: If dump is True, name of the file where the records have been dumped
+        list: records
 
 
     """

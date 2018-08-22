@@ -21,7 +21,7 @@ Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...)
     :scale: 50
     :alt: alternate text
 
-.. image:: img/inhexc.png
+.. image:: img/flc.png
     :width: 800px
     :align: center
     :height: 500px
@@ -77,5 +77,4 @@ ODYNN is still in development and its syntax might change.
 TODO
 ---------------
 
-- more documentation
 - more tutorials
