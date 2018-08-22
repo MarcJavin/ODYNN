@@ -1,9 +1,9 @@
-Installing the code
+Getting started
 -------------------
 
-Clone a local copy of this repository from Gitlab using::
+Clone a local copy of this repository from Github using::
 
-      git clone https://gitlab.com/RastaMarcus/opt_HH
+      git clone https://github.com/MarcusJP/ODYNN
 
 Go to the root directory and run::
 

@@ -1,5 +1,5 @@
 """
-.. module:: circopt
+.. module:: coptim
     :synopsis: Module for optimizing neural circuits
 
 .. moduleauthor:: Marc Javin

@@ -654,6 +654,7 @@ class CircuitTf(Circuit, Optimized):
             if func == utils.box:
                 varl = {k: v for k, v in var_d.items() if k in labels}
                 df = pd.DataFrame(varl)
+                print(df)
                 func(df, utils.COLORS[:len(labels)], labels)
             else:
                 for i, var in enumerate(labels):

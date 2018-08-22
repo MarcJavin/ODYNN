@@ -33,11 +33,12 @@ class classproperty(object):
 
 
 def set_dir(subdir):
-    """Set directory to save files
+    """Set directory for saving files to `utils.RES_DIR`+`subdir` and create subfolders
 
     Args:
-      subdir(str): path to the directory
+      subdir(str): name of the directory
     Returns:
+        str: complete path to the new directory
 
     """
     global _current_dir
@@ -85,13 +86,23 @@ def box(df, cols, labels):
     lighter = [colorscale(c, 0.6) for c in cols]
     sns.boxplot(data=df[labels], palette = lighter)
     sns.swarmplot(data=df[labels], palette=cols, size=2)
-    from odynn.models.cfg_model import NEURON_MODEL
-    import pandas as pd
-    dd = pd.DataFrame(NEURON_MODEL.default_params, index=[0])
-    sns.swarmplot(data=dd[labels], color='r', edgecolor='#ffffff', marker='*', linewidth=1, size=20)
+    # from odynn.models.cfg_model import NEURON_MODEL
+    # import pandas as pd
+    # dd = pd.DataFrame(NEURON_MODEL.default_params, index=[0])
+    # sns.swarmplot(data=dd[labels], color='r', edgecolor='#ffffff', marker='*', linewidth=1, size=20)
 
 
 def clamp(val, minimum=0, maximum=255):
+    """
+        Clamp `val` between `minimum` and `maximum`
+    Args:
+        val(float): value to clamp
+        minimum(int): minimum
+        maximum(int): maximum
+
+    Returns:
+
+    """
     if val < minimum:
         return minimum
     if val > maximum:

@@ -1,5 +1,5 @@
 """
-.. module:: circsimul
+.. module:: csimul
     :synopsis: Module for simulation of neural circuits
 
 .. moduleauthor:: Marc Javin
