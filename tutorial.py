@@ -142,57 +142,70 @@ def hhsimp_box(df):
     plt.tight_layout()
     utils.save_show(True, True, 'boxrates', dpi=300)
 
+def leak_box(df):
+    utils.box(df, ['b', 'g', 'Gold'], ['C_m', 'g_L', 'E_L'])
+    plt.title('Membrane')
+    utils.save_show(True, True, 'box1', dpi=300)
+
 if __name__ == '__main__':
 
 
 
-    dir = utils.set_dir('Integcomp_volt_mod3dt0.1-YES')
+    dir = utils.set_dir('Tapwith_dt0.5')
 
-    # dic = optim.get_vars(dir, loss=False)
+    dic = optim.get_vars(dir, loss=False)
     # df = pd.DataFrame.from_dict(dic)
+    # df = df.dropna()
     # dfdisp = (df - df.mean()) / df.std()
     # plt.plot(dfdisp.transpose())
-    # utils.save_show(True, True, 'disp', dpi=300)
+    # utils.save_show(True, True, 'dispreal', dpi=300)
 
-
-    dic = optim.get_vars(dir, loss=True)
+    dd = optim.get_vars_all(dir, losses=True)
+    optim.plot_loss_rate(dd['loss'], dd['rates'], dd['loss_test'], 50, show=True)
     from odynn import datas
 
-    train = datas.give_train(0.1)
-    test = datas.give_test(0.1)
-    # train, test = optim.get_data(dir)
-    df = pd.DataFrame.from_dict(dic)#.head(4)
+    dic = optim.get_vars(dir, loss=True)
+    train, test = optim.get_data(dir)
+    print(dic['loss'])
+    df = pd.DataFrame(dic['loss'], columns=['loss'])
+    # df = pd.DataFrame.from_dict(dic)#.head(4)
     df = df.sort_values('loss').reset_index(drop=True)
     # df = df.dropna()
     sns.barplot(x=df.index, y='loss', data=df)
     # df.plot.bar(y='loss')
-    utils.save_show(True, True, 'lossfin_virt', dpi=300)
-    # df = df[df['loss'] <= np.min(df['loss'] + 0.2)]
+    utils.save_show(True, True, 'lossfin_virt', dpi=300);exit()
+    # df = df[df['loss'] <= np.min(df['loss'])]
 
-    corr(df)
-    cfg_model.NEURON_MODEL.boxplot_vars(dic, show=True, save=True)
-
+    # hhsimp_box(df)
+    # cfg_model.NEURON_MODEL.boxplot_vars(dic, show=True, save=True)
+    dic = df.to_dict('list')
     # dic = collections.OrderedDict(sorted(dic.items(), key=lambda t: t[0]))
     # obj = circuit.CircuitTf.create_random(n_neuron=9, syn_keys={(i,i+1):True for i in range(8)}, gap_keys={}, n_rand=50, dt=0.1)
     p = optim.get_best_result(dir)
+    print(p)
+    # p = {k: v[0] for k,v in p.items()}
 
     for i in range(train[1].shape[-1]):
         ns.comp_pars_targ(p, cfg_model.NEURON_MODEL.default_params, dt=train[0][1] - train[0][0], i_inj=train[1][:,i], suffix='virtrain%s'%i, show=True, save=True)
     for i in range(test[1].shape[-1]):
         ns.comp_pars_targ(p, cfg_model.NEURON_MODEL.default_params, dt=test[0][1] - test[0][0], i_inj=test[1][:,i], suffix='virtest%s'%i, show=True, save=True)
 
-
-    # for i in range(X.shape[2]):
+    n = optim.get_model(dir)
+    n.init_params = dic
+    X = n.calculate(train[1])
+    Xt = n.calculate(test[1])
+    for i in range(X.shape[2]):
+        n.plot_output(train[0], train[1][:,i], X[:,:,i], [train[-1][0][:,i], train[-1][-1][:,i]], save=True, suffix='virtend%s'%i)
+    # for i in range(X.shape[3]):
     #     plt.subplot(2, 1, 1)
     #     plt.plot(train[-1][-1], 'r', label='train data')
-    #     plt.plot(X[:, -1, i])
+    #     plt.plot(X[:, -1,:, i])
     #     plt.legend()
     #     plt.subplot(2, 1, 2)
     #     plt.plot(test[-1][-1], 'r', label='test data')
-    #     plt.plot(Xt[:, -1, i])
+    #     plt.plot(Xt[:, -1,:, i])
     #     plt.legend()
-    #     plt.show()
-    #     utils.save_show(True,True,'best_result%s'%i, dpi=250)
+    #     utils.save_show(True,True,'best_result%s'%i, dpi=300)
     # for i in range(9):
     #     dicn = {k: v[:,i] for k,v in dic.items()}
     #     hhmodel.CElegansNeuron.plot_vars(dicn, show=True, save=False)

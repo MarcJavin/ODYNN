@@ -238,19 +238,31 @@ def test_lstm(dir):
     n = optim.get_model(dir)
     train, test = optim.get_data(dir)
     trace = np.array(train[-1])
-    target = PyBioNeuron(celeg.DEFAULT, dt=1.)
+    target = PyBioNeuron(celeg.DEFAULT, dt=n.dt)
     X = n.calculate(train[1])
     Xtarg = target.calculate(train[1])
     Xt = n.calculate(test[1])
     Xtargt = target.calculate(test[1])
 
     for i in range(train[1].shape[-1]):
+        # plt.plot(X[:,0])
+        # plt.title('Membrane potential (mV)')
+        # utils.save_show(True,True,'lstm1realvolt')
+        # plt.subplot(2,1,1)
+        # plt.plot(train[-1][-1], 'r', label='train data')
+        # plt.plot(X[:,-1])
+        # plt.legend()
         # sim.comp_neuron_trace(n, [train[-1][0][:,i], train[-1][-1][:,i]], i_inj=train[1][:,i], suffix='train%s'%i, save=True)
-        target.plot_output(train[0], train[1][:,i], X[:, :,i], np.moveaxis(Xtarg[:, :, i], 1, 0), suffix='train%s'%i, save=True, show=True,
+        n.plot_output(train[0], train[1][:,i], X[:, :,i], np.moveaxis(Xtarg[:, :, i], 1, 0), suffix='train%s'%i, save=True, show=True,
                             l=2, lt=2, targstyle='-.')
     for i in range(test[1].shape[-1]):
+        # plt.subplot(2, 1, 2)
+        # plt.plot(test[-1][-1], 'r', label='test data')
+        # plt.plot(Xt[:, -1])
+        # plt.legend()
+        # utils.save_show(True, True, 'lstm1real')
         # sim.comp_neuron_trace(n, [test[-1][0][:, i], test[-1][-1][:, i]], i_inj=test[1][:, i], suffix='test%s'%i, save=True)
-        target.plot_output(test[0], test[1][:, i], Xt[:, :, i], np.moveaxis(Xtargt[:, :, i], 1, 0),
+        n.plot_output(test[0], test[1][:, i], Xt[:, :, i], np.moveaxis(Xtargt[:, :, i], 1, 0),
                            suffix='test%s' % i, save=True, show=True,
                            l=2, lt=2, targstyle='-.')
     exit(0)

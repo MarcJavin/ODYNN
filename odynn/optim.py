@@ -404,8 +404,7 @@ def get_vars(dir, i=-1, loss=False):
         dic = dict([(var, np.array(val[i], dtype=np.float32)) for var, val in dic.items()])
     return dic
 
-
-def get_vars_all(dir, i=-1):
+def get_vars_all(dir, i=-1, losses=False):
     """get dic of vars from dumped file
 
     Args:
@@ -416,8 +415,16 @@ def get_vars_all(dir, i=-1):
     """
     file = dir + '/' + FILE_LV
     with open(file, 'rb') as f:
-        dic = pickle.load(f)[-1]
-        dic = dict([(var, val[:i]) for var, val in dic.items()])
+        load = pickle.load(f, encoding="latin1")
+        l = load[0]
+        lt = load[1]
+        rates = load[2]
+        dic = load[-1]
+        if losses:
+            dic['loss'] = l
+            dic['loss_test'] = lt
+            dic['rates'] = rates
+        dic = {var: val[:i] for var, val in dic.items()}
     return dic
 
 

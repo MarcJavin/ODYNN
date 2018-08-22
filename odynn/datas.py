@@ -1,5 +1,5 @@
 """
-.. module:: data
+.. module:: datas
     :synopsis: Module for data extraction and preparation
 
 .. moduleauthor:: Marc Javin

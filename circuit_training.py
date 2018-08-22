@@ -57,9 +57,10 @@ def test(nb_neuron, conns, conns_opt, dir, t, i_injs, n_out=[1]):
     dir = utils.set_dir(dir)
     print("Feed with current of shape : ", i_injs.shape)
 
-    train = sim.simul(t, i_injs, pars, conns, n_out=n_out, show=False)
+    # train = sim.simul(t, i_injs, pars, conns, n_out=n_out, show=False)
     n = nr.BioNeuronTf(init_p=pars, dt=t[1]-t[0])
     cr = CircuitTf(n, synapses=conns_opt)
+    cr.plot(save=True);exit()
     c = CircuitOpt(cr)
     c.optimize(dir, n_out=n_out, train=train)
 

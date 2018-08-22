@@ -54,12 +54,12 @@ GAP = {'G_gap': 0.2}
 SYN_VARS = list(SYNAPSE.keys())
 GAP_VARs = list(GAP.keys())
 
-MIN_SCALE = 0.1
+MIN_SCALE = 0.2
 MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 1.
+MAX_G = 0.5
 
 def give_constraints(conns):
     return {**give_constraints_syn(conns), **give_constraints_gap()}

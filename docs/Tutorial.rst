@@ -32,9 +32,3 @@ Some examples
     :height: 750px
     :scale: 50
     :alt: alternate text
-
-- Circuit simulation :
-
-- Neuron optimization :
-
-- Circuit optimization :

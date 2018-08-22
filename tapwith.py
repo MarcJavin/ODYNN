@@ -111,13 +111,13 @@ def run():
     train = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=i, synapses=syns, gaps=gaps, n_out=n_out, suffix='train', labels=labels)
     test = sim.simul(pars=[p for _ in range(9)], t=t, i_injs=itest, synapses=syns, gaps=gaps, n_out=n_out,
                      labels=labels, suffix='test')
-    exit(0)
+
     # n = nr.BioNeuronTf([rand() for _ in range(9)], dt=dt)
     n = nr.Neurons(
         [nr.NeuronLSTM(dt=dt), nr.NeuronLSTM(dt=dt), nr.BioNeuronTf([p for _ in range(5)], dt=dt), nr.NeuronLSTM(dt=dt),
          nr.NeuronLSTM(dt=dt)])
     ctf = CircuitTf(n, synapses=syns_opt[0], gaps=gaps_opt[0], labels=labels, commands={4, 5}, sensors={0, 1, 7, 8})
-
+    ctf.plot(save=True);exit()
     # ctf = CircuitTf.create_random(neurons = n, n_neuron=9, dt=dt, syn_keys={k: v['E']>-60 for k,v in syns.items()}, gap_keys=gaps.keys(), labels=labels, commands={4, 5},
     #                 sensors={0, 1, 7, 8}, n_rand=n_parallel)
     copt = CircuitOpt(circuit=ctf)
@@ -140,9 +140,10 @@ def analyse(dir):
 
     dic = optim.get_best_result(dir)
     ctf = optim.get_model(dir)
+    ctf.plot(save=True)
     ctf.init_params = dic
-    sim.simul(t=train[0], i_injs=train[1], circuit=ctf, show=True, save=False)
-    sim.simul(t=test[0], i_injs=test[1], circuit=ctf, show=True, save=False)
+    sim.simul(t=train[0], i_injs=train[1], circuit=ctf, show=True, save=True)
+    sim.simul(t=test[0], i_injs=test[1], circuit=ctf, show=True, save=True)
 
 if __name__=='__main__':
     analyse('Tapwith_dt0.5')

@@ -1,5 +1,5 @@
 """
-.. module:: Neuron
+.. module:: neuron
     :synopsis: Module containing classes for neuron models
 
 .. moduleauthor:: Marc Javin
@@ -119,13 +119,13 @@ class BioNeuronTf(MODEL, NeuronTf):
     def init_params(self, value):
         self._init_p = {v: value[v] for v in self.parameter_names}
         # TODO : test
-        if len(self._init_p[self.parameter_names[0]]) == 1:
-            self._num = 1
+        param_ex = self._init_p[self.parameter_names[0]]
+        self._num = len(param_ex)
+        if len(param_ex) == 1:
             self._init_state = self.default_init_state
         else:
-            self._num = len(self._init_p[self.parameter_names[0]])
             self._init_state = np.stack([self.default_init_state for _ in range(self._num)], axis=-1)
-            if self._init_p[self.parameter_names[0]].ndim == 2:
+            if isinstance(param_ex, np.ndarray) and param_ex.ndim == 2:
                 n = self._init_p[self.parameter_names[0]].shape[-1]
                 self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
         for v in self._init_p.values():

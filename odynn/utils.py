@@ -50,10 +50,19 @@ def set_dir(subdir):
     return _current_dir
 
 
-def save_show(show, save, name='', dpi=100):
+def save_show(show, save, name='', dpi=500):
+    """
+    Show and/or save the current plot in `utils.current_dir`/`name`
+    Args:
+        show(bool): If True, show the plot
+        save(bool): If True, save the plot
+        name(str): Name for the saved file
+        dpi(int): quality
+
+    """
     global _current_dir
     if (save):
-        plt.savefig('{}{}.png'.format(_current_dir,name), dpi=dpi)
+        plt.savefig('{}{}.png'.format(_current_dir,name), format='png', dpi=dpi)
     if (show):
         plt.show()
     plt.close()
@@ -76,10 +85,10 @@ def box(df, cols, labels):
     lighter = [colorscale(c, 0.6) for c in cols]
     sns.boxplot(data=df[labels], palette = lighter)
     sns.swarmplot(data=df[labels], palette=cols, size=2)
-    # from odynn.models.cfg_model import NEURON_MODEL
-    # import pandas as pd
-    # dd = pd.DataFrame(NEURON_MODEL.default_params, index=[0])
-    # sns.swarmplot(data=dd[labels], color='r', edgecolor='#ffffff', marker='*', linewidth=1, size=20)
+    from odynn.models.cfg_model import NEURON_MODEL
+    import pandas as pd
+    dd = pd.DataFrame(NEURON_MODEL.default_params, index=[0])
+    sns.swarmplot(data=dd[labels], color='r', edgecolor='#ffffff', marker='*', linewidth=1, size=20)
 
 
 def clamp(val, minimum=0, maximum=255):

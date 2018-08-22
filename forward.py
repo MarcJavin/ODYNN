@@ -379,20 +379,9 @@ def show_res(dir, j=-1):
     dir = utils.set_dir(dir)
     train, __ = optim.get_data(dir)
     cur = train[1]
-    dic = optim.get_vars(dir, j, loss=False)
-    taus = dic['tau']
-    with open('toto', 'rb') as f:
-        dic = pickle.load(f)
-    dic['tau'] = np.full(dic['G'].shape, 0.5, dtype=np.float32)
-
-    plt.plot(cur[:,:,rev_labels['VB1']], label='input current for VB1')
-    # plt.plot(train[-1][0][:,:,rev_labels['VB1']], label='target voltage for VB1...')
-    res = get_data()
-    plt.plot(res[:,rev_labels['VB1']+1], label='target voltage for VB1')
-    plt.legend()
-    plt.plot()
-    plt.show()
-    exit()
+    dic = optim.get_vars(dir, j, loss=True)
+    best = np.nanargmin(dic['loss'])
+    print(best)
     # dic = {k: np.stack([v[:,1] for _ in range(5)], axis=-1) for k,v in dic.items()}
 
     [print(k, dic[k].shape) for k in dic.keys()]
@@ -411,9 +400,11 @@ def show_res(dir, j=-1):
     print(states.shape)
     for i in range(ctf.num):
         try:
+            i = best
             ctf.plots_output_mult(train[0], cur[:,0,i], states[...,i], suffix='%s_epoch%s'%(i,j), show=True, save=True, trace=False)
-        except:
-            print('Fail')
+            break
+        except Exception as e:
+            print(e)
     exit(0)
 
 def count_in_out():
@@ -430,6 +421,8 @@ def count_in_out():
     return w
 
 if __name__=='__main__':
+
+    show_res('Forward_celeggrouprealeq0.2', -1)
 
     get_data()
     get_curr()
@@ -523,5 +516,6 @@ if __name__=='__main__':
         w_n = None
     else:
         w_n = count_in_out()
-    copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], w_n=count_in_out(), n_out=list(np.arange(39)), l_rate=(0.4, 9, 0.92))
+    copt.optimize(subdir=dir, train=[res[..., 0], cur, [res[..., 1:], None]], w_n=w_n, n_out=list(np.arange(39)),
+                  l_rate=(0.4, 9, 0.92), epochs=1000)
 
