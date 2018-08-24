@@ -1,5 +1,5 @@
 Getting started
--------------------
+===============
 
 Clone a local copy of this repository from Github using::
 
@@ -12,7 +12,7 @@ Go to the root directory and run::
 
 
 Some examples
-------------------
+===============
 
 - Neuron simulation :
 
@@ -66,7 +66,7 @@ Some examples
 
 
 Tutorials
--------------------
+===========
 
 Jupyter notebook tutorials are available.
 After cloning the repository, go to the tutorial/ folder and run::

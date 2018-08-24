@@ -1,6 +1,18 @@
 odynn package
 =============
 
+Structure
+-------------
+
+.. figure:: ../../img/uml.png
+    :width: 800px
+    :align: center
+    :height: 500px
+    :scale: 100
+    :alt: UML class diagram
+
+    ODYNN's class diagram
+
 Subpackages
 -----------
 
