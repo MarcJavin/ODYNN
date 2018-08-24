@@ -15,7 +15,7 @@ import tensorflow as tf
 
 # Class for our new model
 class LeakyIntegrate(BioNeuron):
-    # Our model has membrane conductance as its only parameter
+
     default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.}
     # Initial value for the voltage
     default_init_state = np.array([-60.])
