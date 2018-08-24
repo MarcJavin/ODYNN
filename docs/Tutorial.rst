@@ -65,10 +65,10 @@ Some examples
     optimizer.optimize(dir=dir, train=train)
 
 
-Tutorial
+Tutorials
 -------------------
 
-Jupyter notebook tutorial are available.
+Jupyter notebook tutorials are available.
 After cloning the repository, go to the tutorial/ folder and run::
 
     jupyter notebook

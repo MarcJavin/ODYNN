@@ -110,22 +110,22 @@ class TestCircuit(TestCase):
         vp = [0,3,0,1.1,4]
         vpo = [1., 2., 0, 0, 4]
         with self.assertRaises(ValueError):
-            self.circ.syn_curr(vp, vpo[:-1])
+            self.circ._syn_curr(vp, vpo[:-1])
         with self.assertRaises(ValueError):
-            self.circ.syn_curr(vp[-2], vpo[:-2])
+            self.circ._syn_curr(vp[-2], vpo[:-2])
         with self.assertRaises(ValueError):
-            self.circ.syn_curr(vp, vpo)
-        i = self.circ.syn_curr(vp[:-1], vpo[:-1])
+            self.circ._syn_curr(vp, vpo)
+        i = self.circ._syn_curr(vp[:-1], vpo[:-1])
         self.assertEqual(len(i), 4)
 
         vp = np.stack([vp[:-1] for _ in range(7)], axis=1)
         vpo = np.stack([vpo[:-1] for _ in range(7)], axis=1)
-        i = self.circ2.syn_curr(vp, vpo)
+        i = self.circ2._syn_curr(vp, vpo)
         self.assertEqual(i.shape, (4,7))
 
         vp = np.stack([vp for _ in range(10)], axis=0)
         vpo = np.stack([vpo for _ in range(10)], axis=0)
-        i = self.circ2.syn_curr(vp, vpo)
+        i = self.circ2._syn_curr(vp, vpo)
         self.assertEqual(i.shape, (10, 4, 7))
 
     def test_step(self):

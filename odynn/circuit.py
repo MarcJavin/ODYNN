@@ -196,13 +196,14 @@ class Circuit:
 
     @property
     def init_state(self):
+        """(ndarray) Initial states of neurons"""
         return self._init_state
 
-    def gap_curr(self, vprev, vpost):
+    def _gap_curr(self, vprev, vpost):
         G = self._param['G_gap']
         return G * (vprev - vpost)
 
-    def syn_curr(self, vprev, vpost):
+    def _syn_curr(self, vprev, vpost):
         """
         Compute the synaptic current
 
@@ -223,18 +224,18 @@ class Circuit:
             g = G / (1 + sp.exp((mdp - vprev) / scale))
         return g * (self._param['E'] - vpost)
 
-    def inter_curr(self, vprev, vpost):
+    def _inter_curr(self, vprev, vpost):
         if(self.n_synapse == 0):
-            return self.gap_curr(vprev, vpost)
+            return self._gap_curr(vprev, vpost)
         elif(self.n_gap == 0):
-            return self.syn_curr(vprev, vpost)
+            return self._syn_curr(vprev, vpost)
         if self.num > 1:
-            syns = self.syn_curr(vprev[...,:self.n_synapse,:], vpost[...,:self.n_synapse,:])
-            gaps = self.gap_curr(vprev[...,self.n_synapse:,:], vpost[...,self.n_synapse:,:])
+            syns = self._syn_curr(vprev[..., :self.n_synapse, :], vpost[..., :self.n_synapse, :])
+            gaps = self._gap_curr(vprev[..., self.n_synapse:, :], vpost[..., self.n_synapse:, :])
             axis = -2
         else:
-            syns = self.syn_curr(vprev[...,:self.n_synapse], vpost[...,:self.n_synapse])
-            gaps = self.gap_curr(vprev[...,self.n_synapse:], vpost[...,self.n_synapse:])
+            syns = self._syn_curr(vprev[..., :self.n_synapse], vpost[..., :self.n_synapse])
+            gaps = self._gap_curr(vprev[..., self.n_synapse:], vpost[..., self.n_synapse:])
             axis = -1
         if self._tensors:
             return tf.concat([syns, gaps], axis=axis)
@@ -277,7 +278,7 @@ class Circuit:
             vposts = tf.transpose(tf.gather_nd(hprev_swap, idx_post), perm=perm_v)
 
             #voltage of the presynaptic cells
-            curs_intern = self.inter_curr(vpres, vposts)
+            curs_intern = self._inter_curr(vpres, vposts)
             # [batch, neuron(, model)] -> [neuron, batch(, model)]
             curs_intern = tf.transpose(curs_intern, perm=perm_v)
             curs_post = []
@@ -304,12 +305,12 @@ class Circuit:
                 hs = np.swapaxes(h, 1, 2)
                 vpres = np.swapaxes(hs[0, self._pres], 0, 1)
                 vposts = np.swapaxes(hs[0, self._posts], 0, 1)
-                curs_intern = np.swapaxes(self.inter_curr(vpres, vposts), 0, 1)
+                curs_intern = np.swapaxes(self._inter_curr(vpres, vposts), 0, 1)
             else:
                 # update synapses
                 vpres = h[0, self._pres]
                 vposts = h[0, self._posts]
-                curs_intern = self.inter_curr(vpres, vposts)
+                curs_intern = self._inter_curr(vpres, vposts)
             curs_post = np.zeros(curs.shape)
 
             if self._num > 1:
@@ -350,10 +351,8 @@ class Circuit:
         """
         Plot the circuit using networkx
         Args:
-            show(bool):
-            save(bool:
-
-        Returns:
+            show(bool): If True, show the figure
+            save(bool): If True, save the figure
 
         """
         G = nx.MultiDiGraph()
@@ -405,13 +404,13 @@ class Circuit:
         """plot multiple voltages and Ca2+ concentration
 
         Args:
-          ts:
-          i_inj:
-          states:
-          i_syn:  (Default value = None)
-          suffix:  (Default value = "")
-          show(bool): If True, show the figure (Default value = True)
-          save(bool): If True, save the figure (Default value = False)
+          ts(ndarray): time sequence
+          i_inj(ndarray): input currents
+          states(ndarray): series of neural states
+          i_syn(ndarray, optional): synaptic currents (Default value = None)
+          suffix(str, optional): Suffix for the file name (Default value = "")
+          show(bool, optional): If True, show the figure (Default value = True)
+          save(bool, optional): If True, save the figure (Default value = False)
 
         """
         meas = [states[:, self._neurons.V_pos]]
@@ -517,6 +516,7 @@ class CircuitTf(Circuit, Optimized):
 
     @property
     def init_params(self):
+        """(dict), initial model parameters"""
         if self._neurons.trainable:
             return {**self._init_p, **self._neurons.init_params}
         else:
@@ -614,6 +614,11 @@ class CircuitTf(Circuit, Optimized):
         return results
     
     def settings(self):
+        """
+
+        Returns(str): string describing the object
+
+        """
         return ('Circuit optimization'.center(20, '.') + '\n' +
                 'Chemical connections : \n %s' % (self.synapses.keys()) + '\n' +
                 'Gap junctions : \n %s' % self.gaps.keys() + '\n' +
@@ -622,6 +627,12 @@ class CircuitTf(Circuit, Optimized):
                 self._neurons.settings())
 
     def apply_constraints(self, session):
+        """
+        Apply the constraints and call the `apply_constraints` function of the neurons
+
+        Args:
+            session: tensorflow session
+        """
         session.run(self._constraints)
         self._neurons.apply_constraints(session)
 
