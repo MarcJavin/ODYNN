@@ -149,6 +149,12 @@ def leak_box(df):
 
 if __name__ == '__main__':
 
+    from odynn.nsimul import simul
+    import scipy as sp
+    t = sp.arange(0., 1200., 0.1)
+    i = 20. * ((t>400) & (t<800))
+    simul(t=t, i_inj=i, show=True);exit()
+
 
 
     dir = utils.set_dir('Tapwith_dt0.5')

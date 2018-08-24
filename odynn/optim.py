@@ -42,6 +42,7 @@ class Optimized(ABC):
 
     @property
     def num(self):
+        """int, number of models"""
         return self._num
 
     @abstractmethod
@@ -86,6 +87,7 @@ class Optimized(ABC):
 
     @property
     def init_params(self):
+        """dict, initial parameters"""
         return self._init_p
 
     @init_params.setter
@@ -94,6 +96,7 @@ class Optimized(ABC):
 
     @property
     def variables(self):
+        """dict, current Tf variables"""
         return {}
 
     def predump(self, sess):

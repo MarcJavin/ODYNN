@@ -285,13 +285,13 @@ class CElegansNeuron(model.BioNeuron):
         """Membrane leak current (in uA/cm^2)"""
         return self._param['g_L'] * (V - self._param['E_L'])
 
-    def g_Ks(self, n):
+    def _g_Ks(self, n):
         return self._param['g_Ks'] * n
 
-    def g_Kf(self, p, q):
+    def _g_Kf(self, p, q):
         return self._param['g_Kf'] * p ** 4 * q
 
-    def g_Ca(self, e, f, h):
+    def _g_Ca(self, e, f, h):
         return self._param['g_Ca'] * e ** 2 * f * h
 
     def step(self, X, i_inj):
@@ -306,8 +306,8 @@ class CElegansNeuron(model.BioNeuron):
         if self._tensors:
             i_inj.set_shape(V.get_shape())
         h = self._h(cac)
-        V = (V*(self._param['C_m']/self.dt) + (i_inj + self.g_Ca(e,f,h)*self._param['E_Ca'] + (self.g_Ks(n)+self.g_Kf(p,q))*self._param['E_K'] + self._param['g_L']*self._param['E_L'])) / \
-            ((self._param['C_m']/self.dt) + self.g_Ca(e,f,h) + self.g_Ks(n) + self.g_Kf(p,q) + self._param['g_L'])
+        V = (V * (self._param['C_m']/self.dt) + (i_inj + self._g_Ca(e, f, h) * self._param['E_Ca'] + (self._g_Ks(n) + self._g_Kf(p, q)) * self._param['E_K'] + self._param['g_L'] * self._param['E_L'])) / \
+            ((self._param['C_m']/self.dt) + self._g_Ca(e, f, h) + self._g_Ks(n) + self._g_Kf(p, q) + self._param['g_L'])
 
         cac = (self._param['decay_ca'] / (self._param['decay_ca']+self.dt)) * (cac - self._i_ca(V, e, f, h)*self._param['rho_ca'])
         p = self._update_gate(p, 'p', V)
@@ -321,11 +321,11 @@ class CElegansNeuron(model.BioNeuron):
         else:
             return np.array([V, p, q, n, e, f, cac])
 
-    def calculate_exc(self, i_inj):
-        X = [self._init_state]
-        for i in i_inj:
-            X.append(self.step_exc(X[-1], i))
-        return np.array(X[1:])
+    # def calculate_exc(self, i_inj):
+    #     X = [self._init_state]
+    #     for i in i_inj:
+    #         X.append(self.step_exc(X[-1], i))
+    #     return np.array(X[1:])
 
     def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
         """plot all dynamics

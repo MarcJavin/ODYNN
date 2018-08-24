@@ -137,6 +137,7 @@ class BioNeuron(Neuron):
     default_params = None
     """dict, Default set of parameters for the model, of the form {<param_name> : value}"""
     parameter_names = None
+    """names of parameters from the model"""
     _constraints_dic = None
     """dict, Constraints to be applied during optimization
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
@@ -144,7 +145,7 @@ class BioNeuron(Neuron):
 
     def __new__(cls, *args, **kwargs):
         obj = Neuron.__new__(cls)
-        obj.init_names()
+        obj._init_names()
         return obj
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
@@ -197,13 +198,23 @@ class BioNeuron(Neuron):
         return ((tau * self.dt) / (tau + self.dt)) * ((rate / self.dt) + (self._inf(V, name) / tau))
 
     def calculate(self, i_inj):
+        """
+        Simulate the neuron with input current `i_inj` and return the state vectors
+
+        Args:
+            i_inj: input currents of shape [time, batch]
+
+        Returns:
+            ndarray: series of state vectors of shape [time, state, batch]
+
+        """
         X = [self._init_state]
         for i in i_inj:
             X.append(self.step(X[-1], i))
         return np.array(X[1:])
 
     @classmethod
-    def init_names(cls):
+    def _init_names(cls):
         cls.parameter_names = list(cls.default_params.keys())
 
     @staticmethod

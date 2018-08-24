@@ -34,21 +34,32 @@ class NeuronTf(Neuron, Optimized):
     def __init__(self, dt=0.1):
         Neuron.__init__(self, dt=dt)
         Optimized.__init__(self, dt=dt)
-        self.id = self.give_id()
+        self.id = self._give_id()
 
     @property
     def groups(self):
+        """
+        list indicating the group of each neuron
+        Neurons with the same group share the same parameters
+        """
         return None
 
     def init(self, batch):
+        """
+        Method to implement whe initialization is needed, will be called before reset
+
+        Args:
+            batch(int): number of batches
+        """
         pass
 
     @property
     def trainable(self):
+        """boolean stating if the neuron can be optimized"""
         return True
 
     @classmethod
-    def give_id(cls):
+    def _give_id(cls):
         cls.nb += 1
         return str(cls.nb - 1)
 
@@ -113,6 +124,7 @@ class BioNeuronTf(MODEL, NeuronTf):
 
     @property
     def init_params(self):
+        """initial model parameters"""
         return self._init_p
 
     @init_params.setter
@@ -143,6 +155,7 @@ class BioNeuronTf(MODEL, NeuronTf):
 
     @property
     def trainable(self):
+        """True if the object can be optimized"""
         return (self._fixed != set(self._init_p.keys()))
 
     def reset(self):
@@ -242,6 +255,11 @@ class BioNeuronTf(MODEL, NeuronTf):
         return results
 
     def settings(self):
+        """
+
+        Returns(str): string describing the object
+
+        """
         return ('Neuron optimization'.center(20, '.') + '\n' +
                 'Nb of neurons : {}'.format(self._num) + '\n' +
                 'Initial neuron params : {}'.format(self._init_p) + '\n' +
@@ -251,10 +269,18 @@ class BioNeuronTf(MODEL, NeuronTf):
                 'dt : {}'.format(self.dt) + '\n')
 
     def apply_constraints(self, session):
+        """
+        Apply the constraints to the object variables
+
+        Args:
+            session: tensorflow session
+
+        """
         session.run(self._constraints)
 
     @property
     def variables(self):
+        """Current variables of the models"""
         return self._param
 
 
@@ -286,10 +312,12 @@ class NeuronLSTM(NeuronTf):
 
     @property
     def num(self):
+        """Number of neurons contained in the object, always 1 here"""
         return 1
 
     @property
     def init_params(self):
+        """Initial model parameters"""
         if self.vars_init is None:
             return {}
         return self.vars_init
@@ -421,6 +449,11 @@ class NeuronLSTM(NeuronTf):
         return results
 
     def settings(self):
+        """
+
+        Returns(str): string describing the object
+
+        """
         return ('Number of hidden layers : {}'.format(self._hidden_layer_nb) + '\n'
                 'Units per hidden layer : {}'.format(self._hidden_layer_size) + '\n' +
                 'Extra layers for [Ca] : %s' % self._extra_ca + '\n' +
@@ -483,6 +516,7 @@ class Neurons(NeuronTf):
             n.reset()
 
     def init(self, batch):
+        """call `init` method for all contained neuron objects"""
         for n in self._neurons:
             n.init(batch)
 
@@ -536,9 +570,21 @@ class Neurons(NeuronTf):
         pass
 
     def settings(self):
+        """
+
+        Returns(str): string describing the object
+
+        """
         return 'Ensemble neurons : '.join(['\n' + n.settings() for n in self._neurons])
 
     def apply_constraints(self, session):
+        """
+        Apply the constraints to the object variables
+
+        Args:
+            session: tensorflow session
+
+        """
         return [n.apply_constraints(session) for n in self._neurons]
 
     def apply_init(self, session):
