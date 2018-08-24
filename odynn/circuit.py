@@ -62,13 +62,26 @@ MIN_G = 1.e-7
 MAX_G = 0.5
 
 def give_constraints(conns):
+    """Give constraints for synaptic parameters
+
+    Args:
+      conns(dict): dictionnary of chemical synapse parameters
+
+    Returns:
+        dict: constraints
+    """
     return {**give_constraints_syn(conns), **give_constraints_gap()}
 
 def give_constraints_gap():
+    """Give constraints for gap junction parameters
+
+    Returns:
+        dict: constraints
+    """
     return {'G_gap': np.array([MIN_G, MAX_G])}
 
 def give_constraints_syn(conns):
-    """constraints for synapse parameters
+    """Give constraints for chemical synapse parameters
 
     Args:
       conns(dict): dictionnary of synapse parameters
@@ -90,13 +103,13 @@ def const_E(exc=True):
 
 
 def get_syn_rand(exc=True):
-    """Give random parameters dictionnary for a synapse
+    """Give random parameters dictionnary for a chemical synapse
 
     Args:
       exc(bool): If True, give an excitatory synapse (Default value = True)
 
     Returns:
-        dict: random parameters for a synapse
+        dict: random parameters for a chemical synapse
     """
     # scale is negative if inhibitory
     if exc:
@@ -111,6 +124,11 @@ def get_syn_rand(exc=True):
     }
 
 def get_gap_rand():
+    """Give random parameters dictionnary for a gap junction
+
+    Returns:
+        dict: random parameters for a gap junction
+    """
     return {'G_gap' : random.uniform(MIN_G, MAX_G)}
 
 VARS_SYN = list(SYNAPSE1.keys())

@@ -101,6 +101,7 @@ def clamp(val, minimum=0, maximum=255):
         maximum(int): maximum
 
     Returns:
+        int: clamped value
 
     """
     if val < minimum:
