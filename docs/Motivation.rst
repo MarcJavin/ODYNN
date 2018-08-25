@@ -10,4 +10,4 @@ It is enhanced with features such as performing experiments with different bioph
     :align: center
     :height: 500px
     :scale: 50
-    :alt: alternate text
+    :alt: Objective
