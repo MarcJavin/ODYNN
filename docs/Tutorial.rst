@@ -69,6 +69,6 @@ Tutorials
 ===========
 
 Jupyter notebook tutorials are available.
-After cloning the repository, go to the tutorial/ folder and run::
+After cloning the repository, go to the `tutorial/` folder and run::
 
     jupyter notebook

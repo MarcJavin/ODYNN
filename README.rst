@@ -19,14 +19,14 @@ Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...)
     :align: center
     :height: 500px
     :scale: 50
-    :alt: alternate text
+    :alt: Objective
 
 .. image:: img/flc.png
     :width: 800px
     :align: center
     :height: 500px
     :scale: 50
-    :alt: alternate text
+    :alt: Forward Locomotion Circuit Optimization
 
 Description
 ------------
@@ -65,7 +65,7 @@ Folders
 
 - docs : files for creating documentation with Sphinx
 - img : images
-- opthh : package python files
+- odynn : package python files
 - tests : unit tests
 - tutorial : notebook to run with Jupyter
 
