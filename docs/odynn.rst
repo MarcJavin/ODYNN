@@ -4,7 +4,7 @@ odynn package
 Structure
 -------------
 
-.. figure:: ../../img/uml.png
+.. figure:: ../img/uml.png
     :width: 800px
     :align: center
     :height: 500px
