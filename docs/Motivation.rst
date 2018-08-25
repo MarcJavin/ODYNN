@@ -8,6 +8,6 @@ It is enhanced with features such as performing experiments with different bioph
 .. image:: ../img/final_goal.png
     :width: 800px
     :align: center
-    :height: 500px
-    :scale: 50
+    :height: 600px
+    :scale: 70
     :alt: Objective
