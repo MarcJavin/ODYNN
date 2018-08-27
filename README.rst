@@ -12,7 +12,7 @@ ODYNN : Optimization for DYnamic Neural Networks
 
 ODYNN is a python package aiming at providing an optimization suite for biological neural circuits.
 It allows implementation of different neuron models, definition of circuit architectures, simulation and optimization of such circuits, and evaluation of the results.
-Documentation and examples can be find at https://odynn.readthedocs.io
+Documentation and examples can be found at https://odynn.readthedocs.io
 
 .. image:: img/final_goal.png
     :width: 800px
