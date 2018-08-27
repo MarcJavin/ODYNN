@@ -12,7 +12,7 @@ ODYNN : Optimization for DYnamic Neural Networks
 
 Motivation
 ------------
-Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
+Optimization of biological neural circuit models (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
 
 .. image:: img/final_goal.png
     :width: 800px
@@ -27,6 +27,17 @@ Optimization of biological neural models (Integrate and Fire, Hodgkin-Huxley...)
     :height: 500px
     :scale: 50
     :alt: Forward Locomotion Circuit Optimization
+
+
+Structure
+-----------------
+
+.. image:: img/uml.png
+    :width: 800px
+    :align: center
+    :height: 500px
+    :scale: 50
+    :alt: UML class diagram
 
 Description
 ------------
