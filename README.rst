@@ -10,9 +10,9 @@ ODYNN : Optimization for DYnamic Neural Networks
     :target: https://odynn.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-Motivation
-------------
-Optimization of biological neural circuit models (Integrate and Fire, Hodgkin-Huxley...) as well as circuits connected via synapses.
+ODYNN is a python package aiming at providing an optimization suite for biological neural circuits.
+It allows implementation of different neuron models, definition of circuit architectures, simulation and optimization of such circuits, and evaluation of the results.
+Documentation and examples can be find at https://odynn.readthedocs.io
 
 .. image:: img/final_goal.png
     :width: 800px
@@ -32,6 +32,7 @@ Optimization of biological neural circuit models (Integrate and Fire, Hodgkin-Hu
 Structure
 -----------------
 
+
 .. image:: img/uml.png
     :width: 800px
     :align: center
@@ -39,17 +40,6 @@ Structure
     :scale: 50
     :alt: UML class diagram
 
-Description
-------------
-
-- Parallel Simulation
-- Parallel Optimization
-- User defined model
-- Tensorflow
-- LSTM
-- Unit tests
-- Documentation
-- Tutorial
 
 
 Getting started
