@@ -10,7 +10,7 @@ from odynn import utils
 from pylab import plt
 import random
 import numpy as np
-import tensorflow as tf
+import torch
 
 
 # Class for our new model
@@ -35,7 +35,7 @@ class LeakyIntegrate(NeuronModel):
             ((self._param['C_m'] / self.dt) + self._param['g_L'])
         # V = V + self.dt*(i_inj + self._i_L(V))/self._param['C_m']
         if self._tensors:
-            return tf.stack([V])
+            return torch.Tensor([V])
         else:
             return np.array([V])
 
