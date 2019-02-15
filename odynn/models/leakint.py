@@ -22,7 +22,7 @@ class LeakyIntegrate(NeuronModel):
     _constraints_dic = {'C_m': [0.5, 40.],
                         'g_L': [1e-9, 10.]}
 
-    def __init__(self, init_p, tensors=False, dt=0.1):
+    def __init__(self, init_p=None, tensors=False, dt=0.1):
         NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _i_L(self, V):

@@ -8,7 +8,6 @@
 from unittest import TestCase
 from odynn import utils
 import os
-import numpy as np
 
 
 class TestOptim(TestCase):

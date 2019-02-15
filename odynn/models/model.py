@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 from odynn import utils
 import torch
-import scipy as sp
 
 
 class Model(ABC):
@@ -133,6 +132,9 @@ class NeuronModel(Model):
     _ions = {}
     V_pos = 0
 
+    def __init__(self, init_p=None, tensors=False, dt=0.1):
+        Model.__init__(self, init_p, tensors, dt)
+
     def calculate(self, i_inj):
         """
         Simulate the neuron with input current `i_inj` and return the state vectors
@@ -156,7 +158,7 @@ class NeuronModel(Model):
         if self._tensors:
             return torch.sigmoid((V - mdp) / scale)
         else:
-            return 1 / (1 + sp.exp((mdp - V) / scale))
+            return 1 / (1 + np.exp((mdp - V) / scale))
 
     def _update_gate(self, rate, name, V):
         tau = self._param['%s__tau'%name]
