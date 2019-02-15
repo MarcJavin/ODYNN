@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from .model import BioNeuron
+from .model import NeuronModel
 from odynn import utils
 from pylab import plt
 import random
@@ -19,7 +19,7 @@ MIN_SCALE = 1.
 MAX_SCALE = 200.
 
 # Class for our new model
-class HodgHuxSimple(BioNeuron):
+class HodgHuxSimple(NeuronModel):
     # Our model has membrane conductance as its only parameter
     default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.,
                       'g_K': 0.5,
@@ -44,7 +44,7 @@ class HodgHuxSimple(BioNeuron):
                         }
 
     def __init__(self, init_p, tensors=False, dt=0.1):
-        BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
+        NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _i_K(self, a, b, V):
         return self._param['g_K'] * a**3 * b * (self._param['E_K'] - V)

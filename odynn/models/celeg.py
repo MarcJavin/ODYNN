@@ -248,7 +248,7 @@ ALL = set(DEFAULT.keys())
 
 
 
-class CElegansNeuron(model.BioNeuron):
+class CElegansNeuron(model.NeuronModel):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
 
@@ -262,7 +262,7 @@ class CElegansNeuron(model.BioNeuron):
     """constraints to be applied when optimizing"""
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
-        model.BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
+        model.NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _h(self, cac):
         """Channel gating kinetics. Functions of membrane voltage"""
@@ -295,7 +295,7 @@ class CElegansNeuron(model.BioNeuron):
         return self._param['g_Ca'] * e ** 2 * f * h
 
     def step(self, X, i_inj):
-        V = X[self.V_pos]
+        V = X[0]
         p = X[1]
         q = X[2]
         n = X[3]

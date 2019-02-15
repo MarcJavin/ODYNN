@@ -5,7 +5,7 @@
 .. moduleauthor:: Marc Javin
 """
 
-from .model import BioNeuron
+from .model import NeuronModel
 from odynn import utils
 from pylab import plt
 import random
@@ -14,7 +14,7 @@ import tensorflow as tf
 
 
 # Class for our new model
-class LeakyIntegrate(BioNeuron):
+class LeakyIntegrate(NeuronModel):
 
     default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.}
     # Initial value for the voltage
@@ -23,7 +23,7 @@ class LeakyIntegrate(BioNeuron):
                         'g_L': [1e-9, 10.]}
 
     def __init__(self, init_p, tensors=False, dt=0.1):
-        BioNeuron.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
+        NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
 
     def _i_L(self, V):
         return self._param['g_L'] * (self._param['E_L'] - V)
