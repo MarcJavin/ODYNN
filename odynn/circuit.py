@@ -392,6 +392,7 @@ class Circuit:
                 colors.append('c')
             else:
                 colors.append(max(set(cols), key=cols.count))
+        # draw neurons
         nx.draw_networkx_nodes(G, pos, node_shape='v', node_color=[colors[i] for i in self.sensors], nodelist=self.sensors,
                                node_size=2000, alpha=1)
         nx.draw_networkx_nodes(G, pos, node_shape='o', node_color=[colors[i] for i in self.inter], nodelist=self.inter,
@@ -405,6 +406,7 @@ class Circuit:
         edges_gap = [e for e in G.edges if G[e[0]][e[1]][e[2]]['color'] == gap]
         style = ArrowStyle("wedge", tail_width=2., shrink_factor=0.2)
         styleg = ArrowStyle("wedge", tail_width=0.6, shrink_factor=0.4)
+        #draw synapses
         nx.draw_networkx_edges(G, pos, arrowstyle=style, edgelist=edges_exc, edge_color='Chartreuse',
                                arrowsize=10, alpha=1, width=1)
         nx.draw_networkx_edges(G, pos, arrowstyle=style, edgelist=edges_inh, edge_color='red',
