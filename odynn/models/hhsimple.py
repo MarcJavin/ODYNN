@@ -10,7 +10,7 @@ from odynn import utils
 from pylab import plt
 import random
 import numpy as np
-import tensorflow as tf
+import torch
 import collections
 
 MIN_TAU = 1.
@@ -61,7 +61,7 @@ class HodgHuxSimple(NeuronModel):
         a = self._update_gate(a, 'a', V)
         b = self._update_gate(b, 'b', V)
         if self._tensors:
-            return tf.stack([V, a, b], 0)
+            return torch.stack([V, a, b])
         else:
             return np.array([V, a, b])
 

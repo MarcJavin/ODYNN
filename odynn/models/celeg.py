@@ -12,7 +12,7 @@ import random
 import pylab as plt
 import pandas as pd
 import seaborn as sns
-import tensorflow as tf
+import torch
 from matplotlib import gridspec as gridspec
 from matplotlib.ticker import FormatStrFormatter
 import collections
@@ -317,7 +317,7 @@ class CElegansNeuron(model.NeuronModel):
         f = self._update_gate(f, 'f', V)
 
         if self._tensors:
-            return tf.stack([V, p, q, n, e, f, cac], 0)
+            return torch.stack([V, p, q, n, e, f, cac], 0)
         else:
             return np.array([V, p, q, n, e, f, cac])
 
