@@ -59,44 +59,43 @@ MIN_MDP = -50.
 MAX_MDP = 50.
 
 
-def give_rand():
-    rand_par = {
-        'decay_ca': random.uniform(10.,500.),
-        'rho_ca': random.uniform(1e-5,10.),
-        'p__tau': random.uniform(MIN_TAU, MAX_TAU/5),
-        'p__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'p__mdp': random.uniform(MIN_MDP, MAX_MDP),
+RAND = {
+    'decay_ca': [10.,500.],
+    'rho_ca': [1e-5,10.],
+    'p__tau': [MIN_TAU, MAX_TAU/5],
+    'p__scale': [MIN_SCALE, MAX_SCALE],
+    'p__mdp': [MIN_MDP, MAX_MDP],
 
-        'q__tau': random.uniform(MIN_TAU, MAX_TAU/5),
-        'q__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'q__mdp': random.uniform(MIN_MDP, MAX_MDP),
+    'q__tau': [MIN_TAU, MAX_TAU/5],
+    'q__scale': [-MAX_SCALE, -MIN_SCALE],
+    'q__mdp': [MIN_MDP, MAX_MDP],
 
-        'n__tau': random.uniform(MAX_TAU/5, MAX_TAU),
-        'n__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'n__mdp': random.uniform(MIN_MDP, MAX_MDP),
+    'n__tau': [MAX_TAU/5, MAX_TAU],
+    'n__scale': [MIN_SCALE, MAX_SCALE],
+    'n__mdp': [MIN_MDP, MAX_MDP],
 
-        'f__tau': random.uniform(MIN_TAU, MAX_TAU/5),
-        'f__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'f__mdp': random.uniform(MIN_MDP, MAX_MDP),
+    'f__tau': [MIN_TAU, MAX_TAU/5],
+    'f__scale': [-MAX_SCALE, -MIN_SCALE],
+    'f__mdp': [MIN_MDP, MAX_MDP],
 
-        'e__tau': random.uniform(MIN_TAU, MAX_TAU/5),
-        'e__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-        'e__mdp': random.uniform(-30., 0.),
+    'e__tau': [MIN_TAU, MAX_TAU/5],
+    'e__scale': [MIN_SCALE, MAX_SCALE],
+    'e__mdp': [-30., 0.],
 
-        'h__alpha': random.uniform(0.1, 0.9),
-        'h__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-        'h__mdp': random.uniform(1, 100),
+    'h__alpha': [0.1, 0.9],
+    'h__scale': [-MAX_SCALE, -MIN_SCALE],
+    'h__mdp': [1, 100],
 
-        'C_m': random.uniform(0.5, 40.),
-        'g_Ca': random.uniform(0.1, MAX_G),
-        'g_Ks': random.uniform(0.1, MAX_G),
-        'g_Kf': random.uniform(0.1, MAX_G),
-        'g_L': random.uniform(0.0001, 0.5),
-        'E_Ca': random.uniform(0., 40),
-        'E_K': random.uniform(-80, -40.),
-        'E_L': random.uniform(-80, -40.),
-    }
-    return collections.OrderedDict(sorted(rand_par.items(), key=lambda t: t[0]))
+    'C_m': [0.5, 40.],
+    'g_Ca': [0.1, MAX_G],
+    'g_Ks': [0.1, MAX_G],
+    'g_Kf': [0.1, MAX_G],
+    'g_L': [0.0001, 0.5],
+    'E_Ca': [0., 40],
+    'E_K': [-80, -40.],
+    'E_L': [-80, -40.],
+}
+RAND = collections.OrderedDict(sorted(RAND.items(), key=lambda t: t[0]))
 
 CONSTRAINTS = {
     'decay_ca': [1e-1, np.infty],
@@ -258,8 +257,9 @@ class CElegansNeuron(model.NeuronModel):
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
     default_params = DEFAULT
     """default parameters as a dictionnary"""
-    _constraints_dic = CONSTRAINTS
+    _constraints = CONSTRAINTS
     """constraints to be applied when optimizing"""
+    _random_bounds = RAND
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         model.NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
@@ -398,11 +398,6 @@ class CElegansNeuron(model.NeuronModel):
         plt.ylabel('$I_{inj}$ ($\\mu{A}/cm^2$)')
         # plt.ylim(-1, 40)
         utils.save_show(show, save, name='Results_{}'.format(suffix), dpi=300)
-
-    @staticmethod
-    def get_random():
-        """Returns a dictionnary of random parameters"""
-        return give_rand()
 
     @staticmethod
     def boxplot_vars(var_dic, suffix="", show=False, save=True):

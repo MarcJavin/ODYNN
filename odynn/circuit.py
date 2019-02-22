@@ -11,35 +11,53 @@ from odynn.models import neur_models, syn_models
 
 class Circuit(object):
 
-    def __init__(self, synapses=[], neuron_model='leakint', syn_model='classic', tensors=False, dt=0.1):
-        self._tensors = tensors
-        syns = list(zip(*synapses))
-        self._synapses = syn_models[syn_model](syns[0], syns[1], tensors=tensors)
-        nb_neurons = len(np.unique(np.hstack((syns[0], syns[1]))))
-        self.n_synapse = len(syns[0])
-        nmod = neur_models[neuron_model]
-        self._neurons = nmod(init_p=[nmod.get_random() for _ in range(nb_neurons)], tensors=tensors, dt=dt)
+    def __init__(self, neurons, synapses):
+        assert neurons._tensors == synapses._tensors
+        assert neurons._parallel == synapses._parallel
+        nb_neurons = len(np.unique(np.hstack((synapses._pres, synapses._posts))))
+        assert nb_neurons == neurons.num
+        self._tensors = neurons._tensors
+        self._parallel = neurons._parallel
+        self._synapses = synapses
+        self._neurons = neurons
         self._init_state = self._neurons.init_state
 
+    @classmethod
+    def create_random(cls, synapses, parallel=1, neuron_model='leakint', syn_model='classic', tensors=True, dt=0.1):
+        syns = list(zip(*synapses))
+        nb_neurons = len(np.unique(np.hstack((syns[0], syns[1]))))
+        n_synapse = len(syns[0])
+        nmod = neur_models[neuron_model]
+        neurons = nmod.create_random(nb_neurons, parallel, tensors=tensors, dt=dt)
+        syns = syn_models[syn_model].create_random(n_synapse, parallel, tensors=tensors)
+        return Circuit(neurons, syns)
+
+    @property
+    def parameters(self):
+        return {**self._neurons.parameters, **self._synapses.parameters}
 
     def calculate(self, i_inj):
-        for k, v in self._neurons._param.items():
-            self._neurons._param[k] = v[...,None]
-        init = self._neurons.init_state[:,None,:,None]
-        X = [init]
-        if i_inj.ndim == 1:
-            i_inj = i_inj[:,None,None,None]
-        elif i_inj.ndim == 2:
-            i_inj = i_inj[:,None,:,None]
-        elif i_inj.ndim == 3:
-            i_inj = i_inj[:,:,:,None]
+        init = np.repeat(self._neurons._init_state[:, None], self._neurons._num, axis=-1)
+        init = np.repeat(init[:, :, None], self._parallel, axis=-1)
+        init = init[:, None]
+        X = [torch.Tensor(init)]
+        # if i_inj.ndim == 1:
+        #     i_inj = i_inj[:,None,None,None]
+        # elif i_inj.ndim == 2:
+        i_inj = i_inj[:,None,:,None]
+        # elif i_inj.ndim == 3:
+        #     i_inj = i_inj[:,:,:,None]
         for i in i_inj:
             syn_cur = self._synapses.step(X[-1])
-            i += syn_cur
-            X.append(self._neurons.step(X[-1], i))
+            X.append(self._neurons.step(X[-1], i + syn_cur))
         if self._tensors:
             return torch.cat(X[1:])
         else:
             return np.array(X[1:])
-        
+
+    def apply_constraints(self):
+        self._neurons.apply_constraints()
+        self._synapses.apply_constraints()
+
+
             

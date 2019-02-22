@@ -13,21 +13,23 @@ from odynn import utils
 import torch
 
 
-class Model(ABC):
+class Model():
     """Abstract class to implement for using a new biological model
     All methods and class variables have to be implemented in order to have the expected behavior
 
     """
-    default_init_state = None
+    default_init_state = []
     """array, Initial values for the vector of state variables"""
     default_params = {}
     """dict, Default set of parameters for the model, of the form {<param_name> : value}"""
-    parameter_names = None
+    _parameter_names = []
     """names of parameters from the model"""
-    _constraints_dic = None
+    _constraints = {}
     """dict, Constraints to be applied during optimization
         Should be of the form : {<variable_name> : [lower_bound, upper_bound]}
     """
+    _random_bounds = {}
+
 
     def __new__(cls, *args, **kwargs):
         obj = ABC.__new__(cls)
@@ -39,33 +41,19 @@ class Model(ABC):
         Reshape the initial state and parameters for parallelization in case init_p is a list
 
         Args:
-            init_p(dict or list of dict): initial parameters of the neuron(s). If init_p is a list, then this object
-                will model n = len(init_p) neurons
-            tensors(bool): used in the step function in order to use tensorflow or numpy
+            init_p(dict): initial parameters of the neuron(s)
+            tensors(bool): used in the step function in order to use PyTorch or numpy
             dt(float): time step
 
         """
         self.dt = dt
         self._init_state = self.default_init_state
         if(init_p is None):
-            init_p = self.default_params
+            init_p = {k: np.array([[v]]) for k,v in self.default_params.items()}
             self._num = 1
-        elif(init_p == 'random'):
-            init_p = self.get_random()
-            self._num = 1
-        elif isinstance(init_p, list):
-            self._num = len(init_p)
-            if self._num == 1:
-                init_p = init_p[0]
-            else:
-                init_p = {var: np.array([p[var] for p in init_p], dtype=np.float32) for var in init_p[0].keys()}
-        elif hasattr(init_p[self.parameter_names[0]], '__len__'):
-            self._num = len(init_p[self.parameter_names[0]])
-            init_p = {var: np.array(val, dtype=np.float32) for var, val in init_p.items()}
+            self._parallel = 1
         else:
-            self._num = 1
-        if self._num > 1:
-            self._init_state = np.stack([self._init_state for _ in range(self._num)], axis=-1)
+            self._num, self._parallel = init_p[self.parameter_names[0]].shape
         self._tensors = tensors
         self._init_p = init_p
         self._param = self._init_p.copy()
@@ -74,15 +62,29 @@ class Model(ABC):
         self.dt = dt
 
     def to_tensor(self):
-        try:
-            self._param = {k: torch.Tensor(v) for k,v in self._param.items()}
-        except:
-            self._param = {k: torch.Tensor([v]) for k, v in self._param.items()}
+        # try:
+        self._param = {k: torch.tensor(v, dtype=torch.float, requires_grad=True) for k,v in self._param.items()}
+        # except:
+        #     self._param = {k: torch.Tensor([v]) for k, v in self._param.items()}
 
     @property
     def num(self):
         """int, Number of neurons being modeled in this object"""
         return self._num
+
+    @property
+    def parallel(self):
+        """int, Number of neurons being modeled in this object"""
+        return self._parallel
+
+    @property
+    def parameters(self):
+        return self._param
+
+    @property
+    def parameter_names(self):
+        """int, Number of neurons being modeled in this object"""
+        return self._parameter_names
 
     @property
     def init_state(self):
@@ -106,25 +108,27 @@ class Model(ABC):
 
     @classmethod
     def _init_names(cls):
-        cls.parameter_names = list(cls.default_params.keys())
+        cls._parameter_names = list(cls.default_params.keys())
 
-    @staticmethod
-    def get_random():
+    @classmethod
+    def get_random(cls, num=1, parallel=1):
         """Return a dictionnary with the same keys as default_params and random values"""
-        pass
+        return {k: np.random.uniform(v[0], v[1], size=(num,parallel)) for k,v in cls._random_bounds.items()}
 
-    def parallelize(self, n):
-        """Add a dimension of size n in the initial parameters and initial state
+    @classmethod
+    def create_random(cls, num=1, parallel=1, dt=0.1, tensors=True):
+        return cls(cls.get_random(num, parallel), tensors, dt)
 
-        Args:
-          n(int): size of the new dimension
-        """
-        if self._num > 1 and list(self._init_p.values())[0].ndim == 1:
-                self._init_p = {var: np.stack([val for _ in range(n)], axis=val.ndim) for var, val in self._init_p.items()}
-        elif not hasattr(list(self._init_p.values())[0], '__len__'):
-                self._init_p = {var: np.stack([val for _ in range(n)], axis=-1) for var, val in self._init_p.items()}
-        self._init_state = np.stack([self._init_state for _ in range(n)], axis=-1)
-        self._param = self._init_p.copy()
+    @classmethod
+    def create_default(cls, num=1, parallel=1, dt=0.1, tensors=False):
+        params = {k: np.full((num, parallel), v) for k, v in cls.default_params.items()}
+        return cls(params, tensors, dt)
+
+    def apply_constraints(self):
+        with torch.no_grad():
+            for k,c in self._constraints.items():
+                self._param[k] = self._param[k].clamp(c[0], c[1])
+            # self._param[k].requires_grad = True
 
 
 class NeuronModel(Model):

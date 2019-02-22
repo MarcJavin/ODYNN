@@ -8,7 +8,6 @@
 from .model import NeuronModel
 from odynn import utils
 from pylab import plt
-import random
 import numpy as np
 import torch
 
@@ -19,8 +18,11 @@ class LeakyIntegrate(NeuronModel):
     default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.}
     # Initial value for the voltage
     default_init_state = np.array([-60.])
-    _constraints_dic = {'C_m': [0.5, 40.],
+    _constraints = {'C_m': [0.5, 40.],
                         'g_L': [1e-9, 10.]}
+    _random_bounds = {'C_m': [0.5, 40],
+                'g_L': [1e-5, 10.],
+                'E_L': [-70., -45.]}
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
@@ -35,16 +37,9 @@ class LeakyIntegrate(NeuronModel):
             ((self._param['C_m'] / self.dt) + self._param['g_L'])
         # V = V + self.dt*(i_inj + self._i_L(V))/self._param['C_m']
         if self._tensors:
-            return torch.Tensor([V])
+            return torch.stack([V])
         else:
             return np.array([V])
-
-    @staticmethod
-    def get_random():
-        # Useful later
-        return {'C_m': random.uniform(0.5, 40.),
-                'g_L': random.uniform(1e-5, 10.),
-                'E_L': random.uniform(-70., -45.)}
 
     def plot_results(self, ts, i_inj_values, X, ca_true=None, suffix="", show=True, save=False):
 

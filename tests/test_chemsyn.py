@@ -54,3 +54,8 @@ class TestChemSyn(TestCase):
         c = s.step(v)
         self.assertEqual(c.shape, v.shape[1:])
 
+        s = ChemSyn(np.array([0, 1, 2, 3]), np.array([1, 2, 3, 1]), init_p=ChemSyn.get_random(4,3), tensors=True)
+        v = torch.ones((1, 5, 4, 3))
+        c = s.step(v)
+        self.assertEqual(c.shape, v.shape[1:])
+

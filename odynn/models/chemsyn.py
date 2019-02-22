@@ -13,7 +13,7 @@ import torch
 
 SYNAPSE = {
     'G': 0.05,
-    'mdp': -40.,
+    'mdp': -50.,
     'scale': 10.,
     'E': 1.
 }
@@ -26,20 +26,26 @@ SYNAPSE_inhib = {
 
 SYN_VARS = list(SYNAPSE.keys())
 
-MIN_SCALE = 0.2
+MIN_SCALE = 0.5
 MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
 MIN_G = 1.e-7
-MAX_G = 0.5
+MAX_G = 0.05
 
 # Class for our new model
 class ChemSyn(Model):
 
     default_params = SYNAPSE_inhib
-    _constraints_dic = {'G': np.array([MIN_G, MAX_G]),
+    _constraints = {'G': np.array([MIN_G, MAX_G]),
                         'scale': np.array([MIN_SCALE, np.infty]),
                         'E' : np.array([-100., -60.])}
+    _random_bounds = {
+            'G': [MIN_G, MAX_G],
+            'mdp': [MIN_MDP, MAX_MDP],
+            'scale': [MIN_SCALE, MAX_SCALE],
+            'E': [-100., -60.]
+        }
 
     def __init__(self, pres, posts, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
@@ -109,24 +115,3 @@ class ChemSyn(Model):
         #         curs_post[:,i,:] = np.sum(curs_intern[self._posts == i], axis=0)
         return curs_post
 
-    @staticmethod
-    def get_random(exc=True):
-        """Give random parameters dictionnary for a chemical synapse
-
-        Args:
-          exc(bool): If True, give an excitatory synapse (Default value = True)
-
-        Returns:
-            dict: random parameters for a chemical synapse
-        """
-        # scale is negative if inhibitory
-        if exc:
-            E = random.uniform(-30., 50.)
-        else:
-            E = random.uniform(-100., -60.)
-        return {
-            'G': random.uniform(MIN_G, MAX_G),
-            'mdp': random.uniform(MIN_MDP, MAX_MDP),
-            'scale': random.uniform(MIN_SCALE, MAX_SCALE),
-            'E': E
-        }

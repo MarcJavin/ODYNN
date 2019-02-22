@@ -34,14 +34,26 @@ class HodgHuxSimple(NeuronModel):
     default_params = collections.OrderedDict(sorted(default_params.items(), key=lambda t: t[0]))
     # Initial value for the voltage
     default_init_state = np.array([-60., 0., 1.])
-    _constraints_dic = {'C_m': [0.5, 40.],
+    _constraints = {'C_m': [0.5, 40.],
                         'g_L': [1e-9, 10.],
                         'g_K': [1e-9, 10.],
                         'a__scale': [MIN_SCALE, MAX_SCALE],
                         'a__tau': [MIN_TAU, MAX_TAU],
                         'b__scale': [-MAX_SCALE, -MIN_SCALE],
                         'b__tau': [MIN_TAU, MAX_TAU]
-                        }
+                    }
+    _random_bounds =  {'C_m': [0.5, 40.],
+            'g_L': [1e-5, 10.],
+            'g_K': [1e-5, 10.],
+            'E_L': [-70., -45.],
+            'E_K': [-40., 30.],
+            'a__tau': [MIN_TAU, MAX_TAU],
+            'a__scale': [MIN_SCALE, MAX_SCALE],
+            'a__mdp': [-50., 0.],
+            'b__tau': [MIN_TAU, MAX_TAU],
+            'b__scale': [-MAX_SCALE, -MIN_SCALE],
+            'b__mdp': [-30., 20.],
+            }
 
     def __init__(self, init_p, tensors=False, dt=0.1):
         NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
@@ -64,22 +76,6 @@ class HodgHuxSimple(NeuronModel):
             return torch.stack([V, a, b])
         else:
             return np.array([V, a, b])
-
-    @staticmethod
-    def get_random():
-        # Useful later
-        return {'C_m': random.uniform(0.5, 40.),
-                'g_L': random.uniform(1e-5, 10.),
-                'g_K': random.uniform(1e-5, 10.),
-                'E_L': random.uniform(-70., -45.),
-                'E_K': random.uniform(-40., 30.),
-                'a__tau': random.uniform(MIN_TAU, MAX_TAU),
-                'a__scale': random.uniform(MIN_SCALE, MAX_SCALE),
-                'a__mdp': random.uniform(-50., 0.),
-                'b__tau': random.uniform(MIN_TAU, MAX_TAU),
-                'b__scale': random.uniform(-MAX_SCALE, -MIN_SCALE),
-                'b__mdp': random.uniform(-30., 20.),
-                }
 
     def plot_results(self, ts, i_inj_values, results, ca_true=None, suffix="", show=True, save=False):
 
