@@ -30,7 +30,7 @@ MIN_SCALE = 0.5
 MAX_SCALE = 100.
 MIN_MDP = -60.
 MAX_MDP = 50.
-MIN_G = 1.e-7
+MIN_G = 1.e-2
 MAX_G = 0.05
 
 # Class for our new model
