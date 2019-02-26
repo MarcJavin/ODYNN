@@ -15,9 +15,9 @@ import torch
 # Class for our new model
 class LeakyIntegrate(NeuronModel):
 
-    default_params = {'C_m': 1., 'g_L': 0.1, 'E_L': -60.}
+    default_params = {'C_m': 5., 'g_L': 0.272, 'E_L': -40.8}
     # Initial value for the voltage
-    default_init_state = np.array([-60.])
+    default_init_state = np.array([-35.])
     _constraints = {'C_m': [0.5, 40.],
                         'g_L': [1e-9, 1.]}
     _random_bounds = {'C_m': [0.5, 5],

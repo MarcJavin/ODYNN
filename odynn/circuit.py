@@ -36,20 +36,29 @@ class Circuit(object):
     def parameters(self):
         return {**self._neurons.parameters, **self._synapses.parameters}
 
-    def calculate(self, i_inj):
-        init = np.repeat(self._neurons._init_state[:, None], self._neurons._num, axis=-1)
-        init = np.repeat(init[:, :, None], self._parallel, axis=-1)
-        init = init[:, None]
-        X = [torch.Tensor(init)]
+    def step(self, X, i_inj):
+        syn_cur = self._synapses.step(X)
+        return self._neurons.step(X, i_inj + syn_cur)
+
+    def calculate(self, i_inj, init=None):
+        if init is None:
+            init = np.repeat(self._neurons._init_state[:, None], self._neurons._num, axis=-1)
+            init = np.repeat(init[:, :, None], self._parallel, axis=-1)
+            init = init[:, None]
+        i_inj = np.repeat(i_inj[:, :, None], self._parallel, axis=-1)
+
+        i_inj = i_inj[:, None]
+        if self._tensors:
+            init = torch.Tensor(init)
+        X = [init]
         # if i_inj.ndim == 1:
         #     i_inj = i_inj[:,None,None,None]
         # elif i_inj.ndim == 2:
-        i_inj = i_inj[:,None,:,None]
+        # i_inj = i_inj[:,None]
         # elif i_inj.ndim == 3:
         #     i_inj = i_inj[:,:,:,None]
         for i in i_inj:
-            syn_cur = self._synapses.step(X[-1])
-            X.append(self._neurons.step(X[-1], i + syn_cur))
+            X.append(self.step(X[-1], i))
         if self._tensors:
             return torch.cat(X[1:])
         else:
