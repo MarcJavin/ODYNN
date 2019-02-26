@@ -58,7 +58,13 @@ class Model():
         self._init_p = init_p
         self._param = self._init_p.copy()
         if tensors:
+            self._lib = torch
             self.to_tensor()
+        else:
+            self._lib = np
+            def sigmoid(x):
+                return 1 / (1 + np.exp(-x))
+            np.sigmoid = sigmoid
         self.dt = dt
 
     def to_tensor(self):
@@ -159,10 +165,7 @@ class NeuronModel(Model):
         """Compute the steady state value of a gate activation rate"""
         mdp = self._param['%s__mdp' % rate]
         scale = self._param['%s__scale' % rate]
-        if self._tensors:
-            return torch.sigmoid((V - mdp) / scale)
-        else:
-            return 1 / (1 + np.exp((mdp - V) / scale))
+        return self._lib.sigmoid((V - mdp) / scale)
 
     def _update_gate(self, rate, name, V):
         tau = self._param['%s__tau'%name]

@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from odynn.models import neur_models, syn_models
 
-class Circuit(object):
+class Circuit():
 
     def __init__(self, neurons, synapses):
         assert neurons._tensors == synapses._tensors
@@ -36,6 +36,10 @@ class Circuit(object):
     def parameters(self):
         return {**self._neurons.parameters, **self._synapses.parameters}
 
+    def step(self, X, i):
+        syn_cur = self._synapses.step(X)
+        return self._neurons.step(X, i + syn_cur)
+
     def calculate(self, i_inj):
         init = np.repeat(self._neurons._init_state[:, None], self._neurons._num, axis=-1)
         init = np.repeat(init[:, :, None], self._parallel, axis=-1)
@@ -48,8 +52,7 @@ class Circuit(object):
         # elif i_inj.ndim == 3:
         #     i_inj = i_inj[:,:,:,None]
         for i in i_inj:
-            syn_cur = self._synapses.step(X[-1])
-            X.append(self._neurons.step(X[-1], i + syn_cur))
+            X.append(self.step(X[-1], i))
         if self._tensors:
             return torch.cat(X[1:])
         else:

@@ -67,10 +67,7 @@ class ChemSyn(Model):
         G = self._param['G']
         mdp = self._param['mdp']
         scale = self._param['scale']
-        if self._tensors:
-            g = G * torch.sigmoid((vprev - mdp) / scale)
-        else:
-            g = G / (1 + np.exp((mdp - vprev) / scale))
+        g = G * self._lib.sigmoid((vprev - mdp) / scale)
         return g * (self._param['E'] - vpost)
 
     def step(self, h, i=None):
@@ -94,24 +91,9 @@ class ChemSyn(Model):
             vposts = np.transpose(vposts, (1, 0, 2))
         curs_intern = self._curs(vpres, vposts)
 
-        if self._tensors:
-            curs_post = torch.zeros(h.shape[1:])
-            # bul = torch.zeros(curs_intern.shape)
-        else:
-            curs_post = np.zeros(h.shape[1:])
+        curs_post = self._lib.zeros(h.shape[1:])
 
         for n, i in enumerate(self._posts):
             curs_post[:,i,:] += curs_intern[:,n]
 
-        # for i in range(h.shape[2]):
-        #     if i not in self._posts:
-        #         curs_post[:,i] = 0
-        #         continue
-        #     if self._tensors:
-        #         idx_mask = torch.Tensor(1 * (self._posts == i)).long()
-        #         mask = curs_intern[:,idx_mask.nonzero()].sum(1)
-        #         curs_post[:,i,:] = mask
-        #     else:
-        #         curs_post[:,i,:] = np.sum(curs_intern[self._posts == i], axis=0)
         return curs_post
-
