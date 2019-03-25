@@ -37,7 +37,7 @@ MEMB = ['C_m', 'E_K', 'E_Ca', 'E_L']
 REST_CA = 0.
 INITS = {
     'i': 0,
-    'V': -60.,
+    'V': -35.,
     'p': 0.,
     'q': 0.95,
     'n': 0.,
@@ -46,7 +46,7 @@ INITS = {
     'h': 0.,
     'cac': 1.e-7
 }
-INIT_STATE = np.array([INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f', 'cac']])
+INIT_STATE = np.array([INITS[p] for p in ['V', 'p', 'q', 'n', 'e', 'f']])
 INIT_STATE_ica = [INITS[p] for p in ['i', 'e', 'f', 'h', 'cac']]
 INIT_STATE_ik = [INITS[p] for p in ['i', 'p', 'q', 'n']]
 
@@ -251,7 +251,7 @@ class CElegansNeuron(model.NeuronModel):
     """Full Hodgkin-Huxley Model implemented for C. elegans"""
 
 
-    REST_CA = REST_CA
+    # REST_CA = REST_CA
     _ions = {'$Ca^{2+}$': -1}
     default_init_state = INIT_STATE
     """initial state for neurons : voltage, rates and $[Ca^{2+}]$"""
@@ -303,9 +303,9 @@ class CElegansNeuron(model.NeuronModel):
         f = X[5]
         cac = X[-1]
 
-        if self._tensors:
-            i_inj.set_shape(V.get_shape())
-        h = self._h(cac)
+        # if self._tensors:
+        #     i_inj.set_shape(V.get_shape())
+        h = 0
         V = (V * (self._param['C_m']/self.dt) + (i_inj + self._g_Ca(e, f, h) * self._param['E_Ca'] + (self._g_Ks(n) + self._g_Kf(p, q)) * self._param['E_K'] + self._param['g_L'] * self._param['E_L'])) / \
             ((self._param['C_m']/self.dt) + self._g_Ca(e, f, h) + self._g_Ks(n) + self._g_Kf(p, q) + self._param['g_L'])
 
@@ -317,9 +317,9 @@ class CElegansNeuron(model.NeuronModel):
         f = self._update_gate(f, 'f', V)
 
         if self._tensors:
-            return torch.stack([V, p, q, n, e, f, cac], 0)
+            return torch.stack([V, p, q, n, e, f], 0)
         else:
-            return np.array([V, p, q, n, e, f, cac])
+            return np.array([V, p, q, n, e, f])
 
     # def calculate_exc(self, i_inj):
     #     X = [self._init_state]

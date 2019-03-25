@@ -131,9 +131,9 @@ class Model():
         return cls(params, tensors, dt)
 
     def apply_constraints(self):
-        with torch.no_grad():
-            for k,c in self._constraints.items():
-                self._param[k] = self._param[k].clamp(c[0], c[1])
+        # with torch.no_grad():
+        for k,c in self._constraints.items():
+            self._param[k].data = self._param[k].data.clamp(c[0], c[1])
             # self._param[k].requires_grad = True
 
 
@@ -156,10 +156,19 @@ class NeuronModel(Model):
             ndarray: series of state vectors of shape [time, state, batch]
 
         """
-        X = [self._init_state]
+        init = np.repeat(self._init_state[:, None], self._num, axis=-1)
+        i_inj = np.repeat(i_inj[:, :, None], self._parallel, axis=-1)
+        init = np.repeat(init[:, :, None], self._parallel, axis=-1)
+        init = init[:, None]
+        if self._tensors:
+            init = torch.Tensor(init)
+        X = [init]
         for i in i_inj:
             X.append(self.step(X[-1], i))
-        return np.array(X[1:])
+        if self._tensors:
+            return torch.stack(X[1:])
+        else:
+            return np.array(X[1:])
 
     def _inf(self, V, rate):
         """Compute the steady state value of a gate activation rate"""

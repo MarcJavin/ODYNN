@@ -26,12 +26,12 @@ SYNAPSE_inhib = {
 
 SYN_VARS = list(SYNAPSE.keys())
 
-MIN_SCALE = 0.5
-MAX_SCALE = 100.
+MIN_SCALE = 0.05
+MAX_SCALE = 100
 MIN_MDP = -60.
-MAX_MDP = 50.
+MAX_MDP = -20.
 MIN_G = 1.e-2
-MAX_G = 0.05
+MAX_G = 2.
 
 # Class for our new model
 class ChemSyn(Model):
