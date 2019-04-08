@@ -145,7 +145,7 @@ class NeuronModel(Model):
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p, tensors, dt)
 
-    def calculate(self, i_inj):
+    def calculate(self, i_inj, init=None):
         """
         Simulate the neuron with input current `i_inj` and return the state vectors
 
@@ -156,13 +156,17 @@ class NeuronModel(Model):
             ndarray: series of state vectors of shape [time, state, batch]
 
         """
-        init = np.repeat(self._init_state[:, None], self._num, axis=-1)
-        i_inj = np.repeat(i_inj[:, :, None], self._parallel, axis=-1)
-        init = np.repeat(init[:, :, None], self._parallel, axis=-1)
-        init = init[:, None]
+        if init is None:
+            init = self._init_state
+            init = np.repeat(init[:, None], self._num, axis=-1)
+            init = init[:, None]
+        # init = np.repeat(init[..., None], self._parallel, axis=-1)
+        # i_inj = np.repeat(i_inj[..., None], self._parallel, axis=-1)
         if self._tensors:
             init = torch.Tensor(init)
         X = [init]
+
+        # print('Initial states shape : ', init.shape, 'Input current shape : ', i_inj.shape)
         for i in i_inj:
             X.append(self.step(X[-1], i))
         if self._tensors:

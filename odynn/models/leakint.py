@@ -15,7 +15,7 @@ import torch
 # Class for our new model
 class LeakyIntegrate(NeuronModel):
 
-    default_params = {'C_m': 5., 'g_L': 0.272, 'E_L': -40.8}
+    default_params = {'C_m': 1., 'g_L': 0.5, 'E_L': 0.}
     # Initial value for the voltage
     default_init_state = np.array([-35.])
     _constraints = {'C_m': [0.5, 40.],
@@ -35,7 +35,10 @@ class LeakyIntegrate(NeuronModel):
         V = X[0]
         V = (V * (self._param['C_m'] / self.dt) + (i_inj + self._param['g_L'] * self._param['E_L'])) /\
             ((self._param['C_m'] / self.dt) + self._param['g_L'])
-        # V = V + self.dt*(i_inj + self._i_L(V))/self._param['C_m']
+        # V = V + self.dt * (i_inj + self._i_L(V))/self._param['C_m']
+
+        # V[V > 4.] = 4.
+        # V[V < -3.] = -3.
 
         return self._lib.stack([V])
 
