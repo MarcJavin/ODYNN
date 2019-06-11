@@ -42,7 +42,9 @@ class Circuit():
         return {**self._neurons.parameters, **self._synapses.parameters, **self._gaps.parameters}
 
     def step(self, X, i_inj, xsyn, xgap):
+        # print(X[:,:,-1])
         syn_cur, xsyn = self._synapses.step(X, xsyn)
+        # print(syn_cur[:,-1])
         gap_cur, xgap = self._gaps.step(X, xgap)
         return self._neurons.step(X, i_inj + syn_cur + gap_cur), xsyn, xgap
 

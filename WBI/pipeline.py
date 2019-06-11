@@ -5,6 +5,7 @@ import pandas as pd
 import networkx as nx
 import numpy as np
 import torch
+sys.path.insert(0, '..')
 from odynn.circuit import Circuit
 from odynn.models import LeakyIntegrate, ChemSyn, GapJunction
 import os
@@ -15,10 +16,16 @@ import pickle
 from scipy import stats
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
-sys.path.insert(0, '..')
+import multiprocessing
+from multiprocessing import Process
+
 
 """Constants"""
-DT = 1
+N_CPU = multiprocessing.cpu_count()
+N_THREADS = 4
+torch.set_num_threads(N_THREADS)
+
+T_BASE = 2000
 N_PARALLEL = 1000
 
 
@@ -43,9 +50,13 @@ def optim_neuron(neuron0='RID', n_epochs=501):
 
     gaps = dfg.index[dfg[neuron0] > 0].tolist()
     syns = dfs.index[dfs[neuron0] > 0].tolist()
-    inputs = gaps + syns
+    inputs = np.unique(gaps + syns).tolist()
+    print('Gaps :', gaps)
+    print('Synapses :', syns)
+    name_to_nb = {name: nb for nb, name in enumerate(inputs)}
+    print(name_to_nb)
     with open(dirName + '/conns.txt', 'w') as f:
-        f.write('Gaps : ' + str(gaps) + '\nSynapses : ' + str(syns))
+        f.write('Gaps : ' + str(gaps) + '\nSynapses : ' + str(syns) + '\n' + 'name to nb : ' + str(name_to_nb))
 
     '''Plot graph'''
     G = nx.DiGraph()
@@ -59,6 +70,7 @@ def optim_neuron(neuron0='RID', n_epochs=501):
     nx.draw_networkx_edges(G, pos, [(g, neuron0) for g in syns], edge_color='r')
     plt.axis('off')
     plt.savefig(dirName + '/graph_connectome')
+    plt.close()
 
     '''Get datasets with neuron labelled'''
     recs = []
@@ -85,19 +97,20 @@ def optim_neuron(neuron0='RID', n_epochs=501):
             if inp not in rec.columns:
                 rec[inp] = np.zeros(rec.shape[0])
         traces[:rec.shape[0],i] = rec[neurons]
-        dt[i] = 4000 / rec.shape[0]
+        dt[i] = T_BASE / rec.shape[0]
         plt.subplot(len(recs),1,i+1)
         plt.plot(traces[:,i] + [1.1*j for j in range(len(neurons))])
         plt.yticks([1.1*j for j in range(len(neurons))], neurons)
 
     plt.savefig(dirName + '/traces')
+    plt.close()
     with open(dirName + '/dt.txt', 'w') as f:
         f.write(str(dt.numpy()))
     print('dt : ', dt)
 
     '''Define connections'''
-    conn_g = [(g, len(inputs)) for g in range(len(gaps))]
-    conn_s = [(s, len(inputs)) for s in range(len(gaps), len(inputs))]
+    conn_g = [(name_to_nb[g], len(inputs)) for g in gaps]
+    conn_s = [(name_to_nb[s], len(inputs)) for s in syns]
 
     with open(dirName + '/conns_defined.txt', 'w') as f:
         f.write('Gaps : %s \n Synapses : %s' % (str(conn_g), str(conn_s)))
@@ -124,8 +137,15 @@ def optim_neuron(neuron0='RID', n_epochs=501):
 
     for r in range(len(recs)):
         for i in range(len(syns)):
-            correlations[i] += np.corrcoef(traces[:,r,i], traces[:,r,-1])[0,1]
+            corr = np.corrcoef(traces[:,r,i], traces[:,r,-1])[0,1]
+            if np.isnan(corr):
+                corr = 0
+            correlations[i] += corr
     correlations /= len(recs)
+    sns.heatmap(correlations, vmin=-1, vmax=1, cmap='seismic')
+    plt.savefig(dirName + '/correlations')
+    plt.close()
+    init_E = (correlations + 1) / 2
 
     '''Optimize'''
     target = torch.Tensor(traces[:, None, :, :, None])
@@ -138,7 +158,7 @@ def optim_neuron(neuron0='RID', n_epochs=501):
 
     """Optimize out neuron"""
     circuit = get_circ(N_PARALLEL)
-    circuit._synapses._param['E'] = torch.Tensor(np.repeat(correlations, N_PARALLEL, axis=-1))
+    circuit._synapses._param['E'] = torch.Tensor(np.repeat(init_E, N_PARALLEL, axis=-1))
     circuit._synapses._param['E'].requires_grad = True
 
     def load_param(name='params%s' % neuron0):
@@ -160,11 +180,10 @@ def optim_neuron(neuron0='RID', n_epochs=501):
             plt.plot(2*traces[:,0,i,-1,0].detach().numpy() + ALIGN[-1], linewidth=1.2, color='r')
             plt.plot(2*y[:,0,i,-1,best].detach().numpy() + ALIGN[-1], linewidth=1.1, linestyle='--', color='k')
             plt.yticks(ALIGN, inputs+[neuron0])
-            plt.axis('off')
             plt.subplot(212)
             best_cat = torch.cat( (traces[:,0,i,:,0],y[:,0,i,-1:,best]), dim=1 ).detach().numpy().T
             sns.heatmap(best_cat, cmap='jet', vmin=0, vmax=1)
-            plt.yticks(ALIGN, (inputs+[neuron0])[::-1])
+            plt.yticks(ALIGN, inputs+[neuron0]+[neuron0])
             plt.savefig(dirName + '/imgs/result_%s_%s' % (it, i))
             plt.close()
 
@@ -173,9 +192,8 @@ def optim_neuron(neuron0='RID', n_epochs=501):
     optimizer = torch.optim.Adam(params, lr=0.001)
 
     for t in tqdm(range(n_epochs)):
+        plt.figure()
         y = circuit.calculate(torch.zeros(traces.shape[0]), init, vmask=vmask, vadd=vadd)
-        plt.plot(y[:,0,0,:,0].detach().numpy())    
-        plt.savefig('figtest.png')
 
         loss = optim.loss_mse(y, target)
 
@@ -205,6 +223,7 @@ def optim_neuron(neuron0='RID', n_epochs=501):
     plt.plot([l for l in losses], linewidth=0.2)
     plt.yscale('log')
     plt.savefig(dirName + '/losses')
+    plt.close()
 
     plot_params(circuit, losses, gaps, syns, dirName)
 
@@ -253,5 +272,6 @@ def plot_params(circuit, losses, gaps, syns, dirName):
     plt.savefig(dirName + '/paramscorr')
 
 if __name__ == '__main__':
+    n_process = N_CPU // N_THREADS
     for n in ALL_NAMES[1:]:
         optim_neuron(n)

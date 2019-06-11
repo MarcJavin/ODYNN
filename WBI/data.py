@@ -8,7 +8,7 @@ def dataname(i):
     return '/WBInorm%s.csv'%i
 DERIV = '/dWBIdt.csv'
 N_REC = 6
-NAMES = ['AFDL', 'AIBL', 'AIBR', 'ALA', 'ALNL', 'ALNR', 'AS10', 'ASKL', 'ASKR', 'AVAL', 'AVAR', 'AVBL', 'AVBR', 'AVEL', 'AVER', 'AVFL', 'AVFR', 'AWAR', 'AWCL', 'AWCR', 'BAGL', 'BAGR', 'DA01', 'DA07', 'DA09', 'DB01', 'DB02', 'DB07', 'DVA', 'DVB', 'DVC', 'LUAL', 'LUAR', 'OLQDL', 'OLQDR', 'OLQVL', 'OLQVR', 'PDA', 'PHAL', 'PHAR', 'PLML', 'PVCL', 'PVCR', 'PVNL', 'PVNR', 'RIBL', 'RIBR', 'RID', 'RIFR', 'RIML', 'RIMR', 'RIS', 'RIVL', 'RIVR', 'RMED', 'RMEL', 'RMEV', 'SABD', 'SABVL', 'SABVR', 'SIADL', 'SIADR', 'SIAVL', 'SIAVR', 'SMDDL', 'SMDDR', 'SMDVL', 'SMDVR', 'URADR', 'URAVL', 'URAVR', 'URYDR', 'URYVL', 'URYVR', 'VA01', 'VA11', 'VA12', 'VB01', 'VB02', 'VB11', 'VD11', 'VD13']
+NAMES = ['AFDL', 'AIBL', 'AIBR', 'ALA', 'ALNL', 'ALNR', 'AS10', 'ASKL', 'ASKR', 'AVAL', 'AVAR', 'AVBL', 'AVBR', 'AVEL', 'AVER', 'AVFL', 'AVFR', 'AWAR', 'AWCL', 'AWCR', 'BAGL', 'BAGR', 'DA01', 'DA07', 'DA09', 'DB01', 'DB02', 'DB07', 'DVA', 'DVB', 'DVC', 'LUAL', 'LUAR', 'OLQDL', 'OLQDR', 'OLQVL', 'OLQVR', 'PDA', 'PHAL', 'PHAR', 'PLML', 'PLMR', 'PVCL', 'PVCR', 'PVNL', 'PVNR', 'RIBL', 'RIBR', 'RID', 'RIFR', 'RIML', 'RIMR', 'RIS', 'RIVL', 'RIVR', 'RMED', 'RMEL', 'RMER', 'RMEV', 'SABD', 'SABVL', 'SABVR', 'SIADL', 'SIADR', 'SIAVL', 'SIAVR', 'SMDDL', 'SMDDR', 'SMDVL', 'SMDVR', 'URADR', 'URAVL', 'URAVR', 'URYDL', 'URYDR', 'URYVL', 'URYVR', 'VA01', 'VA11', 'VA12', 'VB01', 'VB02', 'VB11', 'VD11', 'VD13']
 
 def get_synapses():
     return pd.read_csv(HERE+SYNS, index_col=0).loc[NAMES,NAMES]

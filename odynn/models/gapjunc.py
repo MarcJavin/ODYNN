@@ -12,14 +12,14 @@ import torch
 
 
 MIN_G = 0.01
-MAX_G = 2.
+MAX_G = 1.
 
 # Class for our new model
 class GapJunction(Model):
 
     default_params = {'G_gap': 0.5, 'factor':1}
     _constraints = {'G_gap': np.array([MIN_G, MAX_G])}
-    _random_bounds = {'G_gap': [MIN_G, MAX_G/4], 'factor': [0.5,2.]}
+    _random_bounds = {'G_gap': [MIN_G, MAX_G], 'factor': [0.5,2.]}
 
     def __init__(self, pres, posts, init_p=None, tensors=False, dt=0.1):
         Model.__init__(self, init_p=init_p, tensors=tensors, dt=dt)
@@ -119,6 +119,6 @@ class GapJunctionTau(GapJunction):
 
         for n, (i,j) in enumerate(zip(self._pres, self._posts)):
             curs_post[:,j,:] += x[:,n]
-            curs_post[:, i, :] -= x[:, n]
+            # curs_post[:, i, :] -= x[:, n]
 
         return curs_post, x

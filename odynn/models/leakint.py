@@ -18,11 +18,11 @@ class LeakyIntegrate(NeuronModel):
     default_params = {'C_m': 1., 'g_L': 0.5, 'E_L': 0.}
     # Initial value for the voltage
     default_init_state = np.array([-35.])
-    _constraints = {'C_m': [1., 40.],
-                        'g_L': [1e-9, 1.]}
+    _constraints = {'C_m': [2., 40.],
+                        'g_L': [1e-6, 1.]}
     _random_bounds = {'C_m': [2., 5],
-                'g_L': [1e-5, 1.],
-                'E_L': [-1., 1.]}
+                'g_L': [1e-4, 1.],
+                'E_L': [-0.25, 0.25]}
 
     def __init__(self, init_p=None, tensors=False, dt=0.1):
         NeuronModel.__init__(self, init_p=init_p, tensors=tensors, dt=dt)

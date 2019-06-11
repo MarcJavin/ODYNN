@@ -29,7 +29,7 @@ MAX_SCALE = 100
 MIN_MDP = 0.
 MAX_MDP = 1.
 MIN_G = 0.01
-MAX_G = 2.
+MAX_G = 1.
 
 # Class for our new model
 class ChemSyn(Model):
