@@ -39,20 +39,16 @@ class Circuit():
 
     @property
     def parameters(self):
-        return {**self._neurons.parameters, **self._synapses.parameters}
+        return {**self._neurons.parameters, **self._synapses.parameters, **self._gaps.parameters}
 
     def step(self, X, i_inj, xsyn, xgap):
         syn_cur, xsyn = self._synapses.step(X, xsyn)
         gap_cur, xgap = self._gaps.step(X, xgap)
         return self._neurons.step(X, i_inj + syn_cur + gap_cur), xsyn, xgap
 
-    def calculate(self, i_inj, init=None):
+    def calculate(self, i_inj, init=None, vmask=None, vadd=None):
         if init is None:
-            init = np.repeat(self._neurons._init_state[:, None], self._neurons._num, axis=-1)
-            init = np.repeat(init[:, :, None], self._parallel, axis=-1)
-            init = init[:, None]
-        i_inj = np.repeat(i_inj[:, :, None], self._parallel, axis=-1)
-        i_inj = i_inj[:, None]
+            init = np.repeat(self._neurons._init_state[:, None, None, None], self._neurons._num, axis=-2)
         if self._tensors:
             init = torch.Tensor(init)
             i_inj = torch.Tensor(i_inj)
@@ -60,8 +56,12 @@ class Circuit():
         print('Initial states shape : ', init.shape, 'Input current shape : ', i_inj.shape)
         xsyn = 0.
         xgap = 0.
-        for i in i_inj:
-            x, xsyn, xgap = self.step(X[-1], i, xsyn, xgap)
+        for j, i in enumerate(i_inj):
+            next_x = X[-1]
+            # fix some neural activity
+            if vadd is not None and vmask is not None:
+                next_x = X[-1] * vmask + vadd[j]
+            x, xsyn, xgap = self.step(next_x, i, xsyn, xgap)
             X.append(x)
         if self._tensors:
             return torch.stack(X[1:])
@@ -73,7 +73,7 @@ class Circuit():
         self._synapses.apply_constraints()
         self._gaps.apply_constraints()
 
-    def plot(self, labels=None, img_size=15):
+    def plot(self, labels=None, img_size=10, save=None):
         """
         Plot the circuit representation and its connections
         :param labels: dict, names for the neurons
@@ -108,8 +108,11 @@ class Circuit():
         nx.draw_networkx_labels(G, pos, font_color='w', font_weight='bold')
 
         plt.axis('off')
-        plt.draw()
-        plt.show()
+        if save is not None:
+            plt.savefig(save)
+        else:
+            plt.draw()
+            plt.show()
         plt.close()
 
 

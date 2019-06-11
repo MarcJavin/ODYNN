@@ -8,7 +8,7 @@
 from .leakint import LeakyIntegrate
 from .hhsimple import HodgHuxSimple
 from .celeg import CElegansNeuron
-from .chemsyn import ChemSyn, ChemSynTau
+from .chemsyn import ChemSyn, ChemSynTau, ChemSynLin
 from .gapjunc import GapJunction, GapJunctionTau
 
 model_classes = [CElegansNeuron, LeakyIntegrate, HodgHuxSimple]

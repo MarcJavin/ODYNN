@@ -12,6 +12,7 @@ import numpy as np
 from odynn import utils
 import torch
 
+np.clamp = np.clip
 
 class Model():
     """Abstract class to implement for using a new biological model
@@ -122,13 +123,17 @@ class Model():
         return {k: np.random.uniform(v[0], v[1], size=(num,parallel)) for k,v in cls._random_bounds.items()}
 
     @classmethod
+    def get_default(cls, num=1, parallel=1):
+        """Return a dictionnary with the same keys as default_params and default values"""
+        return {k: np.full((num, parallel), v) for k, v in cls.default_params.items()}
+
+    @classmethod
     def create_random(cls, num=1, parallel=1, dt=0.1, tensors=True):
         return cls(cls.get_random(num, parallel), tensors, dt)
 
     @classmethod
     def create_default(cls, num=1, parallel=1, dt=0.1, tensors=False):
-        params = {k: np.full((num, parallel), v) for k, v in cls.default_params.items()}
-        return cls(params, tensors, dt)
+        return cls(cls.get_default(num, parallel), tensors, dt)
 
     def apply_constraints(self):
         # with torch.no_grad():
