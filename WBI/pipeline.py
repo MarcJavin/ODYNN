@@ -191,7 +191,7 @@ def optim_neuron(neuron0='RID', n_epochs=501):
     params = [v for v in circuit.parameters.values()]
     optimizer = torch.optim.Adam(params, lr=0.001)
 
-    for t in tqdm(range(n_epochs)):
+    for t in range(n_epochs):
         plt.figure()
         y = circuit.calculate(torch.zeros(traces.shape[0]), init, vmask=vmask, vadd=vadd)
 
@@ -208,9 +208,8 @@ def optim_neuron(neuron0='RID', n_epochs=501):
 
         circuit.apply_constraints()
 
-        print(loss.mean().detach().numpy(), loss.min().detach().numpy())
-
         if t%10 == 0:
+            print(loss.mean().detach().numpy(), loss.min().detach().numpy())
             plots(y, target, loss, t)
             if loss.min() <= losses[-1].min():
                 with open(dirName + '/params', 'wb') as f:
@@ -273,5 +272,10 @@ def plot_params(circuit, losses, gaps, syns, dirName):
 
 if __name__ == '__main__':
     n_process = N_CPU // N_THREADS
-    for n in ALL_NAMES[1:]:
-        optim_neuron(n)
+    for n in ALL_NAMES:
+        if not os.path.exists(n):
+            try:
+                optim_neuron(n)
+            except Exception as e: 
+                print(e)
+                print('%s not possible' % n)
